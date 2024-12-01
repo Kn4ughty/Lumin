@@ -21,13 +21,23 @@ class GTKApp:
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
+        self.box = Gtk.Box(spacing=6)
+        self.window.add(self.box)
+
         # Add a simple label as a placeholder
         label = Gtk.Label(label="Welcome to Lumin")
-        self.window.add(label)
+        self.box.pack_start(label, True, True, 0)
+
+        self.button = Gtk.Button(label="button!")
+        self.button.connect("clicked", self.on_button_clicked)
+        self.box.pack_start(self.button, True, True, 0)
         
         # Connect the close event
         self.window.connect("destroy", Gtk.main_quit)
 
     def run(self):
         self.window.show_all()  # Show the window
-        Gtk.main()    
+        Gtk.main()
+
+    def on_button_clicked(self, widet):
+        print("Buttoned!")
