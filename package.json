@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-css": "sass ./src/lumin/gui/themes/default.scss ./src/lumin/gui/themes/dist/default.css"
+    "css-build": "sass ./src/lumin/gui/themes/default.scss ./src/lumin/gui/themes/dist/default.css",
+    "css-watch": "sass --watch ./src/lumin/gui/themes/default.scss ./src/lumin/gui/themes/dist/default.css"
   },
   "keywords": [],
   "author": "",
