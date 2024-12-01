@@ -7,7 +7,8 @@ class GTKApp:
     def __init__(self):
         # Create a window
         self.window = Gtk.Window(title="Lumin Search")
-        self.window.set_default_size(600, 400)
+        self.window.set_default_size(600, 200)
+        self.window.set_resizable(False)
 
         # Load css
         css_provider = Gtk.CssProvider()
@@ -25,8 +26,11 @@ class GTKApp:
         self.window.add(self.box)
 
         # Add a simple label as a placeholder
-        label = Gtk.Label(label="Welcome to Lumin")
-        self.box.pack_start(label, True, True, 0)
+        self.label = Gtk.Entry()
+        self.label.connect("activate", self.on_search_entry)
+        
+
+        self.box.pack_start(self.label, True, True, 0)
 
         self.button = Gtk.Button(label="button!")
         self.button.connect("clicked", self.on_button_clicked)
@@ -41,3 +45,8 @@ class GTKApp:
 
     def on_button_clicked(self, widet):
         print("Buttoned!")
+
+    def on_search_entry(self, thing):
+        print("Searched!")
+        print(f"Search text: {thing.get_text()}")
+        print(thing)
