@@ -1,10 +1,14 @@
 from pathlib import Path
+from typing import Callable
+
 import gi
+
 gi.require_version("Gtk","3.0")
 from gi.repository import Gtk, Gdk  # noqa: E402
 
+
 class GTKApp:
-    def __init__(self):
+    def __init__(self, on_search_activate: Callable, on_search_text_changed: Callable):
         # Create a window
         self.window = Gtk.Window(title="Lumin Search")
         self.window.set_default_size(600, 200)
@@ -27,8 +31,9 @@ class GTKApp:
 
         # Add a simple label as a placeholder
         self.label = Gtk.Entry()
-        self.label.connect("activate", self.on_search_entry)
+        self.label.connect("activate", on_search_activate)
         
+        self.label.connect("changed", on_search_text_changed)
 
         self.box.pack_start(self.label, True, True, 0)
 
@@ -45,8 +50,3 @@ class GTKApp:
 
     def on_button_clicked(self, widet):
         print("Buttoned!")
-
-    def on_search_entry(self, thing):
-        print("Searched!")
-        print(f"Search text: {thing.get_text()}")
-        print(thing)
