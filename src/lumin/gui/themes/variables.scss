@@ -1,0 +1,5 @@
+@use "mocha.scss" as c;
+
+$background: rgba(c.$base, 0.1);
+
+$text: c.$text;

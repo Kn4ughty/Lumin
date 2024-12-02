@@ -1,7 +1,12 @@
-@use "mocha.scss" as *;
-
+@use "mocha.scss" as mocha;
+@use "variables.scss" as v;
 
 window {
-  background-color: $base;
-  color: $text;
+  /* background-color: $base; */
+  background: v.$background;
+  color: v.$text;
+}
+
+button.text-button {
+  background: rgba(128, 128, 128, 0.5);
 }
