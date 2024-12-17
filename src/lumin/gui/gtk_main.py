@@ -3,12 +3,12 @@ from typing import Callable
 
 import gi
 
-gi.require_version("Gtk","4.0")
+gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk  # noqa: E402
 
 
 class MyApp(Gtk.Application):
-    def __init__(self,  search_changed: Callable, search_activated: Callable):
+    def __init__(self, search_changed: Callable, search_activated: Callable):
         super().__init__(application_id="com.example.Gtk4App")
         self.search_changed = search_changed
         self.search_activated = search_activated
@@ -20,7 +20,7 @@ class MyApp(Gtk.Application):
         self.window.set_default_size(400, 100)
         self.window.set_decorated(False)  # Disable window decorations
         self.window.set_resizable(False)  # Disable resizing
-        
+
         """ Overview of the widget heirarchy
         ________________________lord box_______________________
         | ______________________search_box___________________ |
@@ -33,12 +33,10 @@ class MyApp(Gtk.Application):
         |_____________________________________________________|
         """
 
-
-
         # Load CSS
         theme_path = Path(__file__).parent / "themes" / "dist" / "default.css"
         self.load_css(theme_path)
-        
+
         # The woke parade said calling things master was bad
         # Contains the sub-elements, search_entry, and results
         self.lord_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -56,14 +54,13 @@ class MyApp(Gtk.Application):
         # Add search entry box
         self.search_entry = Gtk.Entry()
         self.search_entry.set_placeholder_text("search")
-        self.search_entry.set_hexpand(True) # Makes it take up correct space
-        self.search_entry.connect("activate", self.search_activated) # enter key
-        self.search_entry.connect("changed", self.search_changed) # any change
+        self.search_entry.set_hexpand(True)  # Makes it take up correct space
+        self.search_entry.connect("activate", self.search_activated)  # enter key
+        self.search_entry.connect("changed", self.search_changed)  # any change
         self.search_box.append(self.search_entry)
-        
+
         self.results_box = Gtk.Box()
         self.lord_box.append(self.results_box)
-
 
         # Set the layout into the window
         self.window.show()
@@ -86,8 +83,6 @@ class MyApp(Gtk.Application):
         self.lord_box.remove(self.results_box)
         self.results_box = new_results
         self.lord_box.append(self.results_box)
-
-
 
 
 if __name__ == "__main__":
