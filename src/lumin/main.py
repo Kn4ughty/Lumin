@@ -26,7 +26,12 @@ def on_open():
 
 def on_search_text_changed(search_box):
     print("Search text changed")
+
     text = search_box.get_text()
+
+    if text == "":
+        app.search_empty(search_box)
+        return
 
     # Create fake results
     result_list = []
@@ -35,8 +40,6 @@ def on_search_text_changed(search_box):
 
     result_box = result.result_list_to_gtkbox(result_list)
     app.update_results(result_box)
-
-    print(result_box.get_first_child)
 
     print(search_box.get_text())
 

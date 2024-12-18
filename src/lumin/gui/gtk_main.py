@@ -57,6 +57,7 @@ class MyApp(Gtk.Application):
         self.search_entry.set_hexpand(True)  # Makes it take up correct space
         self.search_entry.connect("activate", self.search_activated)  # enter key
         self.search_entry.connect("changed", self.search_changed)  # any change
+
         self.search_box.append(self.search_entry)
 
         self.results_box = Gtk.Box()
@@ -80,9 +81,18 @@ class MyApp(Gtk.Application):
         )
 
     def update_results(self, new_results: Gtk.Box):
+
         self.lord_box.remove(self.results_box)
         self.results_box = new_results
         self.lord_box.append(self.results_box)
+
+    # If there is no search text,
+    # Make results section empty
+    def search_empty(self, widget):
+        text = widget.get_text()
+        if text != "":
+            return
+        self.update_results(Gtk.Box())  # Make results empty
 
 
 if __name__ == "__main__":
