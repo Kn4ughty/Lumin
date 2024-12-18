@@ -8,6 +8,11 @@ from lumin.gui.gtk_main import MyApp
 from lumin.types import result
 from lumin.types.result import Result
 
+import gi
+
+gi.require_version("Gtk", "4.0")
+from gi.repository import Gtk  # noqa: E402
+
 
 def main():
     global app
@@ -30,7 +35,7 @@ def on_search_text_changed(search_box):
     text = search_box.get_text()
 
     if text == "":
-        app.search_empty(search_box)
+        app.update_results(Gtk.Box())  # Make results empty
         return
 
     # Create fake results

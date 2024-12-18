@@ -86,14 +86,6 @@ class MyApp(Gtk.Application):
         self.results_box = new_results
         self.lord_box.append(self.results_box)
 
-    # If there is no search text,
-    # Make results section empty
-    def search_empty(self, widget):
-        text = widget.get_text()
-        if text != "":
-            return
-        self.update_results(Gtk.Box())  # Make results empty
-
 
 if __name__ == "__main__":
     print("This is UI. Running UI by itself doesn't make sense.")
