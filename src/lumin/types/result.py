@@ -18,11 +18,12 @@ def result_list_to_gtkbox(result_list: List[Result]):
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
 
     for item in result_list:
-        entry = Gtk.Box()
+        frame = Gtk.Frame()
+        frame.set_label_align(0.0)
 
         text_label = Gtk.Label(label=item.display_str)
 
-        entry.append(text_label)
-        main_box.append(entry)
+        frame.set_child(text_label)
+        main_box.append(frame)
 
     return main_box
