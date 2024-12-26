@@ -10,7 +10,7 @@ from gi.repository import Gtk, Gdk  # noqa: E402
 log.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class Result:
     display_str: str
     icon: None  # TODO work out this type
