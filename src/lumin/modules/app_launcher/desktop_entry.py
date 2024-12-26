@@ -1,42 +1,36 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
+import time
 
 import logging as log
 
 # TODO. Work this out
 # https://specifications.freedesktop.org/icon-theme-spec/latest/
+
+
 class AppIcon():
     pass
 
-# I have ignored keys that are not applicable
-# Will need refactoring for multi language support later
-@dataclass
-class DesktopEntry():
-    exec: str # techinally not mandatory in spec but in practice it is
-    name: str
-    try_exec: str = ""
-    path: Path = Path("") # Working dir for app
-    generic_name: str = ""
-    comment: str = ""
-    icon: AppIcon = AppIcon() # Stupid line
-    terminal: bool = False
-    keywords: List[str] = field(default_factory=list)
 
+def get_all_desktop_apps(search_dir: Path) -> List[dict]:
 
-def get_all_desktop_apps(search_dir: Path) -> List[DesktopEntry]:
+    start_time = time.time()
 
     # Get all .destop files in search_dir
     files = [f for f in search_dir.glob("*.desktop")]
 
+    entries = []
+
     for file in files:
-        parse_desktop_file(file)
+        entries.append(parse_desktop_file(file))
 
-    
-    return [DesktopEntry(Path(""), "Name")]
+    log.info(f"Time to parse all .desktop files: {
+             (time.time() - start_time)*1000:.3f}ms")
+    return entries
 
 
-def parse_desktop_file(file: Path) -> DesktopEntry:
+def parse_desktop_file(file: Path) -> dict:
     ''' example file
     [Desktop Entry]
     Version=1.0
@@ -55,13 +49,13 @@ def parse_desktop_file(file: Path) -> DesktopEntry:
     Type=Application
     '''
 
-    entry = DesktopEntry(Path(), "Name")
+    entry = {}
 
     with open(file, 'r') as f:
         lines = f.readlines()
-    
+
     log.debug(f"Parsing desktop file: {file} with contents {lines}")
-    
+
     in_desktop_entry_group_header = False
     for line in lines:
         if line[0] == '#':
@@ -82,12 +76,13 @@ def parse_desktop_file(file: Path) -> DesktopEntry:
             continue
 
         if not in_desktop_entry_group_header:
-            log.warning(f"Desktop entry group header missing. Line: \'{line}\' \n full file: {lines}")
+            log.warning(f"Desktop entry group header missing. Line: \'{
+                        line}\' \n full file: {lines}")
             log.warning(f"Invalid .deskop file? Path {file}")
 
         # At this point there should only be key value pairs in the format
         # Key=Value
-        
+
         # Set max split to 1, to only match first =
         # This is because exec values could include = as part of args
         # i.e Exec=/usr/bin/example --arg1=1 --arg2=2
@@ -97,33 +92,18 @@ def parse_desktop_file(file: Path) -> DesktopEntry:
         key = data[0].strip()
         value = data[1].strip()
 
-        # match key:
-        #     case "Name":
-        #         entry.name = value
-        #     case "Exec":
-        #         entry.exec = value
-        #     case "TryExec":
-        #         entry.try_exec = value
-        #     case "Path":
-        #         entry.path = Path(value)
-        #     case "GenericName":
-        #         entry.generic_name = value
-        #     case "Comment":
-        #         entry.comment = value
+        entry[key] = value
+
+        match key:
+            case "Hidden":
+                if value == "true":
+                    return {}
+                else:
+                    entry[key] = value
+            case "Path":
+                entry[key] = Path(value)
+
+    return entry
 
 
-
-
-
-
-
-
-    return DesktopEntry(Path(), "Name")
-
-import time
-
-start_time = time.time()
-get_all_desktop_apps(Path("/usr/share/applications"))
-print(time.time() - start_time)
-
-# parse_desktop_file(Path("/usr/share/applications/btop.desktop"))
+result = get_all_desktop_apps(Path("/usr/share/applications"))
