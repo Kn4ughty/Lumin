@@ -17,7 +17,7 @@ from gi.repository import Gtk  # noqa: E402
 # log.basicConfig(level=log.DEBUG)
 log.basicConfig(
     level=log.INFO,
-    format="{asctime} - {levelname} - {message}",
+    format="{asctime}-{levelname}: {message}",
     style="{",
     datefmt="%H:%M:%S",
 )
