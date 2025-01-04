@@ -5,6 +5,7 @@ import os
 
 import logging as log
 
+from main import desktop_app
 
 # https://specifications.freedesktop.org/icon-theme-spec/latest/
 def parse_xdg_file(lines: List[str]) -> dict:
