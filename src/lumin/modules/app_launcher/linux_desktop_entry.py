@@ -2,13 +2,27 @@ from pathlib import Path
 from typing import List
 import time
 import os
+from dataclasses import dataclass, field
 
 import logging as log
 
-from main import desktop_app
+
+# https://specifications.freedesktop.org/desktop-entry-spec/latest/
+@dataclass
+class DesktopApp:
+    name: str
+    cmd_to_execute: str
+    generic_name: str = ""
+    keywords: list[str] = field(default_factory=list)
+    catagoires: list[str] = field(default_factory=list)
+    icon: None = None
+    terminal: bool = False
+
 
 # https://specifications.freedesktop.org/icon-theme-spec/latest/
-def parse_xdg_file(lines: List[str]) -> dict:
+
+
+def parse_xdg_file_to_dict(lines: List[str]) -> dict:
     """example file
     [Icon Theme]
     Name=Adwaita
@@ -57,24 +71,37 @@ def parse_xdg_file(lines: List[str]) -> dict:
     return entry
 
 
+# TODO Expand this
+def dict_to_desktop_app(app: dict) -> DesktopApp:
+    """ """
+    # Using dict.get with default values to handle empty cases
+
+    result = DesktopApp(name=app["Name"], cmd_to_execute=app["Exec"])
+
+    return result
+
+
 def get_XDG_DATA_DIRS() -> List[Path]:
     default_dir = "/usr/share/"
 
     XDG_DATA_DIRS = os.getenv("XDG_DATA_DIRS")
 
     if XDG_DATA_DIRS is None:
-        log.warning(f"No value for $XDG_DATA_DIRS was found. \
-                Setting to {default_dir}")
+        log.warning(
+            f"No value for $XDG_DATA_DIRS was found. \
+                Setting to {default_dir}"
+        )
 
         XDG_DATA_DIRS = default_dir
 
         if not Path(default_dir).exists():
-            log.error(f"The directory {default_dir} does not exist, \
-                    and no value for $XDG_DATA_DIRS was found. ")
+            log.error(
+                f"The directory {default_dir} does not exist, \
+                    and no value for $XDG_DATA_DIRS was found. "
+            )
             raise Exception
 
     dirs = []
-
 
     dirs = [Path(dir) for dir in XDG_DATA_DIRS.split(":")]
     log.debug(f"found XDG_DATA_DIRS: {dirs}")
@@ -98,7 +125,7 @@ def get_all_desktop_apps() -> List[dict]:
             with open(file, "r") as f:
                 lines = f.readlines()
 
-            entries.append(parse_xdg_file(lines))
+            entries.append(parse_xdg_file_to_dict(lines))
 
     log.info(
         f"Time to parse all .desktop files: {
@@ -109,5 +136,5 @@ def get_all_desktop_apps() -> List[dict]:
     return entries
 
 
-result = get_all_desktop_apps()
-# print(result)
+# result = get_all_desktop_apps()
+# print(result[3])
