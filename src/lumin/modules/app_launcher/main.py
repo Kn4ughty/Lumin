@@ -1,6 +1,7 @@
 import platform
 from dataclasses import dataclass, field
 from loguru import logger as log
+import time
 
 import lumin.modules.app_launcher.linux_desktop_entry as linux_desktop_entry
 
@@ -13,6 +14,10 @@ OS = platform.system()
 
 
 def search(search_text: str):
+    search_start_time = time.perf_counter()
+
+    search_text = search_text.lower()
+
     match OS:
         case "darwin":
             apps = []
@@ -23,13 +28,20 @@ def search(search_text: str):
             raise SystemError
     log.debug(apps)
 
-    search_text = search_text.lower()
+    app_get_end_time = time.perf_counter()
+
+    sorting_start_time = time.perf_counter()
 
     def s(app) -> int:
         # Find longest matching substring
         return longestCommonSubstr(search_text, app.name.lower())
 
-    return sorted(apps, reverse=True, key=s)
+    result = sorted(apps, reverse=True, key=s)
+
+    log.info(f"App Sorting time: {(time.perf_counter() - sorting_start_time) * 1000}ms")
+    log.info(f"App Sorting time: {(app_get_end_time - search_start_time) * 1000}ms")
+    log.info(f"App total time: {(time.perf_counter() - search_start_time) * 1000}ms")
+    return result
 
 
 # Thank you https://www.geeksforgeeks.org/longest-common-substring-dp-29/
