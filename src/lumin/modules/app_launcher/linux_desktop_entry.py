@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List
 import time
 import os
+import functools
 
 # from loguru import logger as log
 import logging as log
@@ -70,6 +71,7 @@ def dict_to_desktop_app(app: dict) -> DesktopApp:
     return result
 
 
+@functools.cache
 def get_all_desktop_apps() -> List[DesktopApp]:
     start_time = time.time()
 

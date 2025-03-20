@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from loguru import logger as log
 import time
 from typing import List
-import copy
 
 import lumin.modules.app_launcher.linux_desktop_entry as linux_desktop_entry
 
@@ -36,7 +35,9 @@ def search(search_text: str):
     result = sorted(apps, reverse=True, key=s)
 
     log.info(f"App Sorting time: {(time.perf_counter() - sorting_start_time) * 1000}ms")
-    log.info(f"App Sorting time: {(app_get_end_time - search_start_time) * 1000}ms")
+    log.info(
+        f"App list getting time: {(app_get_end_time - search_start_time) * 1000}ms"
+    )
     log.info(f"App total time: {(time.perf_counter() - search_start_time) * 1000}ms")
 
     return result
