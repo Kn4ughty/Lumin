@@ -26,18 +26,32 @@ def search(search_text: str):
     search_text = search_text.lower()
 
     def s(app) -> int:
-        i = 0
-        for char in search_text:
-            if char in app.name:
-                i += 1
-        return i
+        # Find longest matching substring
+        return longestCommonSubstr(search_text, app.name.lower())
 
     return sorted(apps, reverse=True, key=s)
 
-    # this is probably very slow
 
-    # sorted_apps = []
-    #
-    # for app in apps:
-    #     matching_count = 0
-    #
+# Thank you https://www.geeksforgeeks.org/longest-common-substring-dp-29/
+def longestCommonSubstr(s1, s2) -> int:
+    m = len(s1)
+    n = len(s2)
+
+    # Create a 1D array to store the previous row's results
+    prev = [0] * (n + 1)
+
+    res = 0
+    for i in range(1, m + 1):
+        # Create a temporary array to store the current row
+        curr = [0] * (n + 1)
+        for j in range(1, n + 1):
+            if s1[i - 1] == s2[j - 1]:
+                curr[j] = prev[j - 1] + 1
+                res = max(res, curr[j])
+            else:
+                curr[j] = 0
+
+        # Move the current row's data to the previous row
+        prev = curr
+
+    return res
