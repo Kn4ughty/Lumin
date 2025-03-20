@@ -1,6 +1,7 @@
 from pathlib import Path
 from loguru import logger as log
 import sys
+import threading
 
 # Add the src/ directory to sys.path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -13,7 +14,7 @@ from lumin.modules.app_launcher.main import search as app_search  # noqa
 import gi  # noqa
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk  # noqa: E402
+from gi.repository import Gtk, GObject, GLib  # noqa: E402
 
 
 log.remove()
@@ -46,10 +47,7 @@ def on_open():
 
 
 def on_search_text_changed(search_box):
-    log.info(
-        f"Seach entry text changed. {
-             search_box}.text = {search_box.get_text()}"
-    )
+    log.info(f"Seach entry text changed. {search_box}.text = {search_box.get_text()}")
 
     text = search_box.get_text()
 
@@ -60,18 +58,33 @@ def on_search_text_changed(search_box):
 
     result_list = []
 
-    apps = app_search(text)
+    # This will need to be abstracted when there are more search modes
+    # Will need a generic way to thread results
 
-    for i in range(0, 10):
-        desktop_app = apps[i]
-        result_list.append(Result(desktop_app.name, None, on_open))
-        # result_list.append(apps[i].name)
+    # The result fetching is done via threads so the UI can update while processing
 
-    # for i in range(10):
-    #     result_list.append(Result(f"Result {text} {i}", None, on_open))
-    #
-    result_box = result.result_list_to_gtkbox(result_list)
-    app.update_results(result_box)
+    def run_search():
+        output = []
+        apps = app_search(text)
+        GLib.idle_add(update_results, apps)
+
+    def update_results(apps):
+        for i in range(min(10, len(apps))):
+            desktop_app = apps[i]
+            result_list.append(Result(desktop_app.name, None, on_open))
+
+        result_box = result.result_list_to_gtkbox(result_list)
+        app.update_results(result_box)
+        # Glib.idle expects a bool to indicate if the function should be repeated
+        # This makes it run once and terminate
+        return False
+
+    # TODO. Profile the startup cost of creating a new thread
+
+    search_thread = threading.Thread(target=run_search, daemon=True)
+    search_thread.start()
+
+    # apps = app_search(text))
 
 
 if __name__ == "__main__":

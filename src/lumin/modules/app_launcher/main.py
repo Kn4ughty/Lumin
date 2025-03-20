@@ -2,14 +2,12 @@ import platform
 from dataclasses import dataclass, field
 from loguru import logger as log
 import time
+from typing import List
+import copy
 
 import lumin.modules.app_launcher.linux_desktop_entry as linux_desktop_entry
 
-# import gi
-#
-# gi.require_version("Gtk", "4.0")
-# from gi.repository import Gtk  # noqa: E402
-#
+
 OS = platform.system()
 
 
@@ -33,7 +31,6 @@ def search(search_text: str):
     sorting_start_time = time.perf_counter()
 
     def s(app) -> int:
-        # Find longest matching substring
         return longestCommonSubstr(search_text, app.name.lower())
 
     result = sorted(apps, reverse=True, key=s)
@@ -41,6 +38,7 @@ def search(search_text: str):
     log.info(f"App Sorting time: {(time.perf_counter() - sorting_start_time) * 1000}ms")
     log.info(f"App Sorting time: {(app_get_end_time - search_start_time) * 1000}ms")
     log.info(f"App total time: {(time.perf_counter() - search_start_time) * 1000}ms")
+
     return result
 
 
