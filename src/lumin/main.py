@@ -42,8 +42,9 @@ def on_search_activate(search_box):
     log.info("Search box activated")
 
 
-def on_open():
-    log.info("Thing opened")
+def on_open(thing):
+    log.info("REVIUVTED EVENT", thing)
+    print(thing)
 
 
 def on_search_text_changed(search_box):

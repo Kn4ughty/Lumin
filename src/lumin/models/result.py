@@ -17,19 +17,33 @@ class Result:
     open_action: Callable
 
 
+def on_open(thing, thing2):
+    print("AA ", thing, thing2)
+
+
+def help(box, thing2):
+    print("WHATS GOING ON", box, thing2)
+
+
 def result_list_to_gtkbox(result_list: List[Result]):
     log.info("Turning results list into a gtkbox.")
     log.debug(f"result_list = {result_list}")
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+    listbox = Gtk.ListBox()
 
-    for item in result_list:
-        # log.debug(f"For loop. item = {item}")
-        frame = Gtk.Frame()
-        frame.set_label_align(0.0)
+    # for item in result_list:
+    for i in range(len(result_list)):
+        item = result_list[i]
+        row = Gtk.ListBoxRow()
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        label = Gtk.Label(label=item.display_str)
+        box.append(label)
+        row.set_child(box)
 
-        text_label = Gtk.Label(label=item.display_str)
+        row.connect("activate", item.open_action)  # Handle Enter key press
+        listbox.append(row)
 
-        frame.set_child(text_label)
-        main_box.append(frame)
+    listbox.connect("row-activated", help)  # Arrow + Enter handling
+    main_box.append(listbox)
 
     return main_box
