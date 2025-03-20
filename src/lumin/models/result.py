@@ -23,7 +23,7 @@ def result_list_to_gtkbox(result_list: List[Result]):
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
 
     for item in result_list:
-        log.debug(f"For loop. item = {item}")
+        # log.debug(f"For loop. item = {item}")
         frame = Gtk.Frame()
         frame.set_label_align(0.0)
 

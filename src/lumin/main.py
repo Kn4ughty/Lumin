@@ -1,27 +1,32 @@
-import sys
 from pathlib import Path
-import logging as log
+from loguru import logger as log
+import sys
 
 # Add the src/ directory to sys.path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from lumin.gui.gtk_main import MyApp
-from lumin.types import result
-from lumin.types.result import Result
+from lumin.gui.gtk_main import MyApp  # noqa
+from lumin.models import result  # noqa
+from lumin.models.result import Result  # noqa
+from lumin.modules.app_launcher.main import search as app_search  # noqa
 
-import gi
+import gi  # noqa
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk  # noqa: E402
 
-# log.basicConfig(level=log.DEBUG)
-log.basicConfig(
-    level=log.INFO,
-    format="{asctime}-{levelname}: {message}",
-    style="{",
-    datefmt="%H:%M:%S",
-)
-log.info("ASKLDJLKSDFJLKSDFJj")
+
+log.remove()
+log.add(sys.stderr, level="INFO")
+
+# # log.basicConfig(level=log.DEBUG)
+# log.basicConfig(
+#     level=log.INFO,
+#     format="{asctime}-{levelname}: {message}",
+#     style="{",
+#     datefmt="%H:%M:%S",
+# )
+log.debug("ASKLDJLKSDFJLKSDFJj")
 
 
 def main():
@@ -41,7 +46,10 @@ def on_open():
 
 
 def on_search_text_changed(search_box):
-    log.info(f"Seach entry text changed. {search_box}.text = {search_box.get_text()}")
+    log.info(
+        f"Seach entry text changed. {
+             search_box}.text = {search_box.get_text()}"
+    )
 
     text = search_box.get_text()
 
@@ -50,11 +58,18 @@ def on_search_text_changed(search_box):
         app.update_results(Gtk.Box())  # Make results empty
         return
 
-    # Create fake results
     result_list = []
-    for i in range(10):
-        result_list.append(Result(f"Result {text} {i}", None, on_open))
 
+    apps = app_search(text)
+
+    for i in range(0, 10):
+        desktop_app = apps[i]
+        result_list.append(Result(desktop_app.name, None, on_open))
+        # result_list.append(apps[i].name)
+
+    # for i in range(10):
+    #     result_list.append(Result(f"Result {text} {i}", None, on_open))
+    #
     result_box = result.result_list_to_gtkbox(result_list)
     app.update_results(result_box)
 

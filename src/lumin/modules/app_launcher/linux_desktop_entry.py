@@ -2,24 +2,42 @@ from pathlib import Path
 from typing import List
 import time
 import os
-from dataclasses import dataclass, field
 
+# from loguru import logger as log
 import logging as log
 
 
-# https://specifications.freedesktop.org/desktop-entry-spec/latest/
-@dataclass
-class DesktopApp:
-    name: str
-    cmd_to_execute: str
-    generic_name: str = ""
-    keywords: list[str] = field(default_factory=list)
-    catagoires: list[str] = field(default_factory=list)
-    icon: None = None
-    terminal: bool = False
-
+from lumin.modules.app_launcher.models import DesktopApp
 
 # https://specifications.freedesktop.org/icon-theme-spec/latest/
+
+
+def get_XDG_DATA_DIRS() -> List[Path]:
+    default_dir = "/usr/share/"
+
+    XDG_DATA_DIRS = os.getenv("XDG_DATA_DIRS")
+
+    if XDG_DATA_DIRS is None:
+        log.warning(
+            f"No value for $XDG_DATA_DIRS was found. \
+                Setting to {default_dir}"
+        )
+
+        XDG_DATA_DIRS = default_dir
+
+        if not Path(default_dir).exists():
+            log.error(
+                f"The directory {default_dir} does not exist, \
+                    and no value for $XDG_DATA_DIRS was found. "
+            )
+            raise Exception
+
+    dirs = []
+
+    dirs = [Path(dir) for dir in XDG_DATA_DIRS.split(":")]
+    log.debug(f"found XDG_DATA_DIRS: {dirs}")
+
+    return dirs
 
 
 def parse_xdg_file_to_dict(lines: List[str]) -> dict:
@@ -71,45 +89,37 @@ def parse_xdg_file_to_dict(lines: List[str]) -> dict:
     return entry
 
 
+def str_to_bool(s: str) -> bool:
+    s = s.lower()
+
+    match s:
+        case "false":
+            return False
+
+        case "true":
+            return True
+        case _:
+            log.warning(f"Str to bool was given bad data. s: {s}")
+            return False
+
+
 # TODO Expand this
 def dict_to_desktop_app(app: dict) -> DesktopApp:
     """ """
+
+    log.debug(f"dict_to_desktop_app recieved: {app}")
     # Using dict.get with default values to handle empty cases
 
-    result = DesktopApp(name=app["Name"], cmd_to_execute=app["Exec"])
+    result = DesktopApp(
+        name=app["Name"],
+        cmd_to_execute=app["Exec"],
+        terminal=str_to_bool(app.get("Terminal", "False")),
+    )
 
     return result
 
 
-def get_XDG_DATA_DIRS() -> List[Path]:
-    default_dir = "/usr/share/"
-
-    XDG_DATA_DIRS = os.getenv("XDG_DATA_DIRS")
-
-    if XDG_DATA_DIRS is None:
-        log.warning(
-            f"No value for $XDG_DATA_DIRS was found. \
-                Setting to {default_dir}"
-        )
-
-        XDG_DATA_DIRS = default_dir
-
-        if not Path(default_dir).exists():
-            log.error(
-                f"The directory {default_dir} does not exist, \
-                    and no value for $XDG_DATA_DIRS was found. "
-            )
-            raise Exception
-
-    dirs = []
-
-    dirs = [Path(dir) for dir in XDG_DATA_DIRS.split(":")]
-    log.debug(f"found XDG_DATA_DIRS: {dirs}")
-
-    return dirs
-
-
-def get_all_desktop_apps() -> List[dict]:
+def get_all_desktop_apps() -> List[DesktopApp]:
     start_time = time.time()
 
     dirs = [dir.joinpath("applications") for dir in get_XDG_DATA_DIRS()]
@@ -125,16 +135,17 @@ def get_all_desktop_apps() -> List[dict]:
             with open(file, "r") as f:
                 lines = f.readlines()
 
-            entries.append(parse_xdg_file_to_dict(lines))
+            entries.append(dict_to_desktop_app(parse_xdg_file_to_dict(lines)))
 
     log.info(
         f"Time to parse all .desktop files: {
-             (time.time() - start_time)*1000:.3f}ms"
+            (time.time() - start_time) * 1000:.3f}ms"
     )
     # On m1 mac it takes about 9ms. \pm 1ms
 
     return entries
 
 
-# result = get_all_desktop_apps()
-# print(result[3])
+if __name__ == "__main__":
+    result = get_all_desktop_apps()
+    print(result[0])
