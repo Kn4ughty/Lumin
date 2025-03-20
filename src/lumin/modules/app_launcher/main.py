@@ -3,14 +3,18 @@ from dataclasses import dataclass, field
 from loguru import logger as log
 import time
 from typing import List
+import subprocess
 
 import lumin.modules.app_launcher.linux_desktop_entry as linux_desktop_entry
 
+from lumin.modules.app_launcher.models import DesktopApp
+
+from lumin.models.result import Result
 
 OS = platform.system()
 
 
-def search(search_text: str):
+def search(search_text: str) -> List[Result]:
     search_start_time = time.perf_counter()
 
     search_text = search_text.lower()
@@ -30,9 +34,16 @@ def search(search_text: str):
     sorting_start_time = time.perf_counter()
 
     def s(app) -> int:
-        return longestCommonSubstr(search_text, app.name.lower())
+        score = 0
 
-    result = sorted(apps, reverse=True, key=s)
+        score += longestCommonSubstr(search_text, app.name.lower())
+
+        if search_text[0] == app.name.lower()[0]:
+            score += 2
+
+        return score
+
+    sorted_result = sorted(apps, reverse=True, key=s)
 
     log.info(f"App Sorting time: {(time.perf_counter() - sorting_start_time) * 1000}ms")
     log.info(
@@ -40,7 +51,15 @@ def search(search_text: str):
     )
     log.info(f"App total time: {(time.perf_counter() - search_start_time) * 1000}ms")
 
-    return result
+    results = []
+
+    for result in sorted_result:
+        # subprocess.run(result.cmd_to_execute)
+        results.append(
+            Result(result.name, None, lambda _: print(result.cmd_to_execute))
+        )
+
+    return results
 
 
 # Thank you https://www.geeksforgeeks.org/longest-common-substring-dp-29/

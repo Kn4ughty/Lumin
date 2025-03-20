@@ -65,6 +65,7 @@ def dict_to_desktop_app(app: dict) -> DesktopApp:
     result = DesktopApp(
         name=app["Name"],
         cmd_to_execute=app["Exec"],
+        # cmd_to_execute="test",
         terminal=str_to_bool(app.get("Terminal", "False")),
     )
 
@@ -99,9 +100,7 @@ def get_all_desktop_apps() -> List[DesktopApp]:
                     log.debug(f"Skipping empty line: {line}")
                     continue
 
-                if (
-                    line[0] == "["
-                ):  # ] my editor doesnt understand the bracket is quoted
+                if line[0] == "[":
                     log.debug(f"ignoring unknown group header {line}")
                     continue
 
@@ -121,7 +120,7 @@ def get_all_desktop_apps() -> List[DesktopApp]:
     log.info(
         f"Time to parse all .desktop files: {(time.time() - start_time) * 1000:.3f}ms"
     )
-    # On m1 mac it takes about 9ms. \pm 1ms
+    # On m1 mac it takes about 9ms. $\pm$ 1ms
 
     return entries
 

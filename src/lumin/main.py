@@ -64,15 +64,18 @@ def on_search_text_changed(search_box):
 
     # The result fetching is done via threads so the UI can update while processing
 
+    # Create a new thread
+    # This thread does the app search,
+    # and then Glib updates the results on the main thread
+
     def run_search():
-        output = []
         apps = app_search(text)
         GLib.idle_add(update_results, apps)
 
     def update_results(apps):
         for i in range(min(10, len(apps))):
             desktop_app = apps[i]
-            result_list.append(Result(desktop_app.name, None, on_open))
+            result_list.append(desktop_app)
 
         result_box = result.result_list_to_gtkbox(result_list)
         app.update_results(result_box)
