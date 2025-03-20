@@ -1,4 +1,14 @@
 aiofiles==24.1.0
+black==25.1.0
+click==8.1.8
+greenlet==3.1.1
 loguru==0.7.3
+msgpack==1.1.0
+mypy-extensions==1.0.0
+packaging==24.2
+pathspec==0.12.1
+platformdirs==4.3.7
 pycairo==1.27.0
 PyGObject==3.50.0
+pylyzer==0.0.76
+pynvim==0.5.2

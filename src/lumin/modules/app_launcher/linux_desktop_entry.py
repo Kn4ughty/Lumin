@@ -40,55 +40,6 @@ def get_XDG_DATA_DIRS() -> List[Path]:
     return dirs
 
 
-def parse_xdg_file_to_dict(lines: List[str]) -> dict:
-    """example file
-    [Icon Theme]
-    Name=Adwaita
-    Comment=The Only One
-    Example=folder
-    Inherits=AdwaitaLegacy,hicolor
-    Hidden=true
-
-    # Directory list
-    Directories=16x16/actions,16x16/apps
-
-    [16x16/actions]
-    Context=Actions
-    Size=16
-    Type=Fixed
-
-    [16x16/apps]
-    Context=Applications
-    Size=16
-    Type=Fixed
-    """
-
-    entry = {}
-
-    for line in lines:
-        if line[0] == "#":
-            log.debug(f"Skipping comment line: {line}")
-            continue
-
-        if line == "\n":
-            log.debug(f"Skipping empty line: {line}")
-            continue
-
-        if line[0] == "[":  # ] my editor doesnt understand the bracket is quoted
-            log.debug(f"ignoring unknown group header {line}")
-            continue
-
-        data = line.split("=", 1)
-
-        # Remove any trailing whitespace
-        key = data[0].strip()
-        value = data[1].strip()
-
-        entry[key] = value
-
-    return entry
-
-
 def str_to_bool(s: str) -> bool:
     s = s.lower()
 
@@ -135,11 +86,38 @@ def get_all_desktop_apps() -> List[DesktopApp]:
             with open(file, "r") as f:
                 lines = f.readlines()
 
-            entries.append(dict_to_desktop_app(parse_xdg_file_to_dict(lines)))
+            entry = {}
+
+            for line in lines:
+                if line[0] == "#":
+                    log.debug(f"Skipping comment line: {line}")
+                    continue
+
+                if line == "\n":
+                    log.debug(f"Skipping empty line: {line}")
+                    continue
+
+                if (
+                    line[0] == "["
+                ):  # ] my editor doesnt understand the bracket is quoted
+                    log.debug(f"ignoring unknown group header {line}")
+                    continue
+
+                data = line.split("=", 1)
+
+                # Remove any trailing whitespace
+                key = data[0].strip()
+                value = data[1].strip()
+
+                entry[key] = value
+
+            if str_to_bool(entry.get("NoDisplay", "False")):
+                continue
+
+            entries.append(dict_to_desktop_app(entry))
 
     log.info(
-        f"Time to parse all .desktop files: {
-            (time.time() - start_time) * 1000:.3f}ms"
+        f"Time to parse all .desktop files: {(time.time() - start_time) * 1000:.3f}ms"
     )
     # On m1 mac it takes about 9ms. \pm 1ms
 
