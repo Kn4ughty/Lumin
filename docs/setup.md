@@ -1,4 +1,6 @@
 
+run `install.sh`
+
 Setup npm.
 Should install all dependencies automatically
 `npm -i`
