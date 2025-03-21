@@ -60,29 +60,30 @@ def search(search_text: str) -> List[Result]:
             (time.perf_counter() - search_start_time) * 1000}ms"
     )
 
+    class Run:
+        def __init__(self, e):
+
+            # This takes in a GTK thing because when its called GTK gives stuff
+            self.fn = lambda gtk_thing: subprocess.run(e.split())
+
+        def __call__(self, gtk_thing):
+            self.fn(gtk_thing)
+
     results = []
 
     for result in sorted_result:
-        # subprocess.run(result.cmd_to_execute)
 
+        # I tried using a def here to create the function,
+        # but it seemed to get overridden with the last value
         # def a(thing): return print(result.cmd_to_execute, thing)
-        fn = Run(result.cmd_to_execute)
+        # It also didnt work with lambda, even if it was created in the append
 
-        results.append(Result(result.name, None, fn))
+        # So instead I need to do this rubbish instead.
+        # I wish I was using a language with proper scoping rules
+
+        results.append(Result(result.name, None, Run(result.cmd_to_execute)))
 
     return results
-
-
-class Run:
-    def __init__(self, e):
-
-        self.fn = lambda thing: subprocess.run(e.split())
-        # self.fn(thing)
-
-        # return self.fn
-
-    def __call__(self, thing):
-        self.fn(thing)
 
 
 # Thank you https://www.geeksforgeeks.org/longest-common-substring-dp-29/
