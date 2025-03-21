@@ -45,7 +45,7 @@ def search(search_text: str) -> List[Result]:
 
     sorted_result = sorted(apps, reverse=True, key=s)
 
-    log.info(f"Sorted result: {sorted_result[0:10]}")
+    log.debug(f"Sorted result: {sorted_result[0:10]}")
 
     log.info(
         f"App Sorting time: {

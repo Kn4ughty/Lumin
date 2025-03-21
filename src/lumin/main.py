@@ -19,6 +19,9 @@ from gi.repository import Gtk, GObject, GLib  # noqa: E402
 
 log.remove()
 log.add(sys.stderr, level="INFO")
+# TODO. make sure this works if logs/ dir doesnt exist yet
+log.add("logs/{time}", level="DEBUG", rotation="2 day")
+
 
 # # log.basicConfig(level=log.DEBUG)
 # log.basicConfig(
@@ -50,7 +53,7 @@ def on_open(thing):
 def on_search_text_changed(search_box):
     log.info(
         f"Seach entry text changed. {
-             search_box}.text = {search_box.get_text()}"
+            search_box}.text = {search_box.get_text()}"
     )
 
     text = search_box.get_text()
@@ -73,7 +76,7 @@ def on_search_text_changed(search_box):
 
     def run_search():
         apps = app_search(text)
-        log.info(f"Apps recived: {apps[0:10]}")
+        log.debug(f"Apps recived: {apps[0:10]}")
         GLib.idle_add(update_results, apps)
 
     def update_results(apps):
