@@ -10,5 +10,4 @@ pathspec==0.12.1
 platformdirs==4.3.7
 pycairo==1.27.0
 PyGObject==3.50.0
-pylyzer==0.0.76
 pynvim==0.5.2
