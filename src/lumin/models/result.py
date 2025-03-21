@@ -18,11 +18,11 @@ class Result:
 
 
 def on_open(thing, thing2):
-    print("AA ", thing, thing2)
+    print("Individual opened", thing, thing2)
 
 
 def help(box, thing2):
-    print("WHATS GOING ON", box, thing2)
+    print("Row-Activated", box, thing2)
 
 
 def result_list_to_gtkbox(result_list: List[Result]):

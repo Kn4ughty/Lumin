@@ -45,24 +45,49 @@ def search(search_text: str) -> List[Result]:
 
     sorted_result = sorted(apps, reverse=True, key=s)
 
-    log.info(f"App Sorting time: {(time.perf_counter() - sorting_start_time) * 1000}ms")
+    log.info(f"Sorted result: {sorted_result[0:10]}")
+
     log.info(
-        f"App list getting time: {(app_get_end_time - search_start_time) * 1000}ms"
+        f"App Sorting time: {
+            (time.perf_counter() - sorting_start_time) * 1000}ms"
     )
-    log.info(f"App total time: {(time.perf_counter() - search_start_time) * 1000}ms")
+    log.info(
+        f"App list getting time: {
+            (app_get_end_time - search_start_time) * 1000}ms"
+    )
+    log.info(
+        f"App total time: {
+            (time.perf_counter() - search_start_time) * 1000}ms"
+    )
 
     results = []
 
     for result in sorted_result:
         # subprocess.run(result.cmd_to_execute)
-        results.append(
-            Result(result.name, None, lambda _: print(result.cmd_to_execute))
-        )
+
+        # def a(thing): return print(result.cmd_to_execute, thing)
+        fn = Run(result.cmd_to_execute)
+
+        results.append(Result(result.name, None, fn))
 
     return results
 
 
+class Run:
+    def __init__(self, e):
+
+        self.fn = lambda thing: subprocess.run(e.split())
+        # self.fn(thing)
+
+        # return self.fn
+
+    def __call__(self, thing):
+        self.fn(thing)
+
+
 # Thank you https://www.geeksforgeeks.org/longest-common-substring-dp-29/
+
+
 def longestCommonSubstr(s1, s2) -> int:
     m = len(s1)
     n = len(s2)
@@ -85,3 +110,7 @@ def longestCommonSubstr(s1, s2) -> int:
         prev = curr
 
     return res
+
+
+if __name__ == "__main__":
+    search("insomnia")

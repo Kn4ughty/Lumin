@@ -48,7 +48,10 @@ def on_open(thing):
 
 
 def on_search_text_changed(search_box):
-    log.info(f"Seach entry text changed. {search_box}.text = {search_box.get_text()}")
+    log.info(
+        f"Seach entry text changed. {
+             search_box}.text = {search_box.get_text()}"
+    )
 
     text = search_box.get_text()
 
@@ -70,6 +73,7 @@ def on_search_text_changed(search_box):
 
     def run_search():
         apps = app_search(text)
+        log.info(f"Apps recived: {apps[0:10]}")
         GLib.idle_add(update_results, apps)
 
     def update_results(apps):

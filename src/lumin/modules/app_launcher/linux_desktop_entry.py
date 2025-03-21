@@ -62,6 +62,8 @@ def dict_to_desktop_app(app: dict) -> DesktopApp:
     log.debug(f"dict_to_desktop_app recieved: {app}")
     # Using dict.get with default values to handle empty cases
 
+    # https://specifications.freedesktop.org/desktop-entry-spec/latest/exec-variables.html
+
     result = DesktopApp(
         name=app["Name"],
         cmd_to_execute=app["Exec"],
@@ -70,6 +72,49 @@ def dict_to_desktop_app(app: dict) -> DesktopApp:
     )
 
     return result
+
+
+# Maybe return callable?
+def parse_exec_key(s: str) -> List[str]:
+    # handle escape characters
+    reversed_chars = [
+        " ",
+        "\t",
+        "\n",
+        "'",
+        '"',
+        "\\",
+        ">",
+        "<",
+        "~",
+        "|",
+        "&",
+        ";",
+        "$",
+        "*",
+        "?",
+        "#",
+        "(",
+        ")",
+        "`",
+    ]
+
+    # Quoting must be done by enclosing the argument between double quotes and escaping the double quote character, backtick character ("`"), dollar sign ("$") and backslash character ("\") by preceding it with an additional backslash character. # noqa
+
+    # TODO. Actually follow the spec.
+
+    output = ""
+
+    for i in range(len(s)):
+        char = s[i]
+        match char:
+            case "%":
+                # Skip next character
+                i += 1
+            case _:
+                output += char
+
+    return output
 
 
 @functools.cache
@@ -118,7 +163,8 @@ def get_all_desktop_apps() -> List[DesktopApp]:
             entries.append(dict_to_desktop_app(entry))
 
     log.info(
-        f"Time to parse all .desktop files: {(time.time() - start_time) * 1000:.3f}ms"
+        f"Time to parse all .desktop files: {
+            (time.time() - start_time) * 1000:.3f}ms"
     )
     # On m1 mac it takes about 9ms. $\pm$ 1ms
 
