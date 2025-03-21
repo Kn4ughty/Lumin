@@ -64,7 +64,8 @@ def search(search_text: str) -> List[Result]:
         def __init__(self, e):
 
             # This takes in a GTK thing because when its called GTK gives stuff
-            self.fn = lambda gtk_thing: subprocess.run(e.split())
+            # self.fn = lambda gtk_thing: subprocess.run(e.split())
+            self.fn = lambda gtk_thing: subprocess.Popen(e, start_new_session=True)
 
         def __call__(self, gtk_thing):
             self.fn(gtk_thing)

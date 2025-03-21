@@ -3,6 +3,7 @@ from typing import List
 import time
 import os
 import functools
+import shlex
 
 # from loguru import logger as log
 import logging as log
@@ -66,7 +67,7 @@ def dict_to_desktop_app(app: dict) -> DesktopApp:
 
     result = DesktopApp(
         name=app["Name"],
-        cmd_to_execute=app["Exec"],
+        cmd_to_execute=parse_exec_key(app["Exec"]),
         # cmd_to_execute="test",
         terminal=str_to_bool(app.get("Terminal", "False")),
     )
@@ -114,7 +115,7 @@ def parse_exec_key(s: str) -> List[str]:
             case _:
                 output += char
 
-    return output
+    return shlex.split(output)
 
 
 @functools.cache
