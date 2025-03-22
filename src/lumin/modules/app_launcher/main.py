@@ -47,33 +47,29 @@ def search(search_text: str) -> List[Result]:
 
     log.debug(f"Sorted result: {sorted_result[0:10]}")
 
+    log.info(f"App Sorting time: {(time.perf_counter() - sorting_start_time) * 1000}ms")
     log.info(
-        f"App Sorting time: {
-            (time.perf_counter() - sorting_start_time) * 1000}ms"
+        f"App list getting time: {(app_get_end_time - search_start_time) * 1000}ms"
     )
-    log.info(
-        f"App list getting time: {
-            (app_get_end_time - search_start_time) * 1000}ms"
-    )
-    log.info(
-        f"App total time: {
-            (time.perf_counter() - search_start_time) * 1000}ms"
-    )
+    log.info(f"App total time: {(time.perf_counter() - search_start_time) * 1000}ms")
 
     class Run:
-        def __init__(self, e):
+        def __init__(self, command):
+            self.command = command
 
             # This takes in a GTK thing because when its called GTK gives stuff
             # self.fn = lambda gtk_thing: subprocess.run(e.split())
-            self.fn = lambda gtk_thing: subprocess.Popen(e, start_new_session=True)
+            self.fn = lambda gtk_thing: subprocess.Popen(
+                command, start_new_session=True
+            )
 
         def __call__(self, gtk_thing):
+            log.info(f"Command being run: {self.command}")
             self.fn(gtk_thing)
 
     results = []
 
     for result in sorted_result:
-
         # I tried using a def here to create the function,
         # but it seemed to get overridden with the last value
         # def a(thing): return print(result.cmd_to_execute, thing)

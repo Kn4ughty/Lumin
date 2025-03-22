@@ -63,11 +63,9 @@ def dict_to_desktop_app(app: dict) -> DesktopApp:
     log.debug(f"dict_to_desktop_app recieved: {app}")
     # Using dict.get with default values to handle empty cases
 
-    # https://specifications.freedesktop.org/desktop-entry-spec/latest/exec-variables.html
-
     result = DesktopApp(
         name=app["Name"],
-        cmd_to_execute=parse_exec_key(app["Exec"]),
+        cmd_to_execute=parse_exec_string(app["Exec"]),
         # cmd_to_execute="test",
         terminal=str_to_bool(app.get("Terminal", "False")),
     )
@@ -75,8 +73,8 @@ def dict_to_desktop_app(app: dict) -> DesktopApp:
     return result
 
 
-# Maybe return callable?
-def parse_exec_key(s: str) -> List[str]:
+# https://specifications.freedesktop.org/desktop-entry-spec/latest/exec-variables.html
+def parse_exec_string(s: str) -> List[str]:
     # handle escape characters
     reversed_chars = [
         " ",
@@ -106,14 +104,23 @@ def parse_exec_key(s: str) -> List[str]:
 
     output = ""
 
-    for i in range(len(s)):
+    i = 0
+    while i < len(s):
         char = s[i]
         match char:
             case "%":
-                # Skip next character
-                i += 1
+                if s[i + 1] == "%i":
+                    log.warning(f"FOUND STRANGE %i. s: {s}")
+
+                if s[i + 1] == "%":
+                    output += "%"
+                    i += 2
+                    continue
+                i += 2
+                continue
             case _:
                 output += char
+        i += 1
 
     return shlex.split(output)
 
@@ -164,8 +171,7 @@ def get_all_desktop_apps() -> List[DesktopApp]:
             entries.append(dict_to_desktop_app(entry))
 
     log.info(
-        f"Time to parse all .desktop files: {
-            (time.time() - start_time) * 1000:.3f}ms"
+        f"Time to parse all .desktop files: {(time.time() - start_time) * 1000:.3f}ms"
     )
     # On m1 mac it takes about 9ms. $\pm$ 1ms
 
