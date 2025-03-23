@@ -5,8 +5,7 @@ import os
 import functools
 import shlex
 
-# from loguru import logger as log
-import logging as log
+from loguru import logger as log
 
 
 from lumin.modules.app_launcher.models import DesktopApp
@@ -118,6 +117,48 @@ def parse_exec_key(s: str) -> List[str]:
     return shlex.split(output)
 
 
+def parse_entry_contents(lines: List[str]) -> dict:
+    entry = {}
+    for line in lines:
+        if line[0] == "#":
+            log.debug(f"Skipping comment line: {line}")
+            continue
+
+        if line == "\n":
+            log.debug(f"Skipping empty line: {line}")
+            continue
+
+        if line[0] == "[":
+            if line[1:15] == "Desktop Action":
+                log.warning("I FOUND AN ACTIONN")
+                return entry
+
+            log.debug(f"ignoring unknown group header {line}")
+            continue
+
+        data = line.split("=", 1)
+
+        # Remove any trailing whitespace
+        key = data[0].strip()
+        value = data[1].strip()
+
+        entry[key] = value
+    return entry
+
+
+def parse_desktop_file_contents(lines: List[str]) -> List[dict]:
+    # Split for each entry header.
+    # If its an action, and actions are enabled,
+    # Add it
+
+    entry = parse_entry_contents(lines)
+
+    if str_to_bool(entry.get("NoDisplay", "False")):
+        return
+
+    return [entry]
+
+
 @functools.cache
 def get_all_desktop_apps() -> List[DesktopApp]:
     start_time = time.time()
@@ -135,33 +176,10 @@ def get_all_desktop_apps() -> List[DesktopApp]:
             with open(file, "r") as f:
                 lines = f.readlines()
 
-            entry = {}
-
-            for line in lines:
-                if line[0] == "#":
-                    log.debug(f"Skipping comment line: {line}")
-                    continue
-
-                if line == "\n":
-                    log.debug(f"Skipping empty line: {line}")
-                    continue
-
-                if line[0] == "[":
-                    log.debug(f"ignoring unknown group header {line}")
-                    continue
-
-                data = line.split("=", 1)
-
-                # Remove any trailing whitespace
-                key = data[0].strip()
-                value = data[1].strip()
-
-                entry[key] = value
-
-            if str_to_bool(entry.get("NoDisplay", "False")):
-                continue
-
-            entries.append(dict_to_desktop_app(entry))
+            ds = parse_desktop_file_contents(lines)
+            if ds is not None:
+                for d in ds:
+                    entries.append(dict_to_desktop_app(d))
 
     log.info(
         f"Time to parse all .desktop files: {
