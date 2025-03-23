@@ -62,12 +62,16 @@ def dict_to_desktop_app(app: dict) -> DesktopApp:
     log.debug(f"dict_to_desktop_app recieved: {app}")
     # Using dict.get with default values to handle empty cases
 
-    result = DesktopApp(
-        name=app["Name"],
-        cmd_to_execute=parse_exec_string(app["Exec"]),
-        # cmd_to_execute="test",
-        terminal=str_to_bool(app.get("Terminal", "False")),
-    )
+    try:
+        result = DesktopApp(
+            name=app["Name"],
+            cmd_to_execute=parse_exec_string(app["Exec"]),
+            # cmd_to_execute="test",
+            terminal=str_to_bool(app.get("Terminal", "False")),
+        )
+    except KeyError as e:
+        log.warning(f"bad dict given. e: {e}, dict: {app}")
+        result = DesktopApp(name="BAD KEY", cmd_to_execute="false")
 
     return result
 
@@ -125,6 +129,8 @@ def parse_exec_string(s: str) -> List[str]:
 
 
 def parse_entry_contents(lines: List[str]) -> dict:
+    # Parse a single thing, from [askdd] to end
+
     entry = {}
     for line in lines:
         if line[0] == "#":
@@ -137,8 +143,7 @@ def parse_entry_contents(lines: List[str]) -> dict:
 
         if line[0] == "[":
             if line[1:15] == "Desktop Action":
-                log.warning("I FOUND AN ACTIONN")
-                return entry
+                log.warning("Strange")
 
             log.debug(f"ignoring unknown group header {line}")
             continue
@@ -158,12 +163,32 @@ def parse_desktop_file_contents(lines: List[str]) -> List[dict]:
     # If its an action, and actions are enabled,
     # Add it
 
-    entry = parse_entry_contents(lines)
+    entries = []
 
-    if str_to_bool(entry.get("NoDisplay", "False")):
-        return
+    i = 0
+    length = len(lines)
+    while i < length:
+        line = lines[i]
+        if line[0] == "[":
+            # if line[1:15] == "Desktop Action":
+            # Search forward to next action or end of file.
+            # Then select that range of the array and parse it in.
+            j = i + 1
+            while j < len(lines[i:]):
+                if lines[j] == "[":
+                    break
+                j += 1
+            entry = parse_entry_contents(lines[i:j])
+            if str_to_bool(entry.get("NoDisplay", "False")):
+                return
 
-    return [entry]
+            entries.append(entry)
+
+        i += 1
+
+    # entry = parse_entry_contents(lines)
+
+    return entries
 
 
 @functools.cache
@@ -189,7 +214,8 @@ def get_all_desktop_apps() -> List[DesktopApp]:
                     entries.append(dict_to_desktop_app(d))
 
     log.info(
-        f"Time to parse all .desktop files: {(time.time() - start_time) * 1000:.3f}ms"
+        f"Time to parse all .desktop files: {
+            (time.time() - start_time) * 1000:.3f}ms"
     )
     # On m1 mac it takes about 9ms. $\pm$ 1ms
 
