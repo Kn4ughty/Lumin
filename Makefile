@@ -16,3 +16,6 @@ all:
 
 watch:
 	npm run css-watch
+
+test:
+	pytest
