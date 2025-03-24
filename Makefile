@@ -22,3 +22,6 @@ test:
 
 clear-config:
 	rm ~/.config/lumin/config.toml
+
+install:
+	python3 $(MAIN_FILE_PATH) install

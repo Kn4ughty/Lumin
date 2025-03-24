@@ -8,6 +8,12 @@ CONFIG_DIR = Path(f"~/.config/{APP_NAME.lower()}/").expanduser()
 MAIN_CONFIG_NAME = "config.toml"
 MAIN_CONFIG_PATH = CONFIG_DIR.joinpath(MAIN_CONFIG_NAME)
 
+DATA_DIR = Path(f"~/.local/share/{APP_NAME.lower()}/").expanduser()
+if not os.path.exists(DATA_DIR):
+    os.mkdir(DATA_DIR)
+
+ENGLISH_DICT_NAME = "dict_en.csv"
+
 # TODO. Potentially load this from a file. default_config.toml or smth
 default_config = """
 desktop_actions_enabled = false

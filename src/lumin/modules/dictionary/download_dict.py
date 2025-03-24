@@ -2,6 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 import logging
 import os
+from pathlib import Path
+import lumin.globals as g
 
 logger = logging.getLogger(__name__)
 
@@ -19,17 +21,41 @@ def crawl(alph):
         for entries in dictionary:
             word = entries.find("b").getText()  # get the word itself
             pos = entries.find("i").getText()  # get the part of speech
-            cut = len(word) + len(pos) + 4  # calulate how much word and pos take up
+            # calulate how much word and pos take up
+            cut = len(word) + len(pos) + 4
             definition = entries.getText()[
                 cut:
             ]  # cut that from the total sting to get definition
             yield word, pos, definition
 
 
+def download():
+    alph = "abcdefghijklmnopqrstuvwxyz"
+    if os.environ.get("DEV"):
+        alph = "x"
+    # print("word,pos,definition")
+    s = ""
+    for word, pos, definition in crawl(alph):
+        r = f'{word},{pos},"{definition}"'
+        print(r)
+        s += r
+
+    with open(g.DATA_DIR.joinpath(Path('dict.csv')), 'w') as f:
+        f.write(s)
+        f.close()
+
+
 if __name__ == "__main__":
     alph = "abcdefghijklmnopqrstuvwxyz"
     if os.environ.get("DEV"):
         alph = "x"
-    print("word,pos,definition")
+    # print("word,pos,definition")
+    s = ""
     for word, pos, definition in crawl(alph):
-        print(f'{word},{pos},"{definition}"')
+        r = f'{word},{pos},"{definition}"'
+        print(r)
+        s += r
+
+    with open(g.DATA_DIR.joinpath(Path('dict.csv')), 'w') as f:
+        f.write(s)
+        f.close()

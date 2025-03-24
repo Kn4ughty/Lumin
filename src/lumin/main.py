@@ -3,12 +3,14 @@ from loguru import logger as log
 import sys
 import threading
 import os
+import sys
 
 # Add the src/ directory to sys.path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from lumin.gui.gtk_main import MyApp  # noqa
 from lumin.models import result  # noqa
+import lumin.modules.dictionary as dictionary_module  # noqa
 from lumin.modules.app_launcher.main import search as app_search  # noqa
 from lumin.modules.dictionary.main import search as dictionary_search  # noqa
 
@@ -69,6 +71,7 @@ def on_search_text_changed(search_box):
     # Ideally a use match statement, but the prefix's are not fixed length
     if text[:2] == "!d":
         search = dictionary_search
+        text = text[3:]
 
     result_list = []
 
@@ -77,16 +80,11 @@ def on_search_text_changed(search_box):
     # and then Glib updates the results on the main thread
 
     def run_search():
-        apps = search(text)
-        log.debug(f"Results recived: {apps[0:10]}")
-        GLib.idle_add(update_results, apps)
+        result_box = search(text)
+        log.debug(f"Result received from search: {result_box}")
+        GLib.idle_add(update_results, result_box)
 
-    def update_results(apps):
-        for i in range(min(10, len(apps))):
-            desktop_app = apps[i]
-            result_list.append(desktop_app)
-
-        result_box = result.result_list_to_gtkbox(result_list)
+    def update_results(result_box):
         app.update_results(result_box)
         # Glib.idle expects a bool to indicate if function should be repeated
         # This makes it run once and terminate
@@ -101,4 +99,7 @@ def on_search_text_changed(search_box):
 
 
 if __name__ == "__main__":
+    if 'install' in sys.argv:
+        dictionary_module.main.download()
+
     main()

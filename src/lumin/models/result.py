@@ -5,7 +5,7 @@ import logging as log
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, Gdk  # noqa: E402
+from gi.repository import Gtk  # noqa: E402
 
 log.getLogger(__name__)
 
@@ -15,14 +15,6 @@ class Result:
     display_str: str
     icon: None  # TODO work out this type
     open_action: Callable
-
-
-def on_open(thing, thing2):
-    print("Individual opened", thing, thing2)
-
-
-def help(box, thing2):
-    print("Row-Activated", box, thing2)
 
 
 def result_list_to_gtkbox(result_list: List[Result]):

@@ -8,6 +8,7 @@ import lumin.modules.app_launcher.linux_desktop_entry as linux_desktop_entry
 
 
 from lumin.models.result import Result
+import lumin.models.result as result_module
 
 OS = platform.system()
 
@@ -53,10 +54,6 @@ def search(search_text: str) -> List[Result]:
         f"App list getting time: {(
             (app_get_end_time - search_start_time) * 1000):.4f}ms"
     )
-    log.info(
-        f"App total time: {(
-            (time.perf_counter() - search_start_time) * 1000):.4f}ms"
-    )
 
     class Run:
         def __init__(self, command):
@@ -73,9 +70,9 @@ def search(search_text: str) -> List[Result]:
             self.fn(gtk_thing)
             exit(0)
 
-    results = []
+    apps = []
 
-    for result in sorted_result:
+    for app in sorted_result:
         # I tried using a def here to create the function,
         # but it seemed to get overridden with the last value
         # def a(thing): return print(result.cmd_to_execute, thing)
@@ -84,9 +81,19 @@ def search(search_text: str) -> List[Result]:
         # So instead I need to do this rubbish instead.
         # I wish I was using a language with proper scoping rules
 
-        results.append(Result(result.name, None, Run(result.cmd_to_execute)))
+        apps.append(Result(app.name, None, Run(app.cmd_to_execute)))
 
-    return results
+    result_list = []
+    for i in range(min(10, len(apps))):
+        result_list.append(apps[i])
+
+    result_element = result_module.result_list_to_gtkbox(result_list)
+
+    log.info(
+        f"App total time: {(
+            (time.perf_counter() - search_start_time) * 1000):.4f}ms"
+    )
+    return result_element
 
 
 # Thank you https://www.geeksforgeeks.org/longest-common-substring-dp-29/
