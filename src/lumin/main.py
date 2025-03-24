@@ -10,6 +10,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from lumin.gui.gtk_main import MyApp  # noqa
 from lumin.models import result  # noqa
 from lumin.modules.app_launcher.main import search as app_search  # noqa
+from lumin.modules.dictionary.main import search as dictionary_search  # noqa
 
 import gi  # noqa
 
@@ -48,7 +49,6 @@ def on_search_activate(search_box):
 
 def on_open(thing):
     log.info("REVIUVTED EVENT", thing)
-    print(thing)
 
 
 def on_search_text_changed(search_box):
@@ -64,18 +64,21 @@ def on_search_text_changed(search_box):
         app.update_results(Gtk.Box())  # Make results empty
         return
 
-    result_list = []
+    search = app_search
 
-    # This will need to be abstracted when there are more search modes
-    # Will need a generic way to thread results
+    # Ideally a use match statement, but the prefix's are not fixed length
+    if text[:2] == "!d":
+        search = dictionary_search
+
+    result_list = []
 
     # Create a new thread
     # This thread does the app search,
     # and then Glib updates the results on the main thread
 
     def run_search():
-        apps = app_search(text)
-        log.debug(f"Apps recived: {apps[0:10]}")
+        apps = search(text)
+        log.debug(f"Results recived: {apps[0:10]}")
         GLib.idle_add(update_results, apps)
 
     def update_results(apps):
