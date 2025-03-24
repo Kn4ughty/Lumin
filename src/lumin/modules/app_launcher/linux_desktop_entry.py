@@ -9,6 +9,7 @@ from loguru import logger as log
 
 
 from lumin.modules.app_launcher.models import DesktopApp
+import lumin.globals as G
 
 # https://specifications.freedesktop.org/icon-theme-spec/latest/
 
@@ -170,23 +171,28 @@ def parse_desktop_file_contents(lines: List[str]) -> List[dict]:
     while i < length:
         line = lines[i]
         if line[0] == "[":
-            # if line[1:15] == "Desktop Action":
+            if line.startswith("[Desktop Action"):
+                if not G.CONFIG_DICT["desktop_actions_enabled"]:
+                    i += 1
+                    while i < length and not lines[i].startswith("["):
+                        i += 1
+                    continue
             # Search forward to next action or end of file.
             # Then select that range of the array and parse it in.
             j = i + 1
-            while j < len(lines[i:]):
-                if lines[j] == "[":
-                    break
+
+            while j < length and not lines[j].startswith("["):
                 j += 1
             entry = parse_entry_contents(lines[i:j])
             if str_to_bool(entry.get("NoDisplay", "False")):
-                return
+                i = j + 1
+                continue
+                # return
 
             entries.append(entry)
 
+            i = j + 1
         i += 1
-
-    # entry = parse_entry_contents(lines)
 
     return entries
 
