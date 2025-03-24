@@ -47,11 +47,18 @@ def search(search_text: str) -> List[Result]:
 
     log.debug(f"Sorted result: {sorted_result[0:10]}")
 
-    log.info(f"App Sorting time: {(time.perf_counter() - sorting_start_time) * 1000}ms")
     log.info(
-        f"App list getting time: {(app_get_end_time - search_start_time) * 1000}ms"
+        f"App Sorting time: {
+            (time.perf_counter() - sorting_start_time) * 1000}ms"
     )
-    log.info(f"App total time: {(time.perf_counter() - search_start_time) * 1000}ms")
+    log.info(
+        f"App list getting time: {
+            (app_get_end_time - search_start_time) * 1000}ms"
+    )
+    log.info(
+        f"App total time: {
+            (time.perf_counter() - search_start_time) * 1000}ms"
+    )
 
     class Run:
         def __init__(self, command):
