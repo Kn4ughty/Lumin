@@ -79,32 +79,7 @@ def dict_to_desktop_app(app: dict) -> DesktopApp:
 
 # https://specifications.freedesktop.org/desktop-entry-spec/latest/exec-variables.html
 def parse_exec_string(s: str) -> List[str]:
-    # handle escape characters
-    reversed_chars = [
-        " ",
-        "\t",
-        "\n",
-        "'",
-        '"',
-        "\\",
-        ">",
-        "<",
-        "~",
-        "|",
-        "&",
-        ";",
-        "$",
-        "*",
-        "?",
-        "#",
-        "(",
-        ")",
-        "`",
-    ]
-
-    # Quoting must be done by enclosing the argument between double quotes and escaping the double quote character, backtick character ("`"), dollar sign ("$") and backslash character ("\") by preceding it with an additional backslash character. # noqa
-
-    # TODO. Actually follow the spec.
+    # shlex makes this easy, all i need to do is handle percent symbols
 
     output = ""
 
@@ -114,6 +89,8 @@ def parse_exec_string(s: str) -> List[str]:
         match char:
             case "%":
                 if s[i + 1] == "%i":
+                    # This is supposed to be the icon of the entry?
+                    # Seems strange and i dont have icons yet so warning it is
                     log.warning(f"FOUND STRANGE %i. s: {s}")
 
                 if s[i + 1] == "%":

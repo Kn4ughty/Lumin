@@ -2,25 +2,26 @@ from pathlib import Path
 from loguru import logger as log
 import sys
 import threading
+import os
 
 # Add the src/ directory to sys.path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from lumin.gui.gtk_main import MyApp  # noqa
 from lumin.models import result  # noqa
-from lumin.models.result import Result  # noqa
 from lumin.modules.app_launcher.main import search as app_search  # noqa
 
 import gi  # noqa
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, GObject, GLib  # noqa: E402
+from gi.repository import Gtk, GLib  # noqa: E402
 
 
 log.remove()
 log.add(sys.stderr, level="INFO")
-# TODO. make sure this works if logs/ dir doesnt exist yet
-log.add("logs/{time}", level="DEBUG", rotation="2 day")
+if not os.path.exists(Path("./logs/")):
+    os.mkdir("logs")
+log.add("logs/{time}", level="INFO", rotation="1 day")
 
 
 # # log.basicConfig(level=log.DEBUG)
@@ -51,7 +52,7 @@ def on_open(thing):
 
 
 def on_search_text_changed(search_box):
-    log.info(
+    log.debug(
         f"Seach entry text changed. {
             search_box}.text = {search_box.get_text()}"
     )
@@ -67,8 +68,6 @@ def on_search_text_changed(search_box):
 
     # This will need to be abstracted when there are more search modes
     # Will need a generic way to thread results
-
-    # The result fetching is done via threads so the UI can update while processing
 
     # Create a new thread
     # This thread does the app search,
@@ -86,7 +85,7 @@ def on_search_text_changed(search_box):
 
         result_box = result.result_list_to_gtkbox(result_list)
         app.update_results(result_box)
-        # Glib.idle expects a bool to indicate if the function should be repeated
+        # Glib.idle expects a bool to indicate if function should be repeated
         # This makes it run once and terminate
         return False
 

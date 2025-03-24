@@ -1,5 +1,4 @@
 import platform
-from dataclasses import dataclass, field
 from loguru import logger as log
 import time
 from typing import List
@@ -7,7 +6,6 @@ import subprocess
 
 import lumin.modules.app_launcher.linux_desktop_entry as linux_desktop_entry
 
-from lumin.modules.app_launcher.models import DesktopApp
 
 from lumin.models.result import Result
 
@@ -48,16 +46,16 @@ def search(search_text: str) -> List[Result]:
     log.debug(f"Sorted result: {sorted_result[0:10]}")
 
     log.info(
-        f"App Sorting time: {
-            (time.perf_counter() - sorting_start_time) * 1000}ms"
+        f"App Sorting time: {(
+            (time.perf_counter() - sorting_start_time) * 1000):.4f}ms"
     )
     log.info(
-        f"App list getting time: {
-            (app_get_end_time - search_start_time) * 1000}ms"
+        f"App list getting time: {(
+            (app_get_end_time - search_start_time) * 1000):.4f}ms"
     )
     log.info(
-        f"App total time: {
-            (time.perf_counter() - search_start_time) * 1000}ms"
+        f"App total time: {(
+            (time.perf_counter() - search_start_time) * 1000):.4f}ms"
     )
 
     class Run:
@@ -73,6 +71,7 @@ def search(search_text: str) -> List[Result]:
         def __call__(self, gtk_thing):
             log.info(f"Command being run: {self.command}")
             self.fn(gtk_thing)
+            exit(0)
 
     results = []
 

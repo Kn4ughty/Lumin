@@ -3,7 +3,6 @@ MAIN_FILE_PATH = src/lumin/main.py
 
 
 run:
-	black src/
 	python3 $(MAIN_FILE_PATH)
 
 run-debug:
@@ -13,6 +12,7 @@ run-debug:
 all: 
 	black src/
 	npm run css-build
+	make run
 
 watch:
 	npm run css-watch
