@@ -19,3 +19,6 @@ watch:
 
 test:
 	pytest
+
+clear-config:
+	rm ~/.config/lumin/config.toml
