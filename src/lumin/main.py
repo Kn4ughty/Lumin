@@ -73,8 +73,6 @@ def on_search_text_changed(search_box):
         search = dictionary_search
         text = text[3:]
 
-    result_list = []
-
     # Create a new thread
     # This thread does the app search,
     # and then Glib updates the results on the main thread
