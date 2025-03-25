@@ -1,23 +1,9 @@
-from pathlib import Path
-from loguru import logger as log
-import sys
-import threading
-import os
-import sys
-
-# Add the src/ directory to sys.path
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-
-from lumin.gui.gtk_main import MyApp  # noqa
-from lumin.models import result  # noqa
-import lumin.modules.dictionary as dictionary_module  # noqa
-from lumin.modules.app_launcher.main import search as app_search  # noqa
-from lumin.modules.dictionary.main import search as dictionary_search  # noqa
-
-import gi  # noqa
-
-gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, GLib  # noqa: E402
+import time
+start_time = time.perf_counter()
+from pathlib import Path  # noqa: E402
+import os  # noqa: E402
+import sys  # noqa: E402
+from loguru import logger as log  # noqa: E402
 
 
 log.remove()
@@ -27,33 +13,39 @@ if not os.path.exists(Path("./logs/")):
 log.add("logs/{time}", level="INFO", rotation="1 day")
 
 
-# # log.basicConfig(level=log.DEBUG)
-# log.basicConfig(
-#     level=log.INFO,
-#     format="{asctime}-{levelname}: {message}",
-#     style="{",
-#     datefmt="%H:%M:%S",
-# )
-log.debug("ASKLDJLKSDFJLKSDFJj")
+# Add the src/ directory to sys.path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
+import_gtk_time = time.perf_counter()
 
-def main():
-    global app
-    log.info("Gui being initialised")
-    app = MyApp(on_search_text_changed, on_search_activate)
-    log.info("Running GUI")
-    app.run()
+from lumin.gui.gtk_main import MyApp  # noqa
+import gi  # noqa: E402
+
+gi.require_version("Gtk", "4.0")
+from gi.repository import Gtk  # noqa: E402
+
+log.info(f"Gui import time: {(time.perf_counter() - import_gtk_time) * 1000:.2f}ms")
+del import_gtk_time
+
+log.info(f"Mandatory imports: {(time.perf_counter() - start_time) * 1000:.2f}ms")
 
 
 def on_search_activate(search_box):
     log.info("Search box activated")
 
 
-def on_open(thing):
-    log.info("REVIUVTED EVENT", thing)
-
-
 def on_search_text_changed(search_box):
+    # Lazy loading is done here to improve startup time.
+    # Without it, I end up dropping inputs
+    # because I start typing before there is a gui
+    search_start_import = time.perf_counter()
+    from lumin.modules.app_launcher.main import search as app_search  # noqa
+    log.info(f"app_search import time: {(time.perf_counter() - search_start_import) * 1000:.2f}ms")
+    import threading  # noqa: E402
+
+    log.info(f"Search import time: {
+        (time.perf_counter() - search_start_import) * 1000:.2f}ms")
+
     log.debug(
         f"Seach entry text changed. {
             search_box}.text = {search_box.get_text()}"
@@ -70,6 +62,10 @@ def on_search_text_changed(search_box):
 
     # Ideally a use match statement, but the prefix's are not fixed length
     if text[:2] == "!d":
+        dict_start = time.perf_counter()
+        from lumin.modules.dictionary.main import search as dictionary_search  # noqa
+        log.info(f"dictionary import time: {
+            (time.perf_counter() - dict_start) * 1000:.2f}ms")
         search = dictionary_search
         text = text[3:]
 
@@ -80,6 +76,7 @@ def on_search_text_changed(search_box):
     def run_search():
         result_box = search(text)
         log.debug(f"Result received from search: {result_box}")
+        from gi.repository import GLib  # noqa: E402
         GLib.idle_add(update_results, result_box)
 
     def update_results(result_box):
@@ -96,8 +93,18 @@ def on_search_text_changed(search_box):
     # apps = app_search(text))
 
 
+def main():
+    global app
+    log.info("Gui being initialised")
+    app = MyApp(on_search_text_changed, on_search_activate)
+    log.info(f"Time to gui: {(time.perf_counter() - start_time)*1000:.2f}ms")
+    app.run()
+
+
 if __name__ == "__main__":
     if 'install' in sys.argv:
-        dictionary_module.main.download()
+        pass
+        # import lumin.modules.dictionary as dictionary_module  # noqa
+        # dictionary_module.main.download()
 
     main()
