@@ -1,8 +1,7 @@
-import nltk
-from nltk.corpus import wordnet as wn
 from loguru import logger as log
 
-import lumin.globals as g
+# import lumin.globals as g
+import wn
 
 import gi
 
@@ -22,15 +21,18 @@ from gi.repository import Gtk  # noqa: E402
 # https://www.nltk.org/howto/wordnet.html
 
 
-def search(s: str):
+def search(s: str) -> Gtk.Box:
     s = s.lower()
     log.info(f"dict recived text: '{s}'")
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     try:
         words = wn.synsets(s)
         log.info(f"Words found: {words}")
-    except LookupError:
-        log.error("Failed to get word. Have you installed the dataset?")
+    except Exception as e:
+        log.error(f"Failed to get word. Have you installed the dataset? \n \
+            Error:'{e}'\n\
+            Hint, try `make install`")
+        return
 
     if len(words) == 0:
         log.info(f"No definition for word: '{s}' found")
@@ -39,22 +41,20 @@ def search(s: str):
     # print(dir(words[0]))
     cleaned_word_list = []
     for word in words:
-        name: str = word.name()
-        print(name)
-        split_name = name.split(".")
-        log.info(f"Split name = {split_name}")
-        if split_name[0] == s:
-            cleaned_word_list.append(word)
+        # name: str = word.name()
+        # if split_name[0] == s:
+        cleaned_word_list.append(word)
 
     log.info(f"Cleaned words = {cleaned_word_list}")
 
     # https://docs.gtk.org/Pango/pango_markup.html
     display_str = ""
     for word in cleaned_word_list:
-        word_type = word.name().split(".")[1]
-        word_names = [str(lemma.name()) for lemma in word.lemmas()]
+        # word_type = word.name().split(".")[1]
+        word_obj = word.words()
+        word_names = [e.forms() for e in word_obj]
         definition = word.definition()
-        item = f"{word_names}. {word_type}. \n {definition}"
+        item = f"{word_names}. {word.pos}. \n {definition}"
         display_str += item
 
     log.info(f"display_str: {display_str}")
@@ -65,5 +65,5 @@ def search(s: str):
     return main_box
 
 
-def download():
-    nltk.download('wordnet')
+# def download():
+#     nltk.download('wordnet')

@@ -24,4 +24,5 @@ clear-config:
 	rm ~/.config/lumin/config.toml
 
 install:
+	python -m wn download oewn:2024
 	python3 $(MAIN_FILE_PATH) install
