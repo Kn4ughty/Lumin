@@ -18,7 +18,7 @@ watch:
 	npm run css-watch
 
 test:
-	pytest
+	pytest -s
 
 clear-config:
 	rm ~/.config/lumin/config.toml

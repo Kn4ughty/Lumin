@@ -23,6 +23,7 @@ from gi.repository import Gtk  # noqa: E402
 
 
 def search(s: str):
+    s = s.lower()
     log.info(f"dict recived text: '{s}'")
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     try:
@@ -47,6 +48,7 @@ def search(s: str):
 
     log.info(f"Cleaned words = {cleaned_word_list}")
 
+    # https://docs.gtk.org/Pango/pango_markup.html
     display_str = ""
     for word in cleaned_word_list:
         word_type = word.name().split(".")[1]

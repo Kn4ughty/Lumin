@@ -18,6 +18,10 @@ class Result:
 
 
 def result_list_to_gtkbox(result_list: List[Result]):
+    """
+    This method is public because I
+    expect to reuse it when doing web searching.
+    """
     log.info("Turning results list into a gtkbox.")
     log.debug(f"result_list = {result_list}")
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
