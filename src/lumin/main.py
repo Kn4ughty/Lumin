@@ -1,4 +1,5 @@
 import time
+
 start_time = time.perf_counter()
 from pathlib import Path  # noqa: E402
 import os  # noqa: E402
@@ -40,11 +41,16 @@ def on_search_text_changed(search_box):
     # because I start typing before there is a gui
     search_start_import = time.perf_counter()
     from lumin.modules.app_launcher.main import search as app_search  # noqa
-    log.info(f"app_search import time: {(time.perf_counter() - search_start_import) * 1000:.2f}ms")
+
+    log.info(
+        f"app_search import time: {(time.perf_counter() - search_start_import) * 1000:.2f}ms"
+    )
     import threading  # noqa: E402
 
-    log.info(f"Search import time: {
-        (time.perf_counter() - search_start_import) * 1000:.2f}ms")
+    log.info(
+        f"Search import time: {
+        (time.perf_counter() - search_start_import) * 1000:.2f}ms"
+    )
 
     log.debug(
         f"Seach entry text changed. {
@@ -64,8 +70,11 @@ def on_search_text_changed(search_box):
     if text[:2] == "!d":
         dict_start = time.perf_counter()
         from lumin.modules.dictionary.main import search as dictionary_search  # noqa
-        log.info(f"dictionary import time: {
-            (time.perf_counter() - dict_start) * 1000:.2f}ms")
+
+        log.info(
+            f"dictionary import time: {
+            (time.perf_counter() - dict_start) * 1000:.2f}ms"
+        )
         search = dictionary_search
         text = text[3:]
 
@@ -77,6 +86,7 @@ def on_search_text_changed(search_box):
         result_box = search(text)
         log.debug(f"Result received from search: {result_box}")
         from gi.repository import GLib  # noqa: E402
+
         GLib.idle_add(update_results, result_box)
 
     def update_results(result_box):
@@ -102,7 +112,7 @@ def main():
 
 
 if __name__ == "__main__":
-    if 'install' in sys.argv:
+    if "install" in sys.argv:
         pass
         # import lumin.modules.dictionary as dictionary_module  # noqa
         # dictionary_module.main.download()

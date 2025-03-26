@@ -25,37 +25,36 @@ def search(s: str) -> Gtk.Box:
     s = s.lower()
     log.info(f"dict recived text: '{s}'")
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+    main_box.add_css_class("dict")
     try:
         words = wn.synsets(s)
         log.info(f"Words found: {words}")
     except Exception as e:
-        log.error(f"Failed to get word. Have you installed the dataset? \n \
+        log.error(
+            f"Failed to get word. Have you installed the dataset? \n \
             Error:'{e}'\n\
-            Hint, try `make install`")
+            Hint, try `make install`"
+        )
         return
 
     if len(words) == 0:
         log.info(f"No definition for word: '{s}' found")
         return main_box
 
-    # print(dir(words[0]))
-    cleaned_word_list = []
-    for word in words:
-        # name: str = word.name()
-        # if split_name[0] == s:
-        cleaned_word_list.append(word)
-
-    log.info(f"Cleaned words = {cleaned_word_list}")
+    heading = Gtk.Label(label=f"{s}")
+    heading.add_css_class("title")
+    main_box.append(heading)
 
     # https://docs.gtk.org/Pango/pango_markup.html
     display_str = ""
-    for word in cleaned_word_list:
-        # word_type = word.name().split(".")[1]
-        word_obj = word.words()
-        word_names = [e.forms() for e in word_obj]
-        definition = word.definition()
-        item = f"{word_names}. {word.pos}. \n {definition}"
-        display_str += item
+    for i in range(len(words)):
+        example_str = ""
+        if words[i].examples() != []:
+            alph = "abcdefghijklmnopqrstuvwxyzz"
+            for j in range(len(words[i].examples())):
+                example_str += f"    {alph[j]}. {words[i].examples()[j]}\n"
+
+        display_str += f"{i+1}. {words[i].definition()}\n{example_str}"
 
     log.info(f"display_str: {display_str}")
 

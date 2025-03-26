@@ -19,3 +19,26 @@ entry {
   padding: 0.5rem;
   border-radius: v.$corner-rad
 }
+
+.dict {
+  text-align: left;
+}
+
+separator {
+	margin-top: 1rem;
+	margin-bottom: 0.5rem;
+	margin-left: 5rem;
+	margin-right: 5rem;
+	background: v.$sub-text; /* set to a neutral grey */
+	padding: 0.1rem;
+	border-radius: 1rem;
+}
+
+.title {
+	font-size: 2rem;
+	font-family: bold;
+}
+
+.subtitle {
+	/* grey */
+}
