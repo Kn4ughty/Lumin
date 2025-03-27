@@ -60,7 +60,6 @@ def str_to_bool(s: str) -> bool:
 def dict_to_desktop_app(app: dict) -> DesktopApp:
     """ """
 
-    log.debug(f"dict_to_desktop_app recieved: {app}")
     # Using dict.get with default values to handle empty cases
 
     try:
@@ -112,18 +111,12 @@ def parse_entry_contents(lines: List[str]) -> dict:
     entry = {}
     for line in lines:
         if line[0] == "#":
-            log.debug(f"Skipping comment line: {line}")
             continue
 
         if line == "\n":
-            log.debug(f"Skipping empty line: {line}")
             continue
 
         if line[0] == "[":
-            if line[1:15] == "Desktop Action":
-                log.warning("Strange")
-
-            log.debug(f"ignoring unknown group header {line}")
             continue
 
         data = line.split("=", 1)
@@ -186,7 +179,6 @@ def get_all_desktop_apps() -> List[DesktopApp]:
         files = [f for f in search_dir.glob("*.desktop")]
 
         for file in files:
-            log.debug(f"Reading .desktop file: {file}")
 
             with open(file, "r") as f:
                 lines = f.readlines()

@@ -43,7 +43,7 @@ def search(s: str) -> Gtk.Box:
         log.info(f"No definition for word: '{s}' found")
         return main_box
 
-    heading = Gtk.Label(label=f"{s}")
+    heading = Gtk.Label(label=f"{s[0].upper() + s[1:]}")
     heading.add_css_class("title")
     main_box.append(heading)
 
@@ -58,13 +58,14 @@ def search(s: str) -> Gtk.Box:
 
         display_str += f"{i+1}. {words[i].definition()}\n{example_str}"
 
-    log.info(f"display_str: {display_str}")
+    log.debug(f"display_str: {display_str}")
 
     scroll = Gtk.ScrolledWindow()
     scroll.set_vexpand(True)  # Allow vertical expansion
 
     label = Gtk.Label(label=display_str)
     label.set_wrap(True)
+    label.add_css_class("dict-body")
     scroll.set_child(label)
     main_box.append(scroll)
 

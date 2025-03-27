@@ -8,7 +8,7 @@ from loguru import logger as log  # noqa: E402
 
 
 log.remove()
-log.add(sys.stderr, level="INFO")
+log.add(sys.stderr, level="DEBUG")
 if not os.path.exists(Path("./logs/")):
     os.mkdir("logs")
 log.add("logs/{time}", level="INFO", rotation="1 day")

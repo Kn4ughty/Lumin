@@ -26,7 +26,6 @@ def search(search_text: str) -> List[Result]:
             apps = linux_desktop_entry.get_all_desktop_apps()
         case _:
             raise SystemError
-    log.debug(apps)
 
     app_get_end_time = time.perf_counter()
 
@@ -46,11 +45,11 @@ def search(search_text: str) -> List[Result]:
 
     log.debug(f"Sorted result: {sorted_result[0:10]}")
 
-    log.info(
+    log.debug(
         f"App Sorting time: {(
             (time.perf_counter() - sorting_start_time) * 1000):.4f}ms"
     )
-    log.info(
+    log.debug(
         f"App list getting time: {(
             (app_get_end_time - search_start_time) * 1000):.4f}ms"
     )
@@ -92,7 +91,7 @@ def search(search_text: str) -> List[Result]:
 
     result_element = result_module.result_list_to_gtkbox(result_list)
 
-    log.info(
+    log.debug(
         f"Time to create gui elements: {(
             (time.perf_counter() - list_create_time) * 1000):.4f}ms"
     )
