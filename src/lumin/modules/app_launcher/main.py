@@ -4,7 +4,7 @@ import time
 from typing import List
 import subprocess
 
-import lumin.modules.app_launcher.linux_desktop_entry as linux_desktop_entry
+from . import linux_desktop_entry
 
 
 from lumin.models.result import Result
