@@ -3,6 +3,8 @@ from loguru import logger as log
 # import lumin.globals as g
 import wn
 
+wn.config.allow_multithreading = True
+
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -35,7 +37,7 @@ def search(s: str) -> Gtk.Box:
             Error:'{e}'\n\
             Hint, try `make install`"
         )
-        return
+        return main_box
 
     if len(words) == 0:
         log.info(f"No definition for word: '{s}' found")

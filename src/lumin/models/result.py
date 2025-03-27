@@ -27,6 +27,9 @@ def result_list_to_gtkbox(result_list: List[Result]):
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     listbox = Gtk.ListBox()
 
+    def activate_result(list_box, list_box_row):
+        list_box_row.activate_callback()
+
     # for item in result_list:
     for i in range(len(result_list)):
         item = result_list[i]
@@ -36,10 +39,11 @@ def result_list_to_gtkbox(result_list: List[Result]):
         box.append(label)
         row.set_child(box)
 
-        row.connect("activate", item.open_action)  # Handle Enter key press
+        row.activate_callback = item.open_action
+
         listbox.append(row)
 
-    listbox.connect("row-activated", help)  # Arrow + Enter handling
+    listbox.connect("row-activated", activate_result)  # Arrow + Enter handling
     main_box.append(listbox)
 
     return main_box

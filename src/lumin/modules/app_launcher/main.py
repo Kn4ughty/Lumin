@@ -59,15 +59,11 @@ def search(search_text: str) -> List[Result]:
         def __init__(self, command):
             self.command = command
 
-            # This takes in a GTK thing because when its called GTK gives stuff
-            # self.fn = lambda gtk_thing: subprocess.run(e.split())
-            self.fn = lambda gtk_thing: subprocess.Popen(
-                command, start_new_session=True
-            )
+            self.fn = lambda: subprocess.Popen(command, start_new_session=True)
 
-        def __call__(self, gtk_thing):
+        def __call__(self):
             log.info(f"Command being run: {self.command}")
-            self.fn(gtk_thing)
+            self.fn()
             exit(0)
 
     apps = []
