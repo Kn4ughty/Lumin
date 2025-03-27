@@ -55,6 +55,8 @@ def search(search_text: str) -> List[Result]:
             (app_get_end_time - search_start_time) * 1000):.4f}ms"
     )
 
+    list_create_time = time.perf_counter()
+
     class Run:
         def __init__(self, command):
             self.command = command
@@ -80,10 +82,20 @@ def search(search_text: str) -> List[Result]:
         apps.append(Result(app.name, None, Run(app.cmd_to_execute)))
 
     result_list = []
+
+    # Maybe 100 is too many?
+    # It can be anything since its scrollable now.
+    # Creating all the extra ui elements only seems to take an
+    # extra 2ms from 10 to 100 elements long
     for i in range(min(10, len(apps))):
         result_list.append(apps[i])
 
     result_element = result_module.result_list_to_gtkbox(result_list)
+
+    log.info(
+        f"Time to create gui elements: {(
+            (time.perf_counter() - list_create_time) * 1000):.4f}ms"
+    )
 
     log.info(
         f"App total time: {(

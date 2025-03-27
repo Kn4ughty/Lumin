@@ -18,7 +18,7 @@ class MyApp(Gtk.Application):
         # Create application window
         self.window = Gtk.ApplicationWindow(application=self)
         self.window.set_title("GTK4 Example App")
-        self.window.set_default_size(600, 150)
+        self.window.set_default_size(600, 300)
         self.window.set_decorated(False)  # Disable window decorations
         self.window.set_resizable(False)  # Disable resizing
 

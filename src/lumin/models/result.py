@@ -44,6 +44,9 @@ def result_list_to_gtkbox(result_list: List[Result]):
         listbox.append(row)
 
     listbox.connect("row-activated", activate_result)  # Arrow + Enter handling
-    main_box.append(listbox)
+    scroll = Gtk.ScrolledWindow()
+    scroll.set_vexpand(True)
+    scroll.set_child(listbox)
+    main_box.append(scroll)
 
     return main_box

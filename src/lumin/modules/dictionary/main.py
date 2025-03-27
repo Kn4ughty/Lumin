@@ -60,8 +60,13 @@ def search(s: str) -> Gtk.Box:
 
     log.info(f"display_str: {display_str}")
 
+    scroll = Gtk.ScrolledWindow()
+    scroll.set_vexpand(True)  # Allow vertical expansion
+
     label = Gtk.Label(label=display_str)
-    main_box.append(label)
+    label.set_wrap(True)
+    scroll.set_child(label)
+    main_box.append(scroll)
 
     return main_box
 
