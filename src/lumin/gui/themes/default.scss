@@ -1,44 +1,74 @@
 @use "mocha.scss" as mocha;
 @use "variables.scss" as v;
 
+// https://docs.gtk.org/gtk4/css-properties.html
+
 window {
   /* background-color: $base; */
-  background: v.$background;
+  background: v.$window_bg;
   color: v.$text;
   font-size: 1.2rem;
+  font-family: JetBrainsMono Nerd Font Mono, JetBrains, monospace;
+  outline-color: v.$accent;
 }
 
 list {
-  margin: 1rem;
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
   padding: 0.5rem;
-  border-radius: v.$corner-rad
+  border-radius: v.$corner-rad;
+  background: #00000000;
+}
+
+row {
+  background: rgba(v.$background, 0.8);
+  margin-bottom: 0.2rem;
+  padding: 0.8rem;
+  border-radius: 1rem;
+}
+
+row:selected {
+  background: #13132aff;
+  outline-color: v.$accent;
 }
 
 entry {
   margin: -.5rem;
   padding: 0.5rem;
-  border-radius: v.$corner-rad
+  border-radius: v.$corner-rad;
+  background: v.$background;
+  outline-color: v.$accent;
 }
 
 .dict {
   text-align: left;
+  margin: 1rem;
+  background: v.$dark_bg;
+  border-radius: 1.1rem 1.1rem 0rem 0rem;
+}
+
+.dict-body {
+	background: v.$dark_bg;
+	padding: 0.5rem;
 }
 
 separator {
-	margin-top: 1rem;
-	margin-bottom: 0.5rem;
-	margin-left: 5rem;
-	margin-right: 5rem;
-	background: v.$sub-text; /* set to a neutral grey */
-	padding: 0.1rem;
-	border-radius: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  margin-left: 5rem;
+  margin-right: 5rem;
+  background: v.$sub-text;
+  padding: 0.1rem;
+  border-radius: 1rem;
 }
 
 .title {
-	font-size: 2rem;
-	font-family: bold;
+  font-size: 2rem;
+  font-weight: bold;
+  border-radius: 1rem;
+  margin-bottom: 0px;
+  background: v.$background; 
 }
 
-.subtitle {
-	/* grey */
-}
+

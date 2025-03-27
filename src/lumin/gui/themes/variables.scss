@@ -1,6 +1,10 @@
 @use "mocha.scss" as c;
 
-$background: rgba(c.$base, 0.1);
+$accent: c.$mauve;
+
+$window_bg: rgba(c.$base, 0.2);
+$background: c.$base;
+$dark_bg: c.$mantle;
 
 $text: c.$text;
 $sub-text: c.$subtext1;
