@@ -1,11 +1,12 @@
 from loguru import logger as log
+import time
 
 # import lumin.globals as g
 import wn
 
 wn.config.allow_multithreading = True
 
-import gi
+import gi  # noqa: E402
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk  # noqa: E402
@@ -24,6 +25,7 @@ from gi.repository import Gtk  # noqa: E402
 
 
 def search(s: str) -> Gtk.Box:
+    start_time = time.perf_counter()
     s = s.lower()
     log.info(f"dict recived text: '{s}'")
     main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -68,6 +70,8 @@ def search(s: str) -> Gtk.Box:
     label.add_css_class("dict-body")
     scroll.set_child(label)
     main_box.append(scroll)
+
+    log.info(f"Dictionary time: {( time.perf_counter() - start_time )* 1000:.3f}ms")
 
     return main_box
 

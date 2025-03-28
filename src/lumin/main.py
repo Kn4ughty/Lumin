@@ -41,11 +41,11 @@ def on_search_text_changed(search_box):
     # because I start typing before there is a gui
     search_start_import = time.perf_counter()
     from lumin.modules.app_launcher.main import search as app_search  # noqa
+    import threading  # noqa: E402
 
     log.info(
         f"app_search import time: {(time.perf_counter() - search_start_import) * 1000:.2f}ms"
     )
-    import threading  # noqa: E402
 
     log.info(
         f"Search import time: {
@@ -57,7 +57,7 @@ def on_search_text_changed(search_box):
             search_box}.text = {search_box.get_text()}"
     )
 
-    text = search_box.get_text()
+    text: str = search_box.get_text()
 
     if text == "":
         log.info("Search text was empty. Showing empty results")
@@ -66,17 +66,17 @@ def on_search_text_changed(search_box):
 
     search = app_search
 
-    # Ideally a use match statement, but the prefix's are not fixed length
+    # Ideally i'd use a match statement, but the prefix's are not fixed length
     if text[:2] == "!d":
-        dict_start = time.perf_counter()
+        # dict_start = time.perf_counter()
         from lumin.modules.dictionary.main import search as dictionary_search  # noqa
 
-        log.info(
-            f"dictionary import time: {
-            (time.perf_counter() - dict_start) * 1000:.2f}ms"
-        )
+        # log.debug(
+        #     f"dictionary import time: {
+        #     (time.perf_counter() - dict_start) * 1000:.2f}ms"
+        # )
         search = dictionary_search
-        text = text[3:]
+        text = text[2:].strip()
 
     # Create a new thread
     # This thread does the app search,
