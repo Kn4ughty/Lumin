@@ -13,7 +13,7 @@ log.getLogger(__name__)
 @dataclass(frozen=True)
 class Result:
     display_str: str
-    icon: None | Gtk.Image  # TODO work out this type
+    icon: None | Gtk.Image
     open_action: Callable
 
 
