@@ -89,8 +89,6 @@ def on_search_text_changed(search_box):
         # This makes it run once and terminate
         return False
 
-    # TODO. Profile the startup cost of creating a new thread
-
     search_thread = threading.Thread(target=run_search, daemon=True)
     search_thread.start()
 

@@ -11,18 +11,6 @@ import gi  # noqa: E402
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk  # noqa: E402
 
-# words_file_path = g.DATA_DIR.joinpath(g.ENGLISH_DICT_NAME)
-
-# this dataset has problems.
-# Halfway through the R letters, it breaks,
-# and the definition becomes 500k characters long
-
-# Look at:
-# https://www.gutenberg.org/cache/epub/29765/pg29765.txt
-# https://stackoverflow.com/questions/6441975/where-can-i-download-english-dictionary-database-in-a-text-format  # noqa
-
-# https://www.nltk.org/howto/wordnet.html
-
 
 def search(s: str) -> Gtk.Box:
     start_time = time.perf_counter()
@@ -71,7 +59,7 @@ def search(s: str) -> Gtk.Box:
     scroll.set_child(label)
     main_box.append(scroll)
 
-    log.info(f"Dictionary time: {( time.perf_counter() - start_time )* 1000:.3f}ms")
+    log.info(f"Dictionary time: {(time.perf_counter() - start_time) * 1000:.3f}ms")
 
     return main_box
 
