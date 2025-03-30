@@ -49,13 +49,11 @@ def on_search_text_changed(search_box):
 
     log.info(
         f"Search import time: {
-        (time.perf_counter() - search_start_import) * 1000:.2f}ms"
+            (time.perf_counter() - search_start_import) * 1000:.2f
+        }ms"
     )
 
-    log.debug(
-        f"Seach entry text changed. {
-            search_box}.text = {search_box.get_text()}"
-    )
+    log.debug(f"Seach entry text changed. {search_box}.text = {search_box.get_text()}")
 
     text: str = search_box.get_text()
 
@@ -71,10 +69,6 @@ def on_search_text_changed(search_box):
         # dict_start = time.perf_counter()
         from lumin.modules.dictionary.main import search as dictionary_search  # noqa
 
-        # log.debug(
-        #     f"dictionary import time: {
-        #     (time.perf_counter() - dict_start) * 1000:.2f}ms"
-        # )
         search = dictionary_search
         text = text[2:].strip()
 
@@ -100,21 +94,17 @@ def on_search_text_changed(search_box):
     search_thread = threading.Thread(target=run_search, daemon=True)
     search_thread.start()
 
-    # apps = app_search(text))
-
 
 def main():
     global app
     log.info("Gui being initialised")
     app = MyApp(on_search_text_changed, on_search_activate)
-    log.info(f"Time to gui: {(time.perf_counter() - start_time)*1000:.2f}ms")
+    log.info(f"Time to gui: {(time.perf_counter() - start_time) * 1000:.2f}ms")
     app.run()
 
 
 if __name__ == "__main__":
     if "install" in sys.argv:
         pass
-        # import lumin.modules.dictionary as dictionary_module  # noqa
-        # dictionary_module.main.download()
 
     main()
