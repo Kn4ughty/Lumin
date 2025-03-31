@@ -99,7 +99,7 @@ def parse_desktop_file_contents(lines: List[str]) -> List[dict]:
         line = lines[i]
         if line[0] == "[":
             if line.startswith("[Desktop Action"):
-                if not G.CONFIG_DICT["desktop_actions_enabled"]:
+                if not G.CONFIG["desktop_actions_enabled"]:
                     i += 1
                     while i < length and not lines[i].startswith("["):
                         i += 1
