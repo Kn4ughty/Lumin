@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Callable
 import os
 import lumin.globals as g
+from lumin.models import result
 from loguru import logger as log
 
 import gi
@@ -59,8 +60,8 @@ class MyApp(Gtk.Application):
         self.search_entry = Gtk.Entry()
         self.search_entry.set_placeholder_text("search")
         self.search_entry.set_hexpand(True)  # Makes it take up correct space
-        self.search_entry.connect("activate", self.search_activated)  # enter key
         self.search_entry.connect("changed", self.search_changed)  # any change
+        result.search_entry = self.search_entry
 
         self.search_box.append(self.search_entry)
 

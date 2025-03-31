@@ -62,7 +62,7 @@ def search(search_text: str) -> List[Result]:
 
             self.fn = lambda: subprocess.Popen(command, start_new_session=True)
 
-        def __call__(self):
+        def __call__(self, *argv):
             log.info(f"Command being run: {self.command}")
             self.fn()
             exit(0)
