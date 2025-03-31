@@ -59,7 +59,7 @@ def on_search_text_changed(search_box):
 
     if text == "":
         log.info("Search text was empty. Showing empty results")
-        app.update_results(Gtk.Box())  # Make results empty
+        app.update_results(None)  # Make results empty
         return
 
     search = app_search

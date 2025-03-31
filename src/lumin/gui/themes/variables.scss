@@ -2,11 +2,13 @@
 
 $accent: c.$mauve;
 
-$window_bg: rgba(c.$base, 0.2);
+$window_bg: rgba(c.$crust, 1);
 $background: c.$base;
 $dark_bg: c.$mantle;
+
+$sep: c.$subtext1;
 
 $text: c.$text;
 $sub-text: c.$subtext1;
 
-$corner-rad: 1rem;
+$corner-rad: 0rem;

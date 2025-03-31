@@ -12,19 +12,31 @@ window {
   outline-color: v.$accent;
 }
 
+.result_box {
+  border: 1px solid v.$sep;
+  margin: 1rem;
+}
+
+.search_box {
+  margin: 1rem;
+  margin-bottom: 0px;
+  border: 1px solid v.$sep;
+}
+
 list {
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
+  // margin-left: 0.5rem;
+  // margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
   padding: 0.5rem;
   border-radius: v.$corner-rad;
   background: #00000000;
 }
 
 row {
-  background: rgba(v.$background, 0.8);
+  background: rgba(v.$background, 1);
   margin-bottom: 0.2rem;
   padding: 0.8rem;
-  border-radius: 1rem;
+  border-radius: v.$corner-rad;
 }
 
 row:selected {
@@ -33,7 +45,6 @@ row:selected {
 }
 
 entry {
-  margin: -.5rem;
   padding: 0.5rem;
   border-radius: v.$corner-rad;
   background: v.$background;
@@ -43,7 +54,7 @@ entry {
 .dict {
   margin: 1rem;
   background: v.$dark_bg;
-  border-radius: 1.1rem 1.1rem 0rem 0rem;
+  border-radius: v.$corner-rad v.$corner-rad 0rem 0rem;
 }
 
 .dict-body {
@@ -58,13 +69,13 @@ separator {
   margin-right: 5rem;
   background: v.$sub-text;
   padding: 0.1rem;
-  border-radius: 1rem;
+  border-radius: v.$corner-rad;
 }
 
 .title {
   font-size: 2rem;
   font-weight: bold;
-  border-radius: 1rem;
+  border-radius: v.$corner-rad;
   margin-bottom: 0px;
   background: v.$background; 
 }

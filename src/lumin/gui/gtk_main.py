@@ -52,10 +52,7 @@ class MyApp(Gtk.Application):
 
         # Box containing text entry and submit button
         self.search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        self.search_box.set_margin_top(20)
-        self.search_box.set_margin_bottom(20)
-        self.search_box.set_margin_start(20)
-        self.search_box.set_margin_end(20)
+        self.search_box.add_css_class("search_box")
         self.lord_box.append(self.search_box)
 
         # Add search entry box
@@ -67,8 +64,8 @@ class MyApp(Gtk.Application):
 
         self.search_box.append(self.search_entry)
 
-        self.results_box = Gtk.Box()
-        self.lord_box.append(self.results_box)
+        self.result_box = Gtk.Box()
+        self.lord_box.append(self.result_box)
 
         # Set the layout into the window
         self.window.show()
@@ -87,11 +84,16 @@ class MyApp(Gtk.Application):
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
 
-    def update_results(self, new_results: Gtk.Box):
+    def update_results(self, new_results: Gtk.Box | None):
+        self.lord_box.remove(self.result_box)
+        self.result_box = new_results
 
-        self.lord_box.remove(self.results_box)
-        self.results_box = new_results
-        self.lord_box.append(self.results_box)
+        if new_results is None:
+            self.result_box = Gtk.Box()
+        else:
+            self.result_box.add_css_class("result_box")
+
+        self.lord_box.append(self.result_box)
 
 
 if __name__ == "__main__":
