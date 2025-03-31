@@ -18,12 +18,14 @@ make install
 # TODO
 ## For beta release
 
-- [ ] Support [rofi dmenu](https://github.com/davatorium/rofi/wiki/dmenu_specs)
+- [ ] Theming based on file name in config
 - [ ] App icons
-- [ ] Change UI style
+- [ ] Match style from figma
 - [ ] Fix lutris not working. (when running manually, it works only from $HOME)
 - [x] Configurable css
 
-## For later
-- [ ] Web searching (i.e !w car -> https://en.wikipedia.org/wiki/car)
 
+## For later
+- [ ] Support [rofi dmenu](https://github.com/davatorium/rofi/wiki/dmenu_specs)
+- [ ] Web searching (i.e !w car -> https://en.wikipedia.org/wiki/car)
+- [ ] Custom modules
