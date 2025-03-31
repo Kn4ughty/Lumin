@@ -20,13 +20,10 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 import_gtk_time = time.perf_counter()
 
 from lumin.gui.gtk_main import MyApp  # noqa
-import gi  # noqa: E402
-
-gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk  # noqa: E402
 
 log.info(f"Gui import time: {(time.perf_counter() - import_gtk_time) * 1000:.2f}ms")
 del import_gtk_time
+
 
 log.info(f"Mandatory imports: {(time.perf_counter() - start_time) * 1000:.2f}ms")
 
@@ -72,7 +69,7 @@ def on_search_text_changed(search_box):
         search = dictionary_search
         text = text[2:].strip()
 
-    if text[0] == "/":
+    if text[:1] == "/":
         from lumin.modules.calc.main import calc_func
 
         search = calc_func
