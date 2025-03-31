@@ -11,7 +11,7 @@ log.remove()
 log.add(sys.stderr, level="DEBUG")
 if not os.path.exists(Path("./logs/")):
     os.mkdir("logs")
-log.add("logs/{time}", level="INFO", rotation="1 day")
+log.add("logs/{time}", level="DEBUG", rotation="1 day")
 
 
 # Add the src/ directory to sys.path
@@ -96,8 +96,8 @@ def on_search_text_changed(search_box):
     search_thread.start()
 
 
+@log.catch
 def main():
-
     global app
     if "install" in sys.argv:
         return 0
