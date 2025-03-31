@@ -2,9 +2,9 @@ SHELL = /bin/bash
 MAIN_FILE_PATH = src/lumin/main.py
 
 ARCH := $(shell uname -m)
-PYTHON_VERSION := $(shell /bin/bash python3 -c 'import sys; \
+PYTHON_VERSION := $(shell python3 -c 'import sys; \
 				  print(f"{sys.version_info.major}{sys.version_info.minor}")')
-PYTHONPATH = ./build/lib.linux-$(ARCH)-cpython-$(PYTHON_VERSION)/
+PYTHONPATH := ./build/lib.linux-$(ARCH)-cpython-$(PYTHON_VERSION)/
 
 export PYTHONPATH
 
