@@ -1,8 +1,14 @@
+SHELL = /bin/bash
 MAIN_FILE_PATH = src/lumin/main.py
 
-# This is not portable.
-# I will fix it later
-PYTHONPATH=./build/lib.linux-aarch64-cpython-312/
+ARCH := $(shell uname -m)
+PYTHON_VERSION := $(shell /bin/bash python3 -c 'import sys; \
+				  print(f"{sys.version_info.major}{sys.version_info.minor}")')
+PYTHONPATH = ./build/lib.linux-$(ARCH)-cpython-$(PYTHON_VERSION)/
+
+export PYTHONPATH
+
+all: lint build_css build_calc run
 
 
 run:
@@ -11,15 +17,14 @@ run:
 run-debug:
 	G_MESSAGES_DEBUG=all GTK_DEBUG=interactive GTK_INSPECTOR_TOOL=all python3 $(MAIN_FILE_PATH)
 
-all: 
-	black src/
+build_css:
 	npm run css-build
+
+build_calc:
 	python setup.py build_ext --inplace
 
-	make run
-
-watch:
-	npm run css-watch
+lint:
+	black src/
 
 test:
 	pytest -s
@@ -28,12 +33,8 @@ clear-config:
 	rm ~/.config/lumin/config.toml
 
 install:
-	python -m venv .venv
-	source .venv/bin/activate
 	pip3 install -r requirements.txt
 	
-	# Build Calc
-	python setup.py build_ext --inplace
-
 	python -m wn download oewn:2024
-	# python3 $(MAIN_FILE_PATH) install
+
+	make build_calc
