@@ -3,6 +3,7 @@ from loguru import logger as log
 import time
 from typing import List
 import subprocess
+from pathlib import Path
 
 from . import linux_desktop_entry
 
@@ -46,12 +47,12 @@ def search(search_text: str) -> List[Result]:
     log.debug(f"Sorted result: {sorted_result[0:10]}")
 
     log.debug(
-        f"App Sorting time: {(
-            (time.perf_counter() - sorting_start_time) * 1000):.4f}ms"
+        f"App Sorting time: {((time.perf_counter() - sorting_start_time) * 1000):.4f}ms"
     )
     log.debug(
-        f"App list getting time: {(
-            (app_get_end_time - search_start_time) * 1000):.4f}ms"
+        f"App list getting time: {
+            ((app_get_end_time - search_start_time) * 1000):.4f
+        }ms"
     )
 
     list_create_time = time.perf_counter()
@@ -60,7 +61,12 @@ def search(search_text: str) -> List[Result]:
         def __init__(self, command):
             self.command = command
 
-            self.fn = lambda: subprocess.Popen(command, start_new_session=True)
+            self.fn = lambda: subprocess.Popen(
+                # command, start_new_session=True, cwd=Path("~").expanduser()
+                command,
+                start_new_session=True,
+                cwd="/home/d",
+            )
 
         def __call__(self, *argv):
             log.info(f"Command being run: {self.command}")
@@ -92,13 +98,13 @@ def search(search_text: str) -> List[Result]:
     result_element = result_module.result_list_to_gtkbox(result_list)
 
     log.debug(
-        f"Time to create gui elements: {(
-            (time.perf_counter() - list_create_time) * 1000):.4f}ms"
+        f"Time to create gui elements: {
+            ((time.perf_counter() - list_create_time) * 1000):.4f
+        }ms"
     )
 
     log.info(
-        f"App total time: {(
-            (time.perf_counter() - search_start_time) * 1000):.4f}ms"
+        f"App total time: {((time.perf_counter() - search_start_time) * 1000):.4f}ms"
     )
     return result_element
 

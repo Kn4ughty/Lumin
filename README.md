@@ -21,6 +21,7 @@ make install
 - [ ] Support [rofi dmenu](https://github.com/davatorium/rofi/wiki/dmenu_specs)
 - [ ] App icons
 - [ ] Change UI style
+- [ ] Fix lutris not working. (when running manually, it works only from $HOME)
 - [x] Configurable css
 
 ## For later
