@@ -23,5 +23,8 @@ cdef class PyCalculator:
         cdef MathStructure result 
         cdef string expression_cpp = expression.encode("utf-8")
         result = self.calc.calculate(expression_cpp)
-        result.format()
-        return result.print().decode("utf-8")
+        cdef PrintOptions options = PrintOptions()
+        options.interval_display = INTERVAL_DISPLAY_PLUSMINUS
+        options.use_unicode_signs = True
+        result.format(options)
+        return result.print(options).decode("utf-8")
