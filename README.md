@@ -21,7 +21,7 @@ make install
 - [ ] Support [rofi dmenu](https://github.com/davatorium/rofi/wiki/dmenu_specs)
 - [ ] App icons
 - [ ] Change UI style
-- [ ] Configurable css
+- [x] Configurable css
 
 ## For later
 - [ ] Web searching (i.e !w car -> https://en.wikipedia.org/wiki/car)

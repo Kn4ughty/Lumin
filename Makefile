@@ -9,7 +9,6 @@ run:
 	python3 $(MAIN_FILE_PATH)
 
 run-debug:
-	black src/
 	G_MESSAGES_DEBUG=all GTK_DEBUG=interactive GTK_INSPECTOR_TOOL=all python3 $(MAIN_FILE_PATH)
 
 all: 

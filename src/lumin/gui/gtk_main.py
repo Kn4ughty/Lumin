@@ -1,5 +1,8 @@
 from pathlib import Path
 from typing import Callable
+import os
+import lumin.globals as g
+from loguru import logger as log
 
 import gi
 
@@ -35,8 +38,11 @@ class MyApp(Gtk.Application):
         """
 
         # Load CSS
-        theme_path = Path(__file__).parent / "themes" / "dist" / "default.css"
-        self.load_css(theme_path)
+        default_theme_path = Path(__file__).parent / "themes" / "dist" / "default.css"
+        self.load_css(default_theme_path)
+        if os.path.exists(g.CSS_PATH):
+            log.info("Found external css")
+            self.load_css(g.CSS_PATH)
 
         # The woke parade said calling things master was bad
         # Contains the sub-elements, search_entry, and results

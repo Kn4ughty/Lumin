@@ -100,7 +100,10 @@ def on_search_text_changed(search_box):
 
 
 def main():
+
     global app
+    if "install" in sys.argv:
+        return 0
     log.info("Gui being initialised")
     app = MyApp(on_search_text_changed, on_search_activate)
     log.info(f"Time to gui: {(time.perf_counter() - start_time) * 1000:.2f}ms")
@@ -108,7 +111,4 @@ def main():
 
 
 if __name__ == "__main__":
-    if "install" in sys.argv:
-        pass
-
     main()
