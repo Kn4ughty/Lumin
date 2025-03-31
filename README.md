@@ -14,3 +14,15 @@ Then just run
 make install
 ```
 
+
+# TODO
+## For beta release
+
+- [ ] Support [rofi dmenu](https://github.com/davatorium/rofi/wiki/dmenu_specs)
+- [ ] App icons
+- [ ] Change UI style
+- [ ] Configurable css
+
+## For later
+- [ ] Web searching (i.e !w car -> https://en.wikipedia.org/wiki/car)
+
