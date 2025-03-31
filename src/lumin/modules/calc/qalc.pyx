@@ -19,12 +19,9 @@ cdef class PyCalculator:
     def load_local_definitions(self):
         self.calc.loadLocalDefinitions()
 
-    # def calculate(self, expression: str, timeout: int = 2000) -> str:
-    #     cdef string result = self.calc.calculateAndPrint(expression, timeout)
-    #     return result.encode("utf-8")
     def calculate(self, expression: str, timeout: int = 2000) -> str:
-        cdef string result 
+        cdef MathStructure result 
         cdef string expression_cpp = expression.encode("utf-8")
-        result = self.calc.calculateAndPrint(expression_cpp, timeout)
-        return result.decode("utf-8")
-
+        result = self.calc.calculate(expression_cpp)
+        result.format()
+        return result.print().decode("utf-8")

@@ -15,6 +15,8 @@ run-debug:
 all: 
 	black src/
 	npm run css-build
+	python setup.py build_ext --inplace
+
 	make run
 
 watch:

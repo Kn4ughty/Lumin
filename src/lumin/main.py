@@ -72,6 +72,12 @@ def on_search_text_changed(search_box):
         search = dictionary_search
         text = text[2:].strip()
 
+    if text[0] == "/":
+        from lumin.modules.calc.main import calc_func
+
+        search = calc_func
+        text = text[1:]
+
     # Create a new thread
     # This thread does the app search,
     # and then Glib updates the results on the main thread

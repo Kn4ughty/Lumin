@@ -7,3 +7,16 @@ cdef extern from "libqalculate/qalculate.h":
         void loadGlobalDefinitions()
         void loadLocalDefinitions()
         string calculateAndPrint(const string& expression, int timeout)
+        MathStructure calculate(const string& expression)
+
+    cdef cppclass MathStructure:
+        MathStructure()  # Constructor
+        double toDouble()
+        void format()
+        string print()
+
+    cdef cppclass EvaluationOptions:
+        EvaluationOptions()
+
+    cdef cppclass PrintOptions:
+        PrintOptions()

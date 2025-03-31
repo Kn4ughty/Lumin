@@ -47,7 +47,7 @@ class MyApp(Gtk.Application):
         # Box containing text entry and submit button
         self.search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         self.search_box.set_margin_top(20)
-        self.search_box.set_margin_bottom(0)
+        self.search_box.set_margin_bottom(20)
         self.search_box.set_margin_start(20)
         self.search_box.set_margin_end(20)
         self.lord_box.append(self.search_box)
