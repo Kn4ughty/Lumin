@@ -93,7 +93,9 @@ def on_search_text_changed(search_box):
     # and then Glib updates the results on the main thread
 
     def run_search():
+        search_start_time = time.perf_counter()
         result_box = search(text)
+        log.perf("search funciton time", search_start_time)
 
         if search_cancel_event.is_set():
             log.warning("Search thread cancled")

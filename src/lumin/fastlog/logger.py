@@ -46,3 +46,9 @@ def catch(func):
             print(f"Woah, error: {e}")
 
     return wrapper()
+
+
+def perf(description: str, start_time: float):
+    import time
+
+    info(f"{description}: {(time.perf_counter() - start_time) * 1000:.2f}ms")
