@@ -30,6 +30,30 @@ if not os.path.exists(MAIN_CONFIG_PATH):
     tomllib.dump(default_config, f)
     f.close()
 
-
 with open(MAIN_CONFIG_PATH, "rb") as f:
-    CONFIG = tomllib.load(f)
+    file_config = tomllib.load(f)
+
+joined_config = {}
+for key in default_config:
+    if file_config.get(key, None) is not None:
+        joined_config[key] = file_config.get(key)
+    else:
+        joined_config[key] = default_config.get(key)
+
+
+def str_to_bool(s: str) -> bool:
+    s = s.lower()
+
+    match s:
+        case "false":
+            return False
+
+        case "true":
+            return True
+        case _:
+            log.warning(f"Str to bool was given bad data. s: {s}")
+            return False
+
+
+THEME_FILE_LOCATION = joined_config["theme_file_location"]
+DESKTOP_ACTIONS_ENABLED = joined_config["desktop_actions_enabled"]

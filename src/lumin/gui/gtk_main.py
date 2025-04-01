@@ -41,9 +41,9 @@ class MyApp(Gtk.Application):
         # Load CSS
         default_theme_path = Path(__file__).parent / "themes" / "dist" / "default.css"
         self.load_css(default_theme_path)
-        if os.path.exists(g.CSS_PATH):
+        if os.path.exists(g.THEME_FILE_LOCATION):
             log.info("Found external css")
-            self.load_css(g.CSS_PATH)
+            self.load_css(g.THEME_FILE_LOCATION)
 
         # The woke parade said calling things master was bad
         # Contains the sub-elements, search_entry, and results
