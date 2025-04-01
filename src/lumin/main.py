@@ -3,6 +3,7 @@ import time
 start_time = time.perf_counter()
 from pathlib import Path  # noqa: E402
 import sys  # noqa: E402
+import threading
 
 fast_log_start = time.perf_counter()
 from fastlog import logger as log  # noqa: E402
@@ -30,18 +31,21 @@ del import_gtk_time
 
 log.info(f"Mandatory imports: {(time.perf_counter() - start_time) * 1000:.2f}ms")
 
+search_thread = None
+search_cancel_event = threading.Event()
+
 
 def on_search_activate(search_box):
     log.info("Search box activated")
 
 
 def on_search_text_changed(search_box):
+    global search_thread, search_cancel_event
     # Lazy loading is done here to improve startup time.
     # Without it, I end up dropping inputs
     # because I start typing before there is a gui
     search_start_import = time.perf_counter()
     from lumin.modules.app_launcher.main import search as app_search  # noqa
-    import threading  # noqa: E402
 
     log.info(
         f"app_search import time: {(time.perf_counter() - search_start_import) * 1000:.2f}ms"
@@ -54,6 +58,12 @@ def on_search_text_changed(search_box):
     )
 
     log.debug(f"Seach entry text changed. {search_box}.text = {search_box.get_text()}")
+
+    search_cancel_event.set()
+    if search_thread and search_thread.is_alive():
+        search_thread.join()
+
+    search_cancel_event = threading.Event()
 
     text: str = search_box.get_text()
 
@@ -84,6 +94,11 @@ def on_search_text_changed(search_box):
 
     def run_search():
         result_box = search(text)
+
+        if search_cancel_event.is_set():
+            log.warning("Search thread cancled")
+            return
+
         log.debug(f"Result received from search: {result_box}")
         from gi.repository import GLib  # noqa: E402
 
