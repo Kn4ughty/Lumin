@@ -1,5 +1,5 @@
 import platform
-from loguru import logger as log
+from fastlog import logger as log
 import time
 from typing import List
 import subprocess

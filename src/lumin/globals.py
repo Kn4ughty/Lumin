@@ -1,7 +1,7 @@
 from pathlib import Path
 import tomllib
 import os
-from loguru import logger as log
+from fastlog import logger as log
 
 APP_NAME = "Lumin"
 CONFIG_DIR = Path(f"~/.config/{APP_NAME.lower()}/").expanduser()

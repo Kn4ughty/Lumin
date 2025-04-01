@@ -1,4 +1,4 @@
-from loguru import logger as log
+from fastlog import logger as log
 import time
 
 # import lumin.globals as g

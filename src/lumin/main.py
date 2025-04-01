@@ -4,15 +4,18 @@ start_time = time.perf_counter()
 from pathlib import Path  # noqa: E402
 import os  # noqa: E402
 import sys  # noqa: E402
-from loguru import logger as log  # noqa: E402
 
+fast_log_start = time.perf_counter()
+from fastlog import logger as log  # noqa: E402
+print(f"fastlogtime: {(time.perf_counter() - fast_log_start) * 1000:.2f}ms")
 
-log.remove()
-log.add(sys.stderr, level="DEBUG")
-if not os.path.exists(Path("./logs/")):
-    os.mkdir("logs")
-log.add("logs/{time}", level="DEBUG", rotation="1 day")
-
+#
+# log.remove()
+# log.add(sys.stderr, level="DEBUG")
+# if not os.path.exists(Path("./logs/")):
+#     os.mkdir("logs")
+# log.add("logs/{time}", level="DEBUG", rotation="1 day")
+#
 
 # Add the src/ directory to sys.path
 sys.path.append(str(Path(__file__).resolve().parent.parent))

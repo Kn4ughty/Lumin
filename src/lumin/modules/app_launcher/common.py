@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import List
-from loguru import logger as log
+from fastlog import logger as log
 import os
 
 

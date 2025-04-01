@@ -3,7 +3,7 @@ from typing import Callable
 import os
 import lumin.globals as g
 from lumin.models import result
-from loguru import logger as log
+from fastlog import logger as log
 
 import gi
 

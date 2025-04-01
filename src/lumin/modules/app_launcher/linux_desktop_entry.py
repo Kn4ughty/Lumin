@@ -3,7 +3,7 @@ import time
 import functools
 import shlex
 
-from loguru import logger as log
+from fastlog import logger as log
 
 
 from .models import DesktopApp
