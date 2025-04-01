@@ -61,7 +61,7 @@ def result_list_to_gtkbox(result_list: List[Result]) -> Gtk.Box():
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         name_label = Gtk.Label(label=item.display_str)
         if item.icon is not None:
-            box.append(item.icon)
+            box.append(Gtk.Image.new_from_gicon(item.icon))
         box.append(name_label)
         if item.generic_name != "":
             generic_name_label = Gtk.Label(label=f"({item.generic_name})")

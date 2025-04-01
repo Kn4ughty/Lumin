@@ -1,9 +1,11 @@
-import platform
-
-# from fastlog import logger as log
+import os
+import time
+from typing import Callable
+import subprocess
 
 from lumin.models.result import Result
 import lumin.models.result as result_module
+from lumin.fastlog import logger as log
 
 import gi
 
@@ -11,24 +13,35 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Gio", "2.0")
 from gi.repository import Gtk, Gio  # noqa: E402
 
-OS = platform.system()
+
+apps = Gio.AppInfo.get_all()
+
+
+class Run:
+    def __init__(self, main: Callable):
+        self.main = main
+
+    def __call__(self):
+        env = os.environ.copy()
+        env.pop("VIRTUAL_ENV", None)
+        env["PATH"] = "/usr/bin:" + env["PATH"]
+        launch_context = Gio.AppLaunchContext()
+        launch_context.setenv("PATH", env["PATH"])
+        self.main(context=launch_context)
 
 
 def search(search_text: str) -> Gtk.Box:
-    apps = Gio.AppInfo.get_all()
-    result_list = []
-    for app_info in apps:
+    global apps
+    start_time = time.perf_counter()
 
+    result_list = []
+
+    for app_info in apps:
         display_name = app_info.get_display_name()
 
-        # no () because we want to keep it callable
-        exec = app_info.launch
+        exec = Run(app_info.launch)
 
         icon = app_info.get_icon()
-        if icon is not None:
-            icon_image = Gtk.Image.new_from_gicon(icon)
-        else:
-            icon_image = None
 
         if (generic_name := app_info.get_generic_name()) is None:
             generic_name = ""
@@ -36,7 +49,7 @@ def search(search_text: str) -> Gtk.Box:
         result_list.append(
             Result(
                 display_str=display_name,
-                icon=icon_image,
+                icon=icon,
                 open_action=exec,
                 generic_name=generic_name,
             )
@@ -55,7 +68,9 @@ def search(search_text: str) -> Gtk.Box:
 
     sorted_result = sorted(result_list, reverse=True, key=s)
 
-    return result_module.result_list_to_gtkbox(sorted_result)
+    result_box = result_module.result_list_to_gtkbox(sorted_result)
+    log.perf("Time to search for app", start_time)
+    return result_box
 
 
 # Thank you https://www.geeksforgeeks.org/longest-common-substring-dp-29/
