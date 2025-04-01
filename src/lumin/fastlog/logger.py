@@ -3,10 +3,10 @@ from enum import Enum
 
 class log_level(Enum):
     DEBUG = "\033[1;34mDEBUG\033[0m"
-    INFO = "\033[1;34mINFO\033[0m"
-    WARNING = 3
-    ERROR = 4
-    CRITICAL = 5
+    INFO = "INFO\033[0m"
+    WARNING = "\033[1;33mWARNING\033[0m"
+    ERROR = "\033[0mERROR\033[0m"
+    CRITICAL = "\033[0m\033[0mCRITICAL\033[0m"
 
 
 DEFAULT_LOG_LEVEL = log_level.INFO
