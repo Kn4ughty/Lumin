@@ -55,5 +55,5 @@ def str_to_bool(s: str) -> bool:
             return False
 
 
-THEME_FILE_LOCATION = joined_config["theme_file_location"]
+THEME_FILE_LOCATION = Path(joined_config["theme_file_location"]).expanduser()
 DESKTOP_ACTIONS_ENABLED = joined_config["desktop_actions_enabled"]
