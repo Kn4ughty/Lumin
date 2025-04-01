@@ -18,8 +18,8 @@ make install
 # TODO
 ## For beta release
 
-- [ ] Theming based on file name in config
-- [ ] App icons
+- [x] App icons
+- [x] Theming based on file name in config
 - [ ] Match style from figma
 - [ ] Fix lutris not working. (when running manually, it works only from $HOME)
 - [x] Configurable css

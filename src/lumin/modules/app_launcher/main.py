@@ -1,112 +1,61 @@
 import platform
-from fastlog import logger as log
-import time
-from typing import List
-import subprocess
-from pathlib import Path
 
-from . import linux_desktop_entry
-
+# from fastlog import logger as log
 
 from lumin.models.result import Result
 import lumin.models.result as result_module
 
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gio", "2.0")
+from gi.repository import Gtk, Gio  # noqa: E402
+
 OS = platform.system()
 
 
-def search(search_text: str) -> List[Result]:
-    search_start_time = time.perf_counter()
+def search(search_text: str) -> Gtk.Box:
+    apps = Gio.AppInfo.get_all()
+    result_list = []
+    for app_info in apps:
 
-    search_text = search_text.lower()
+        display_name = app_info.get_display_name()
 
-    match OS:
-        case "darwin":
-            apps = []
-            pass
-        case "Linux":
-            apps = linux_desktop_entry.get_all_desktop_apps()
-        case _:
-            raise SystemError
+        # no () because we want to keep it callable
+        exec = app_info.launch
 
-    app_get_end_time = time.perf_counter()
+        icon = app_info.get_icon()
+        if icon is not None:
+            icon_image = Gtk.Image.new_from_gicon(icon)
+        else:
+            icon_image = None
 
-    sorting_start_time = time.perf_counter()
+        if (generic_name := app_info.get_generic_name()) is None:
+            generic_name = ""
 
-    def s(app) -> int:
+        result_list.append(
+            Result(
+                display_str=display_name,
+                icon=icon_image,
+                open_action=exec,
+                generic_name=generic_name,
+            )
+        )
+
+    def s(result: Result) -> int:
         score = 0
 
-        score += longestCommonSubstr(search_text, app.name.lower())
+        score += longestCommonSubstr(search_text, result.display_str.lower())
+        score += longestCommonSubstr(search_text, result.generic_name.lower())
 
-        if search_text[0] == app.name.lower()[0]:
+        if search_text[0] == result.display_str.lower()[0]:
             score += 2
 
         return score
 
-    sorted_result = sorted(apps, reverse=True, key=s)
+    sorted_result = sorted(result_list, reverse=True, key=s)
 
-    log.debug(f"Sorted result: {sorted_result[0:10]}")
-
-    log.debug(
-        f"App Sorting time: {((time.perf_counter() - sorting_start_time) * 1000):.4f}ms"
-    )
-    log.debug(
-        f"App list getting time: {
-            ((app_get_end_time - search_start_time) * 1000):.4f
-        }ms"
-    )
-
-    list_create_time = time.perf_counter()
-
-    class Run:
-        def __init__(self, command):
-            self.command = command
-
-            self.fn = lambda: subprocess.Popen(
-                # command, start_new_session=True, cwd=Path("~").expanduser()
-                command,
-                start_new_session=True,
-                cwd="/home/d",
-            )
-
-        def __call__(self, *argv):
-            log.info(f"Command being run: {self.command}")
-            self.fn()
-            exit(0)
-
-    apps = []
-
-    for app in sorted_result:
-        # I tried using a def here to create the function,
-        # but it seemed to get overridden with the last value
-        # def a(thing): return print(result.cmd_to_execute, thing)
-        # It also didnt work with lambda, even if it was created in the append
-
-        # So instead I need to do this rubbish instead.
-        # I wish I was using a language with proper scoping rules
-
-        apps.append(Result(app.name, None, Run(app.cmd_to_execute)))
-
-    result_list = []
-
-    # Maybe 100 is too many?
-    # It can be anything since its scrollable now.
-    # Creating all the extra ui elements only seems to take an
-    # extra 2ms from 10 to 100 elements long
-    for i in range(min(10, len(apps))):
-        result_list.append(apps[i])
-
-    result_element = result_module.result_list_to_gtkbox(result_list)
-
-    log.debug(
-        f"Time to create gui elements: {
-            ((time.perf_counter() - list_create_time) * 1000):.4f
-        }ms"
-    )
-
-    log.info(
-        f"App total time: {((time.perf_counter() - search_start_time) * 1000):.4f}ms"
-    )
-    return result_element
+    return result_module.result_list_to_gtkbox(sorted_result)
 
 
 # Thank you https://www.geeksforgeeks.org/longest-common-substring-dp-29/

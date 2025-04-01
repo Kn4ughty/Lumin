@@ -1,5 +1,5 @@
-from typing import Callable, List
-from dataclasses import dataclass
+from typing import Callable, List, Optional
+from dataclasses import dataclass, field
 import logging as log
 
 import gi
@@ -19,8 +19,10 @@ search_activate_signal = None
 @dataclass(frozen=True)
 class Result:
     display_str: str
-    icon: None | Gtk.Image
     open_action: Callable
+    icon: Optional[Gtk.Image] = None
+    keywords: List[str] = field(default_factory=list)
+    generic_name: str = ""
 
 
 def result_list_to_gtkbox(result_list: List[Result]) -> Gtk.Box():
@@ -57,8 +59,15 @@ def result_list_to_gtkbox(result_list: List[Result]) -> Gtk.Box():
         item = result_list[i]
         row = Gtk.ListBoxRow()
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        label = Gtk.Label(label=item.display_str)
-        box.append(label)
+        name_label = Gtk.Label(label=item.display_str)
+        if item.icon is not None:
+            box.append(item.icon)
+        box.append(name_label)
+        if item.generic_name != "":
+            generic_name_label = Gtk.Label(label=f"({item.generic_name})")
+            generic_name_label.add_css_class("subtitle")
+            box.append(generic_name_label)
+
         row.set_child(box)
 
         row.activate_callback = item.open_action

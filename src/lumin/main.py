@@ -2,11 +2,11 @@ import time
 
 start_time = time.perf_counter()
 from pathlib import Path  # noqa: E402
-import os  # noqa: E402
 import sys  # noqa: E402
 
 fast_log_start = time.perf_counter()
 from fastlog import logger as log  # noqa: E402
+
 print(f"fastlogtime: {(time.perf_counter() - fast_log_start) * 1000:.2f}ms")
 
 #

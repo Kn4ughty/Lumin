@@ -80,4 +80,7 @@ separator {
   background: v.$background; 
 }
 
-
+.subtitle {
+  color: v.$sub-text;
+  font-style: italic;
+}
