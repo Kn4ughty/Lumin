@@ -57,6 +57,7 @@ for app_info in apps:
 def search(search_text: str) -> Gtk.Box:
     global apps, result_list
     start_time = time.perf_counter()
+    search_text = search_text.lower()
 
     def s(result: Result) -> int:
         score = 0
