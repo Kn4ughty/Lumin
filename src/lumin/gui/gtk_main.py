@@ -87,6 +87,8 @@ class MyApp(Gtk.Application):
 
     def update_results(self, new_results: Gtk.Box | None):
         self.lord_box.remove(self.result_box)
+        self.result_box.unrealize()
+        self.result_box.run_dispose()
         self.result_box = new_results
 
         if new_results is None:
