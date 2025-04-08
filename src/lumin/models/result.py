@@ -1,6 +1,7 @@
 from typing import Callable, List, Optional
 from dataclasses import dataclass, field
 import logging as log
+import globals as g
 
 import gi
 
@@ -59,14 +60,19 @@ def result_list_to_gtkbox(result_list: List[Result]) -> Gtk.Box():
         item = result_list[i]
         row = Gtk.ListBoxRow()
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        name_label = Gtk.Label(label=item.display_str)
+
         if item.icon is not None:
             box.append(Gtk.Image.new_from_gicon(item.icon))
+
+        name_label = Gtk.Label(label=item.display_str)
         box.append(name_label)
+        row.name = item.display_str
+
         if item.generic_name != "":
             generic_name_label = Gtk.Label(label=f"({item.generic_name})")
             generic_name_label.add_css_class("subtitle")
             box.append(generic_name_label)
+            row.generic_name = item.generic_name
 
         row.set_child(box)
 
@@ -75,9 +81,64 @@ def result_list_to_gtkbox(result_list: List[Result]) -> Gtk.Box():
         listbox.append(row)
 
     listbox.connect("row-activated", activate_result)  # Arrow + Enter handling
+    listbox.set_sort_func(s, "user data")
     scroll = Gtk.ScrolledWindow()
     scroll.set_vexpand(True)
     scroll.set_child(listbox)
     main_box.append(scroll)
 
-    return main_box
+    def invalidate():
+        listbox.invalidate_sort()
+
+    return main_box, invalidate
+
+
+def s(listboxrow1, listboxrow2, user_input) -> int:
+    # input_text = "firefox"
+    input_text = g.awful_input_global
+    input_text = input_text.lower()
+    # print(input_text)
+
+    # Maybe cache score of listboxes?
+
+    score1 = 0
+    score2 = 0
+
+    name1 = listboxrow1.name
+    name2 = listboxrow2.name
+
+    score1 += longestCommonSubstr(name1, input_text)
+    score2 += longestCommonSubstr(name2, input_text)
+    # score += longestCommonSubstr(search_text, result.generic_name.lower())
+
+    # if search_text[0] == result.display_str.lower()[0]:
+    #     score += 2
+
+    return score2 - score1
+
+
+# Thank you https://www.geeksforgeeks.org/longest-common-substring-dp-29/
+
+
+def longestCommonSubstr(s1, s2) -> int:
+    m = len(s1)
+    n = len(s2)
+
+    # Create a 1D array to store the previous row's results
+    prev = [0] * (n + 1)
+
+    res = 0
+    for i in range(1, m + 1):
+        # Create a temporary array to store the current row
+        curr = [0] * (n + 1)
+        for j in range(1, n + 1):
+            if s1[i - 1] == s2[j - 1]:
+                curr[j] = prev[j - 1] + 1
+                res = max(res, curr[j])
+            else:
+                curr[j] = 0
+
+        # Move the current row's data to the previous row
+        prev = curr
+
+    return res
