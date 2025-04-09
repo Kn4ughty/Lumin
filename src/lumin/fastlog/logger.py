@@ -51,4 +51,4 @@ def catch(func):
 def perf(description: str, start_time: float):
     import time
 
-    info(f"{description}: {(time.perf_counter() - start_time) * 1000:.2f}ms")
+    info(f"{description}: {(time.perf_counter() - start_time) * 1000:.3f}ms")
