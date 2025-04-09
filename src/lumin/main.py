@@ -98,7 +98,6 @@ def on_search_text_changed(search_box):
     GLib.idle_add(run_search)
 
 
-@log.catch
 def main():
     global app
     if "install" in sys.argv:

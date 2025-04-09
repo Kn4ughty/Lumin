@@ -38,16 +38,6 @@ def critical(text):
     _print(log_level.CRITICAL, text)
 
 
-def catch(func):
-    def wrapper():
-        try:
-            func()
-        except error as e:  # noqa: E772
-            print(f"Woah, error: {e}")
-
-    return wrapper()
-
-
 def perf(description: str, start_time: float):
     import time
 
