@@ -3,7 +3,7 @@ from setuptools import setup
 from Cython.Build import cythonize
 from setuptools.extension import Extension
 
-extensions = [
+qalc_extensions = [
     Extension(
         "qalc",
         ["src/lumin/modules/calc/qalc.pyx"],
@@ -17,5 +17,14 @@ extensions = [
 
 setup(
     name="qalc",
-    ext_modules=cythonize(extensions),
+    ext_modules=cythonize(qalc_extensions),
+)
+
+
+setup(
+    name="sort",
+    ext_modules=cythonize(Extension(
+        "sort",
+        ["src/lumin/models/sort.pyx"]
+    ))
 )

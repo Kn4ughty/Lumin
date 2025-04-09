@@ -83,11 +83,8 @@ def on_search_text_changed(search_box):
                 in_app_search = True
             else:
                 invalidate_callback()
-            # app.result_box.
             log.perf("App_search time", search_start_time)
             return False
-
-        # def a(sort_func: Callable[[ListBoxRow, ListBoxRow, Any], int] | None = None, user_data: Any = None)
 
         search_func_time = time.perf_counter()
         result_box = search(text)

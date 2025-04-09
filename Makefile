@@ -8,7 +8,7 @@ PYTHONPATH := ./build/lib.linux-$(ARCH)-cpython-$(PYTHON_VERSION)/
 
 export PYTHONPATH
 
-all: lint build_css build_calc run
+all: lint build_css build_cython run
 
 
 run:
@@ -20,7 +20,7 @@ run-debug:
 build_css:
 	npm run css-build
 
-build_calc:
+build_cython:
 	python setup.py build_ext --inplace
 
 lint:
