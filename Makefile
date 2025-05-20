@@ -1,4 +1,4 @@
-SHELL = /bin/bash
+SHELL = bash
 MAIN_FILE_PATH = src/lumin/main.py
 
 ARCH := $(shell uname -m)
