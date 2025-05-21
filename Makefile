@@ -33,8 +33,10 @@ clear-config:
 	rm ~/.config/lumin/config.toml
 
 install:
+	python3 -m venv .venv
 	pip3 install -r requirements.txt
 	
 	python -m wn download oewn:2024
 
-	make build_calc
+	make build_cython
+	npm install sass
