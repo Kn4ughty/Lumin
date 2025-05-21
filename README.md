@@ -6,6 +6,19 @@ Written with gtk and python.
 # Installation
 Python, (probbaly gtk-devel?)
 
+## Requirements
+```
+libqalculate
+python
+cmake
+gobject-introspection
+gtk4
+```
+## Additional requirements for wayland users:
+```
+gtk4-layer-shell
+```
+
 You will need libqalculate-devel for the calculator module.
 It might be named differently based on your package manager.
 
