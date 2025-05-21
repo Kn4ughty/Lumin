@@ -1,6 +1,9 @@
 from pathlib import Path
+import shlex
+import subprocess
 import tomllib
 import os
+import sys
 from lumin.fastlog import logger as log
 
 APP_NAME = "Lumin"
@@ -57,5 +60,17 @@ def str_to_bool(s: str) -> bool:
 
 THEME_FILE_LOCATION = Path(joined_config["theme_file_location"]).expanduser()
 DESKTOP_ACTIONS_ENABLED = joined_config["desktop_actions_enabled"]
+
+PLATFORM_OS = sys.platform
+IS_WAYLAND = False
+if PLATFORM_OS == "linux":
+    # Thanks stackoverflow
+    # https://unix.stackexchange.com/questions/202891/how-to-know-whether-wayland-or-x11-is-being-used
+    command = "bash -c \"loginctl show-session $(awk '/tty/ {print $1}' <(loginctl)) -p Type | awk -F= '{print $2}'\""
+
+    output = subprocess.check_output(shlex.split(command)).decode("utf-8").strip()
+    if output == "wayland":
+        IS_WAYLAND = True
+
 
 awful_input_global = ""

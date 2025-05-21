@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Callable
 import os
+import sys
 import lumin.globals as g
 from lumin.models import result
 from fastlog import logger as log
@@ -10,6 +11,10 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 from gi.repository import Gtk, Gdk  # noqa: E402
+
+if g.IS_WAYLAND:
+    gi.require_version("Gtk4LayerShell", "1.0")
+    from gi.repository import Gtk4LayerShell as LayerShell
 
 
 class MyApp(Gtk.Application):
@@ -21,10 +26,15 @@ class MyApp(Gtk.Application):
     def do_activate(self):
         # Create application window
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("GTK4 Example App")
+        self.window.set_title(f"{g.APP_NAME}")
         self.window.set_default_size(800, 400)
         self.window.set_decorated(False)  # Disable window decorations
         self.window.set_resizable(False)  # Disable resizing
+
+        if g.IS_WAYLAND:
+            LayerShell.init_for_window(self.window)
+            LayerShell.set_layer(self.window, LayerShell.Layer.OVERLAY)
+            LayerShell.set_keyboard_mode(self.window, LayerShell.KeyboardMode.EXCLUSIVE)
 
         """ Overview of the widget heirarchy
         ________________________lord box_______________________
@@ -68,8 +78,19 @@ class MyApp(Gtk.Application):
         self.result_box = Gtk.Box()
         self.lord_box.append(self.result_box)
 
+        # self.window.connect()
+        keycont = Gtk.EventControllerKey()
+        keycont.connect("key-pressed", self.check_escape, self.window)
+        self.window.add_controller(keycont)
+
         # Set the layout into the window
         self.window.show()
+
+    def check_escape(self, keyval, keycode, state, user_data, win):
+        # Idk where this is defined by this is the keycode i get
+        ESCAPE_KEY = 65307
+        if keycode == ESCAPE_KEY:
+            self.window.close()
 
     def load_css(self, css_path):
         if not css_path.exists():

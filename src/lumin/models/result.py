@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 # import logging as log
 from fastlog import logger as log
 import globals as g
-import time
 
 # from sort import longestCommonSubstr as longestCommonSubstr
 from sort import stupidfunc as stupidfunc
@@ -105,4 +104,3 @@ def s(listboxrow1, listboxrow2, user_input) -> int:
     n = stupidfunc(name1, name2, input_text)
 
     return n
-
