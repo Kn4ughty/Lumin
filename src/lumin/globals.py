@@ -18,7 +18,7 @@ DATA_DIR = Path(f"~/.local/share/{APP_NAME.lower()}/").expanduser()
 if not os.path.exists(DATA_DIR):
     os.mkdir(DATA_DIR)
 
-# TODO. Potentially load this from a file. default_config.toml or smth
+# Potentially load this from a file. default_config.toml or smth
 default_config = {
     "theme_file_location": "~/.config/lumin/index.css",
     "desktop_actions_enabled": False,
@@ -45,12 +45,9 @@ for key in default_config:
 
 
 def str_to_bool(s: str) -> bool:
-    s = s.lower()
-
-    match s:
+    match s.lower():
         case "false":
             return False
-
         case "true":
             return True
         case _:

@@ -14,6 +14,7 @@ print(f"fastlogtime: {(time.perf_counter() - fast_log_start) * 1000:.2f}ms")
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import globals as g  # noqa: E402
 
+
 import_gtk_time = time.perf_counter()
 
 # Use the wayland gtk Layer shell to make window overlay if on wayland
