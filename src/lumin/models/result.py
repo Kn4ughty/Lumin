@@ -98,8 +98,8 @@ def s(listboxrow1, listboxrow2, user_input) -> int:
     input_text = g.awful_input_global
     input_text = input_text.lower()
 
-    name1 = listboxrow1.name
-    name2 = listboxrow2.name
+    name1 = listboxrow1.name.lower()
+    name2 = listboxrow2.name.lower()
 
     n = stupidfunc(name1, name2, input_text)
 
