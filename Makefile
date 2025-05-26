@@ -34,9 +34,13 @@ clear-config:
 
 install:
 	python3 -m venv .venv
+	source .venv/bin/activate
 	pip3 install -r requirements.txt
 	
 	python -m wn download oewn:2024
 
 	make build_cython
 	npm install sass
+
+	make build_css
+	make build_cython
