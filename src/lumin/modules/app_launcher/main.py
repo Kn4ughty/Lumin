@@ -17,44 +17,51 @@ apps = Gio.AppInfo.get_all()
 
 
 class Run:
-    def __init__(self, main: Callable):
-        self.main = main
+    def __init__(self, main: Callable, app_name: str | None = None):
+        self.callable = main
+        self.app_name = app_name
 
     def __call__(self, *args):
+
+        log.info(f"app being opened:{self.app_name}, callable: {self.callable}")
         env = os.environ.copy()
         env.pop("VIRTUAL_ENV", None)
         env["PATH"] = "/usr/bin:" + env["PATH"]
         launch_context = Gio.AppLaunchContext()
         launch_context.setenv("PATH", env["PATH"])
-        self.main(context=launch_context)
+        self.callable(context=launch_context)
+
+        # TODO Log Search frequency
+
         exit()
 
 
 result_list = []
 
 
-for app_info in apps:
-    display_name = app_info.get_display_name()
-
-    exec = Run(app_info.launch)
-
-    icon = app_info.get_icon()
-
-    if (generic_name := app_info.get_generic_name()) is None:
-        generic_name = ""
-
-    result_list.append(
-        Result(
-            display_str=display_name,
-            icon=icon,
-            open_action=exec,
-            generic_name=generic_name,
-        )
-    )
-
-
 def search() -> Gtk.Box:
-    global apps, result_list
+    global result_list
+
+    if len(result_list) == 0:
+        for app_info in apps:
+            display_name = app_info.get_display_name()
+
+            exec = Run(app_info.launch, display_name)
+
+            icon = app_info.get_icon()
+
+            if (generic_name := app_info.get_generic_name()) is None:
+                generic_name = ""
+
+            result_list.append(
+                Result(
+                    display_str=display_name,
+                    icon=icon,
+                    open_action=exec,
+                    generic_name=generic_name,
+                )
+            )
+
     start_time = time.perf_counter()
 
     result_box, invalidate = result_module.result_list_to_gtkbox(result_list)

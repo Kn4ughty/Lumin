@@ -33,9 +33,12 @@ make install
 
 - [x] App icons
 - [x] Theming based on file name in config
-- [ ] Match style from figma
-- [ ] Fix lutris not working. (when running manually, it works only from $HOME)
 - [x] Configurable css
+- [ ] Configurable settings
+    - [ ] Option to limit length of results
+    - [ ] Configurable module prefixes
+- [ ] Do the ugly workaround for only pressing enter to run
+- [ ] Code cleanup (rename things, remove old code comments etc.)
 
 
 ## For later

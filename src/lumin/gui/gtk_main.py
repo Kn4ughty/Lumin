@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Callable
 import os
-import sys
 import lumin.globals as g
 from lumin.models import result
 from fastlog import logger as log
@@ -87,7 +86,7 @@ class MyApp(Gtk.Application):
         self.window.show()
 
     def check_escape(self, keyval, keycode, state, user_data, win):
-        # Idk where this is defined by this is the keycode i get
+        # Idk where this is defined but this is the keycode i get
         ESCAPE_KEY = 65307
         if keycode == ESCAPE_KEY:
             self.window.close()

@@ -6,11 +6,15 @@ import os
 import sys
 from lumin.fastlog import logger as log
 
+# TODO. This needs serious cleanup
+
 APP_NAME = "Lumin"
 CONFIG_DIR = Path(f"~/.config/{APP_NAME.lower()}/").expanduser()
 
 MAIN_CONFIG_NAME = "config.toml"
 MAIN_CONFIG_PATH = CONFIG_DIR.joinpath(MAIN_CONFIG_NAME)
+
+SEARCH_DATA_LOG_FILE = CONFIG_DIR.joinpath("search_data.csv")
 
 CSS_PATH = CONFIG_DIR.joinpath("index.css")
 
@@ -22,6 +26,7 @@ if not os.path.exists(DATA_DIR):
 default_config = {
     "theme_file_location": "~/.config/lumin/index.css",
     "desktop_actions_enabled": False,
+    "search_logging_enabled": True,
 }
 
 if not os.path.exists(CONFIG_DIR):
@@ -36,13 +41,6 @@ if not os.path.exists(MAIN_CONFIG_PATH):
 with open(MAIN_CONFIG_PATH, "rb") as f:
     file_config = tomllib.load(f)
 
-joined_config = {}
-for key in default_config:
-    if file_config.get(key, None) is not None:
-        joined_config[key] = file_config.get(key)
-    else:
-        joined_config[key] = default_config.get(key)
-
 
 def str_to_bool(s: str) -> bool:
     match s.lower():
@@ -51,12 +49,26 @@ def str_to_bool(s: str) -> bool:
         case "true":
             return True
         case _:
-            log.warning(f"Str to bool was given bad data. s: {s}")
-            return False
+            return None
 
 
-THEME_FILE_LOCATION = Path(joined_config["theme_file_location"]).expanduser()
-DESKTOP_ACTIONS_ENABLED = joined_config["desktop_actions_enabled"]
+joined_config = {}
+for key in default_config:
+    if file_config.get(key, None) is not None:
+        raw_value = file_config.get(key)
+
+        value = str_to_bool(
+            raw_value if str_to_bool(raw_value) is None else str_to_bool(raw_value)
+        )
+
+        joined_config[key] = value
+    else:
+        joined_config[key] = default_config.get(key)
+
+
+THEME_FILE_LOCATION: Path = Path(joined_config["theme_file_location"]).expanduser()
+DESKTOP_ACTIONS_ENABLED: bool = joined_config["desktop_actions_enabled"]
+SEARCH_LOGGING_ENABLED: bool = joined_config["search_logging_enabled"]
 
 PLATFORM_OS = sys.platform
 IS_WAYLAND = False
@@ -69,5 +81,5 @@ if PLATFORM_OS == "linux":
     if output == "wayland":
         IS_WAYLAND = True
 
-
-awful_input_global = ""
+log.info("ermmm what")
+search_input_global = ""

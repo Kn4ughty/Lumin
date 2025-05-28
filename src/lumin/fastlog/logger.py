@@ -42,3 +42,10 @@ def perf(description: str, start_time: float):
     import time
 
     info(f"{description}: {(time.perf_counter() - start_time) * 1000:.3f}ms")
+
+
+def how_did_i_get_here():
+    import traceback
+
+    summary = traceback.StackSummary.extract(traceback.walk_stack(None))
+    print("".join(summary.format()))

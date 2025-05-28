@@ -95,7 +95,7 @@ def result_list_to_gtkbox(result_list: List[Result]) -> Gtk.Box():
 
 
 def s(listboxrow1, listboxrow2, user_input) -> int:
-    input_text = g.awful_input_global
+    input_text = g.search_input_global
     input_text = input_text.lower()
 
     name1 = listboxrow1.name.lower()

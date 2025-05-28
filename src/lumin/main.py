@@ -55,6 +55,7 @@ def on_search_text_changed(search_box):
     log.perf("app_search import time", search_start_import)
 
     text: str = search_box.get_text()
+    g.search_input_global = text
     log.debug(f"Seach entry text changed. {search_box}.text = {text}")
 
     search = app_search
@@ -80,7 +81,9 @@ def on_search_text_changed(search_box):
         if search == app_search:
             # To prevent memory leaks, dont redo the search.
             # Otherwise creating all the new icons and such every update creates crashes
-            g.awful_input_global = text
+            g.search_input_global = text
+            log.info(f"search_text = {text}")
+            log.info(f"search_input_global = {g.search_input_global}")
             if not in_app_search:
                 # was not in app search last time.
                 # Need to get new results
