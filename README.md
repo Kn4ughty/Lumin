@@ -1,14 +1,20 @@
-Spotlight search for linux
+# Spotlight search for linux
 
-Written with gtk and python. 
-
+For people who want dynamic searching using prefixes
+## Current modules
+- App searching
+- Calculator (start search with `/`)
+- Dictionary (start search with `!d`)
 
 # Installation
-Python, (probbaly gtk-devel?)
 
 ## Requirements
+
+Please note that this list is not exhaustive.
+You might need more, just pay attention to the output of pip as its installing.
+
 ```
-libqalculate
+libqalculate-devel
 python
 cmake
 gobject-introspection
@@ -19,10 +25,8 @@ gtk4
 gtk4-layer-shell
 ```
 
-You will need libqalculate-devel for the calculator module.
-It might be named differently based on your package manager.
+## Final step
 
-Then just run
 ```sh
 make install
 ```
@@ -37,11 +41,13 @@ make install
 - [ ] Configurable settings
     - [ ] Option to limit length of results
     - [ ] Configurable module prefixes
+    - [ ] gtk4-layer-shell toggle
 - [ ] Do the ugly workaround for only pressing enter to run
 - [ ] Code cleanup (rename things, remove old code comments etc.)
+- [ ] Copy result of math module to clipbard
 
 
 ## For later
 - [ ] Support [rofi dmenu](https://github.com/davatorium/rofi/wiki/dmenu_specs)
 - [ ] Web searching (i.e !w car -> https://en.wikipedia.org/wiki/car)
-- [ ] Custom modules
+- [ ] Probably do an entire re-write of the program in a better language.
