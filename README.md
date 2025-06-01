@@ -35,7 +35,6 @@ make install
 - [x] Theming based on file name in config
 - [x] Configurable css
 - [ ] Configurable settings
-    - [ ] Option to limit length of results
     - [ ] Configurable module prefixes
 - [ ] Do the ugly workaround for only pressing enter to run
 - [ ] Code cleanup (rename things, remove old code comments etc.)
