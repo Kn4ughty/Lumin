@@ -60,13 +60,7 @@ def str_to_bool(s: str) -> bool:
 joined_config = {}
 for key in default_config:
     if file_config.get(key, None) is not None:
-        raw_value = file_config.get(key)
-
-        value = str_to_bool(
-            raw_value if str_to_bool(raw_value) is None else str_to_bool(raw_value)
-        )
-
-        joined_config[key] = value
+        joined_config[key] = file_config.get(key)
     else:
         joined_config[key] = default_config.get(key)
 
