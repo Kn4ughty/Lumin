@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class log_level(Enum):
+class LogLevel(Enum):
     DEBUG = "\033[1;34mDEBUG\033[0m"
     INFO = "INFO\033[0m"
     WARNING = "\033[1;33mWARNING\033[0m"
@@ -9,33 +9,33 @@ class log_level(Enum):
     CRITICAL = "\033[0m\033[0mCRITICAL\033[0m"
 
 
-DEFAULT_LOG_LEVEL = log_level.INFO
+DEFAULT_LOG_LEVEL = LogLevel.INFO
 
 
-def _print(level: log_level, text: str):
+def _print(level: LogLevel, text: str):
     # parent = traceback.format_stack(limit=4)
     parent = ""
     print(f"{parent}{level.value:<10} | {text}")
 
 
 def debug(text):
-    _print(log_level.DEBUG, text)
+    _print(LogLevel.DEBUG, text)
 
 
 def info(text):
-    _print(log_level.INFO, text)
+    _print(LogLevel.INFO, text)
 
 
 def warning(text):
-    _print(log_level.WARNING, text)
+    _print(LogLevel.WARNING, text)
 
 
 def error(text):
-    _print(log_level.ERROR, text)
+    _print(LogLevel.ERROR, text)
 
 
 def critical(text):
-    _print(log_level.CRITICAL, text)
+    _print(LogLevel.CRITICAL, text)
 
 
 def perf(description: str, start_time: float):
