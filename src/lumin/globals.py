@@ -27,6 +27,10 @@ default_config = {
     "theme_file_location": "~/.config/lumin/index.css",
     "desktop_actions_enabled": False,
     "search_logging_enabled": True,
+    'prefixes': {
+        'dict': [';d'],
+        'calc': [';c', '/']
+    }
 }
 
 if not os.path.exists(CONFIG_DIR):
@@ -40,6 +44,7 @@ if not os.path.exists(MAIN_CONFIG_PATH):
 
 with open(MAIN_CONFIG_PATH, "rb") as f:
     file_config = tomllib.load(f)
+log.info(f"config loaded form file {file_config}")
 
 
 def str_to_bool(s: str) -> bool:
@@ -67,8 +72,8 @@ for key in default_config:
 
 
 THEME_FILE_LOCATION: Path = Path(joined_config["theme_file_location"]).expanduser()
-DESKTOP_ACTIONS_ENABLED: bool = joined_config["desktop_actions_enabled"]
-SEARCH_LOGGING_ENABLED: bool = joined_config["search_logging_enabled"]
+SHOW_DESKTOP_ACTIONS: bool = joined_config["desktop_actions_enabled"]
+DO_SEARCH_FREQUENCY_LOGGING: bool = joined_config["search_logging_enabled"]
 
 PLATFORM_OS = sys.platform
 IS_WAYLAND = False
