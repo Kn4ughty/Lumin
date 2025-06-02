@@ -35,6 +35,8 @@ class MyApp(Gtk.Application):
             LayerShell.set_layer(self.window, LayerShell.Layer.OVERLAY)
             LayerShell.set_keyboard_mode(self.window, LayerShell.KeyboardMode.EXCLUSIVE)
 
+            # LayerShell.set_anchor(self.window, LayerShell.Edge.LEFT, True)
+
         """ Overview of the widget heirarchy
         ________________________lord box_______________________
         | ______________________search_box___________________ |
@@ -74,6 +76,20 @@ class MyApp(Gtk.Application):
 
         self.search_box.append(self.search_entry)
 
+        self.settings_button = Gtk.Button.new_from_icon_name("applications-system")
+        self.settings_button.connect("clicked", self.open_settings)
+        self.search_box.append(self.settings_button)
+
+        self.settings_box = Gtk.Box()
+        self.settings_box.append(Gtk.Label.new("hello"))
+
+        self.settings_window = Gtk.Dialog.new()
+        self.settings_window.set_modal(True)
+
+        self.settings_window.set_child(self.settings_box)
+        self.lord_box.append(self.settings_window)
+        # self.settings_button.append(self.settings_window)
+
         self.result_box = Gtk.Box()
         self.lord_box.append(self.result_box)
 
@@ -84,6 +100,11 @@ class MyApp(Gtk.Application):
 
         # Set the layout into the window
         self.window.show()
+
+    def open_settings(self, button):
+        print("SETTINGS OPENED")
+        self.settings_window.present()
+        # self.settings_window.popup()
 
     def check_escape(self, keyval, keycode, state, user_data, win):
         # Idk where this is defined but this is the keycode i get
