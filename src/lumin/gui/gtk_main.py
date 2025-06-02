@@ -30,7 +30,7 @@ class MyApp(Gtk.Application):
         self.window.set_decorated(False)  # Disable window decorations
         self.window.set_resizable(False)  # Disable resizing
 
-        if g.IS_WAYLAND:
+        if LayerShell.is_supported():
             LayerShell.init_for_window(self.window)
             LayerShell.set_layer(self.window, LayerShell.Layer.OVERLAY)
             LayerShell.set_keyboard_mode(self.window, LayerShell.KeyboardMode.EXCLUSIVE)
