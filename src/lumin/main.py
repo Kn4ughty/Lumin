@@ -60,19 +60,23 @@ def on_search_text_changed(search_box):
 
     search = app_search
 
-    if text[:2] == "!d":
-        from lumin.modules.dictionary.main import search as dictionary_search  # noqa
+    for prefix in g.SEARCH_PREFIXES["dict"]:
+        if text[: len(prefix)] == prefix:
+            from lumin.modules.dictionary.main import (
+                search as dictionary_search,
+            )  # noqa
 
-        search = dictionary_search
-        text = text[2:].strip()
-        in_app_search = False
+            search = dictionary_search
+            text = text[prefix:].strip()
+            in_app_search = False
 
-    if text[:1] == "/":
-        from lumin.modules.calc.main import calc_func
+    for prefix in g.SEARCH_PREFIXES["calc"]:
+        if text[: len(prefix)] == prefix:
+            from lumin.modules.calc.main import calc_func
 
-        search = calc_func
-        text = text[1:]
-        in_app_search = False
+            search = calc_func
+            text = text[len(prefix) :]
+            in_app_search = False
 
     def run_search():
         global in_app_search, invalidate_callback
