@@ -1,10 +1,18 @@
 
 cpdef stupidfunc(str name1, str name2, str input_text):
-    cdef int score1 = longestCommonSubstr(name1, input_text)
-    cdef int score2 = longestCommonSubstr(name2, input_text)
+    cdef int score1 = score(name1, input_text)
+    cdef int score2 = score(name2, input_text)
 
     return score2 - score1
 
+cpdef score(str eval_str, str input_text):
+    cdef int score = longestCommonSubstr(eval_str, input_text)
+    if len(eval_str) >= 1 and len(input_text) >= 1:
+        if input_text[0] == eval_str[0]:
+            score += 1
+
+    return score
+ 
 cpdef longestCommonSubstr(str s1, str s2):
     cdef int m = len(s1)
     cdef int n = len(s2)
