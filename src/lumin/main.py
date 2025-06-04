@@ -67,7 +67,7 @@ def on_search_text_changed(search_box):
             )  # noqa
 
             search = dictionary_search
-            text = text[prefix:].strip()
+            text = text[len(prefix) :].strip()
             in_app_search = False
 
     for prefix in g.SEARCH_PREFIXES["calc"]:
