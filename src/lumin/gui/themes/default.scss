@@ -10,6 +10,8 @@ window {
   font-size: 1.2rem;
   font-family: JetBrainsMono Nerd Font Mono, JetBrains, monospace;
   outline-color: v.$accent;
+  border: 1px solid v.$sep;
+  border-radius: 1rem;
 }
 
 .result_box {
