@@ -6,7 +6,7 @@ from fastlog import logger as log
 import globals as g
 
 # from sort import longestCommonSubstr as longestCommonSubstr
-from sort import stupidfunc as stupidfunc
+from sort import sort_apps as sort_apps
 
 import gi
 
@@ -17,6 +17,8 @@ from gi.repository import Gtk  # noqa: E402
 # This is yucky.
 # It gets set by the gui startup code to the search entry box
 # I dont have a better way to do this yet
+# It is here so that the sorting function can be attached to it.
+# Maybe
 search_entry = None
 search_activate_signal = None
 
@@ -101,6 +103,6 @@ def s(listboxrow1, listboxrow2, user_input) -> int:
     name1 = listboxrow1.name.lower()
     name2 = listboxrow2.name.lower()
 
-    n = stupidfunc(name1, name2, input_text)
+    score = sort_apps(name1, name2, input_text)
 
-    return n
+    return score

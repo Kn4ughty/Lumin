@@ -1,5 +1,5 @@
 
-cpdef stupidfunc(str name1, str name2, str input_text):
+cpdef sort_apps(str name1, str name2, str input_text):
     cdef int score1 = score(name1, input_text)
     cdef int score2 = score(name2, input_text)
 
