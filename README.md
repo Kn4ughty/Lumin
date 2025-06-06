@@ -13,14 +13,25 @@ For people who want dynamic searching using prefixes
 Please note that this list is not exhaustive.
 You might need more, just pay attention to the output of pip as its installing.
 
+### MacOS
+
+install brew (link me)k
+
 ```
+brew install git python cmake pkgconf cairo gobject-introspection libqalculate npm gtk4
+```
+
+### Linux
+(Non exhaustive, just pay attention to pips output)
+```
+npm
 libqalculate-devel
 python
 cmake
 gobject-introspection
 gtk4
 ```
-## Additional requirements for wayland users:
+### Additional requirements for wayland users:
 ```
 gtk4-layer-shell
 ```
@@ -28,6 +39,10 @@ gtk4-layer-shell
 ## Final step
 
 ```sh
+git clone "https://github ... etc"
+cd lumin
+python3 -m venv .venv
+source .venv/bin/activate
 make install
 ```
 
@@ -38,6 +53,7 @@ make install
 - [x] App icons
 - [x] Theming based on file name in config
 - [x] Configurable css
+- [ ] Handle case where .config doesnt exist
 - [ ] Configurable settings
     - [ ] Configurable module prefixes
     - [ ] gtk4-layer-shell toggle

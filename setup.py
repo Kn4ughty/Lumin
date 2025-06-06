@@ -7,7 +7,7 @@ qalc_extensions = [
     Extension(
         "qalc",
         ["src/lumin/modules/calc/qalc.pyx"],
-        include_dirs=["/usr/include/libqalculate", "/usr/include/c++/14"],
+        include_dirs=["/usr/include/libqalculate", "/usr/include/c++/14", "/opt/homebrew/include"],
         library_dirs=["/usr/lib", "/usr/local/lib"],
         libraries=["qalculate"],
         extra_compile_args=["-std=c++11"],

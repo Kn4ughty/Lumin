@@ -1,15 +1,23 @@
 SHELL = bash
 MAIN_FILE_PATH = src/lumin/main.py
 
+# I dont really like this way of finding the pythonpath, but it works
 ARCH := $(shell uname -m)
 PYTHON_VERSION := $(shell python3 -c 'import sys; \
 				  print(f"{sys.version_info.major}{sys.version_info.minor}")')
-PYTHONPATH := ./build/lib.linux-$(ARCH)-cpython-$(PYTHON_VERSION)/
+
+ifeq ($(shell uname -s),Darwin)
+	# Convert macos version (XX.YY.ZZ) -> (XX.0)
+	PLATFORM := macosx-$(shell sw_vers --productVersion | sed "s/\([0-9]*\)\..*/\1.0/")
+else
+	PLATFORM := linux
+endif
+
+PYTHONPATH := ./build/lib.$(PLATFORM)-$(ARCH)-cpython-$(PYTHON_VERSION)/
 
 export PYTHONPATH
 
 all: lint build_css build_cython run
-
 
 run:
 	python3 $(MAIN_FILE_PATH)
