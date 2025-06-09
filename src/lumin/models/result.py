@@ -1,5 +1,6 @@
 from typing import Callable, List, Optional
 from dataclasses import dataclass, field
+import os
 
 # import logging as log
 from fastlog import logger as log
@@ -11,7 +12,8 @@ from sort import sort_apps as sort_apps
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk  # noqa: E402
+gi.require_version("Gio", "2.0")
+from gi.repository import Gtk, Gio  # noqa: E402
 
 
 # This is yucky.
@@ -94,6 +96,25 @@ def result_list_to_gtkbox(result_list: List[Result]) -> Gtk.Box():
         listbox.invalidate_sort()
 
     return main_box, invalidate
+
+
+class Run:
+    def __init__(self, main: Callable):
+        self.callable = main
+
+    def __call__(self, *args):
+
+        log.info(f"callable: {self.callable}")
+        env = os.environ.copy()
+        env.pop("VIRTUAL_ENV", None)
+        env["PATH"] = "/usr/bin:" + env["PATH"]
+        launch_context = Gio.AppLaunchContext()
+        launch_context.setenv("PATH", env["PATH"])
+        self.callable(context=launch_context)
+
+        # TODO Log Search frequency
+
+        exit()
 
 
 def s(listboxrow1, listboxrow2, user_input) -> int:

@@ -14,6 +14,10 @@ window {
   border-radius: 1rem;
 }
 
+text {
+  color: v.$text
+}
+
 .result_box {
   border: 1px solid v.$sep;
   margin: 1rem;

@@ -1,10 +1,13 @@
 import os
 import time
-from typing import Callable
+from typing import Callable, List
 
-from lumin.models.result import Result
+from lumin.models.result import Result, Run
 import lumin.models.result as result_module
 from lumin.fastlog import logger as log
+import lumin.globals as g
+
+from . import macos_search
 
 import gi
 
@@ -13,54 +16,57 @@ gi.require_version("Gio", "2.0")
 from gi.repository import Gtk, Gio  # noqa: E402
 
 
-apps = Gio.AppInfo.get_all()
+global apps
+apps = []
 
 
-class Run:
-    def __init__(self, main: Callable, app_name: str | None = None):
-        self.callable = main
-        self.app_name = app_name
+def get_linux_apps() -> List[Result]:
+    output = []
+    for app_info in apps:
+        display_name = app_info.get_display_name()
 
-    def __call__(self, *args):
+        exec = Run(app_info.launch)
 
-        log.info(f"app being opened:{self.app_name}, callable: {self.callable}")
-        env = os.environ.copy()
-        env.pop("VIRTUAL_ENV", None)
-        env["PATH"] = "/usr/bin:" + env["PATH"]
-        launch_context = Gio.AppLaunchContext()
-        launch_context.setenv("PATH", env["PATH"])
-        self.callable(context=launch_context)
+        icon = app_info.get_icon()
 
-        # TODO Log Search frequency
+        if (generic_name := app_info.get_generic_name()) is None:
+            generic_name = ""
 
-        exit()
+        output.append(
+            Result(
+                display_str=display_name,
+                icon=icon,
+                open_action=exec,
+                generic_name=generic_name,
+            )
+        )
+    return output
+
+
+def get_macos_apps() -> List[Result]:
+    output = []
+    for app in apps:
+        output.append(macos_search.get_Result_from_path(app))
+
+    print(output)
+    print(apps)
+    return output
 
 
 result_list = []
 
 
 def search() -> Gtk.Box:
-    global result_list
+    global result_list, apps
 
     if len(result_list) == 0:
-        for app_info in apps:
-            display_name = app_info.get_display_name()
+        if g.PLATFORM_OS == "darwin":
+            apps = macos_search.get_app_file_paths()
+            result_list = get_macos_apps()
 
-            exec = Run(app_info.launch, display_name)
-
-            icon = app_info.get_icon()
-
-            if (generic_name := app_info.get_generic_name()) is None:
-                generic_name = ""
-
-            result_list.append(
-                Result(
-                    display_str=display_name,
-                    icon=icon,
-                    open_action=exec,
-                    generic_name=generic_name,
-                )
-            )
+        if g.PLATFORM_OS == "linux":
+            apps = Gio.AppInfo.get_all()
+            result_list = get_linux_apps()
 
     start_time = time.perf_counter()
 

@@ -15,11 +15,18 @@ You might need more, just pay attention to the output of pip as its installing.
 
 ### MacOS
 
-install brew (link me)k
+install brew (link me)
 
 ```
 brew install git python cmake pkgconf cairo gobject-introspection libqalculate npm gtk4
 ```
+
+You have an additional pip requirement so after following the other installation steps run:
+```
+pip3 install pyobjc
+```
+This package provides python bindings to MacOS objectice C libraries.
+
 
 ### Linux
 (Non exhaustive, just pay attention to pips output)
