@@ -81,14 +81,25 @@ class MyApp(Gtk.Application):
         self.settings_button.connect("clicked", self.open_settings)
         self.search_box.append(self.settings_button)
 
-        self.settings_box = Gtk.Box()
+        self.settings_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+        )
 
+        # Desktop actions checkbox
         self.desktop_actions_checkbox = Gtk.CheckButton.new_with_label(
             "Enable desktop actions?"
         )
-        # self.desktop_actions_checkbox.toggled = self.test
         self.desktop_actions_checkbox.connect("toggled", self.settings_desktop_actions)
+        self.desktop_actions_checkbox.set_active(g.SHOW_DESKTOP_ACTIONS)
         self.settings_box.append(self.desktop_actions_checkbox)
+
+        # Wayland overlay checkbox
+        self.wayland_overlay_checkbox = Gtk.CheckButton.new_with_label(
+            "Should wayland window be overlay?"
+        )
+        self.wayland_overlay_checkbox.connect("toggled", self.settings_wayland_overlay)
+        self.wayland_overlay_checkbox.set_active(g.WAYLAND_SHOULD_OVERLAY)
+        self.settings_box.append(self.wayland_overlay_checkbox)
 
         self.save_settings = Gtk.Button.new_with_label("Save")
         self.save_settings.connect("clicked", g.overwrite_config)
@@ -120,6 +131,10 @@ class MyApp(Gtk.Application):
     def settings_desktop_actions(app, checkbox):
         state: bool = checkbox.get_active()
         g.SHOW_DESKTOP_ACTIONS = state
+
+    def settings_wayland_overlay(app, checkbox):
+        state: bool = checkbox.get_active()
+        g.WAYLAND_SHOULD_OVERLAY = state
 
     def check_escape(self, keyval, keycode, state, user_data, win):
         # Idk where this is defined but this is the keycode i get

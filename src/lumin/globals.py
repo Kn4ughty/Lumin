@@ -90,13 +90,13 @@ if PLATFORM_OS == "linux":
 
 # User expected to write over global settings, then call this to save changes
 def overwrite_config(*argv, **kwargs):
-    # this sucks.
 
     # Remake settings dictionary from settings
     new_dict = {
         "theme_file_location": str(THEME_FILE_LOCATION),
         "desktop_actions_enabled": SHOW_DESKTOP_ACTIONS,
         "search_logging_enabled": DO_SEARCH_FREQUENCY_LOGGING,
+        "wayland-should_overlay": WAYLAND_SHOULD_OVERLAY,
         "prefixes": SEARCH_PREFIXES,
     }
 
