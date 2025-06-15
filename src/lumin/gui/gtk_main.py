@@ -82,7 +82,17 @@ class MyApp(Gtk.Application):
         self.search_box.append(self.settings_button)
 
         self.settings_box = Gtk.Box()
-        self.settings_box.append(Gtk.Label.new("hello"))
+
+        self.desktop_actions_checkbox = Gtk.CheckButton.new_with_label(
+            "Enable desktop actions?"
+        )
+        # self.desktop_actions_checkbox.toggled = self.test
+        self.desktop_actions_checkbox.connect("toggled", self.settings_desktop_actions)
+        self.settings_box.append(self.desktop_actions_checkbox)
+
+        self.save_settings = Gtk.Button.new_with_label("Save")
+        self.save_settings.connect("clicked", g.overwrite_config)
+        self.settings_box.append(self.save_settings)
 
         self.settings_window = Gtk.Dialog.new()
         self.settings_window.set_modal(True)
@@ -106,6 +116,10 @@ class MyApp(Gtk.Application):
         print("SETTINGS OPENED")
         self.settings_window.present()
         # self.settings_window.popup()
+
+    def settings_desktop_actions(app, checkbox):
+        state: bool = checkbox.get_active()
+        g.SHOW_DESKTOP_ACTIONS = state
 
     def check_escape(self, keyval, keycode, state, user_data, win):
         # Idk where this is defined but this is the keycode i get

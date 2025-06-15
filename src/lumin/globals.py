@@ -2,11 +2,17 @@ from pathlib import Path
 import shlex
 import subprocess
 import tomllib
+import tomli_w
 import os
 import sys
 from lumin.fastlog import logger as log
 
 # TODO. This needs serious cleanup
+
+# This should probably be split into a settings module
+# Im not going to since its due in a few days and
+# im gonna rewrite everything aswell
+
 
 APP_NAME = "Lumin"
 CONFIG_DIR = Path(f"~/.config/{APP_NAME.lower()}/").expanduser()
@@ -80,6 +86,26 @@ if PLATFORM_OS == "linux":
     output = subprocess.check_output(shlex.split(command)).decode("utf-8").strip()
     if output == "wayland":
         IS_WAYLAND = True
+
+
+# User expected to write over global settings, then call this to save changes
+def overwrite_config(*argv, **kwargs):
+    # this sucks.
+
+    # Remake settings dictionary from settings
+    new_dict = {
+        "theme_file_location": str(THEME_FILE_LOCATION),
+        "desktop_actions_enabled": SHOW_DESKTOP_ACTIONS,
+        "search_logging_enabled": DO_SEARCH_FREQUENCY_LOGGING,
+        "prefixes": SEARCH_PREFIXES,
+    }
+
+    # data = tomli_w.dumps(new_dict)
+    with open(MAIN_CONFIG_PATH, "wb") as f:
+        # f.write(data)
+        tomli_w.dump(new_dict, f)
+    # with open("/home/d/Desktop/test.toml", "wb") as f:
+
 
 log.info("ermmm what")
 search_input_global = ""
