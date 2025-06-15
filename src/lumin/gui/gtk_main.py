@@ -30,7 +30,7 @@ class MyApp(Gtk.Application):
         self.window.set_decorated(False)  # Disable window decorations
         self.window.set_resizable(False)  # Disable resizing
 
-        if g.IS_WAYLAND and LayerShell.is_supported():
+        if g.IS_WAYLAND and LayerShell.is_supported() and g.WAYLAND_SHOULD_OVERLAY:
             LayerShell.init_for_window(self.window)
             LayerShell.set_layer(self.window, LayerShell.Layer.OVERLAY)
             LayerShell.set_keyboard_mode(self.window, LayerShell.KeyboardMode.EXCLUSIVE)
@@ -76,6 +76,7 @@ class MyApp(Gtk.Application):
 
         self.search_box.append(self.search_entry)
 
+        # Settings whatnots
         self.settings_button = Gtk.Button.new_from_icon_name("applications-system")
         self.settings_button.connect("clicked", self.open_settings)
         self.search_box.append(self.settings_button)

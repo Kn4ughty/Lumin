@@ -27,6 +27,7 @@ default_config = {
     "theme_file_location": "~/.config/lumin/index.css",
     "desktop_actions_enabled": False,
     "search_logging_enabled": True,
+    "wayland-should_overlay": True,
     "prefixes": {"dict": [";d"], "calc": [";c", "/"]},
 }
 
@@ -65,6 +66,7 @@ for key in default_config:
 THEME_FILE_LOCATION: Path = Path(joined_config["theme_file_location"]).expanduser()
 SHOW_DESKTOP_ACTIONS: bool = joined_config["desktop_actions_enabled"]
 DO_SEARCH_FREQUENCY_LOGGING: bool = joined_config["search_logging_enabled"]
+WAYLAND_SHOULD_OVERLAY: bool = joined_config["wayland-should_overlay"]
 
 SEARCH_PREFIXES: dict = joined_config["prefixes"]
 
