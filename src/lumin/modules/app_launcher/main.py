@@ -16,6 +16,7 @@ gi.require_version("Gio", "2.0")
 from gi.repository import Gtk, Gio  # noqa: E402
 
 
+# This is done for caching
 global apps
 apps = []
 
@@ -43,16 +44,6 @@ def get_linux_apps() -> List[Result]:
     return output
 
 
-def get_macos_apps() -> List[Result]:
-    output = []
-    for app in apps:
-        output.append(macos_search.get_Result_from_path(app))
-
-    print(output)
-    print(apps)
-    return output
-
-
 result_list = []
 
 
@@ -61,10 +52,13 @@ def search() -> Gtk.Box:
 
     if len(result_list) == 0:
         if g.PLATFORM_OS == "darwin":
-            apps = macos_search.get_app_file_paths()
-            result_list = get_macos_apps()
+            if len(apps) != 0:
+                apps = macos_search.get_app_file_paths()
+            result_list = macos_search.get_macos_apps(apps)
 
         if g.PLATFORM_OS == "linux":
+            # Previously I had done all of the .desktop parsing myself, which was actually quite fun. 
+            # Then I found that GTK had a function for that built in. >:|
             apps = Gio.AppInfo.get_all()
             result_list = get_linux_apps()
 

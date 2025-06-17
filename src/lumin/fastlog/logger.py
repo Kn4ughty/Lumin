@@ -1,7 +1,11 @@
 from enum import Enum
 
+# This module exist because the logging library that I was using was too slow to load.
+# This more mininal one should be faster.
+
 
 class LogLevel(Enum):
+    # These are colour codes
     DEBUG = "\033[1;34mDEBUG\033[0m"
     INFO = "INFO\033[0m"
     WARNING = "\033[1;33mWARNING\033[0m"

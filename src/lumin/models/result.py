@@ -86,7 +86,7 @@ def result_list_to_gtkbox(result_list: List[Result]) -> Gtk.Box():
         listbox.append(row)
 
     listbox.connect("row-activated", activate_result)  # Arrow + Enter handling
-    listbox.set_sort_func(s, "user data")
+    listbox.set_sort_func(sort, "user data")
     scroll = Gtk.ScrolledWindow()
     scroll.set_vexpand(True)
     scroll.set_child(listbox)
@@ -117,7 +117,7 @@ class Run:
         exit()
 
 
-def s(listboxrow1, listboxrow2, user_input) -> int:
+def sort(listboxrow1, listboxrow2, user_input) -> int:
     input_text = g.search_input_global
     input_text = input_text.lower()
 

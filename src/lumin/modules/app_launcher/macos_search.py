@@ -1,18 +1,25 @@
 import os
 import glob
-from lumin.models.result import Result, Run
+from typing import List
+from lumin.models.result import Result
 import subprocess
-
-# These imports come from the installation process of pyobjc
-# https://developer.apple.com/documentation/appkit/nsworkspace
-# from AppKit import NSWorkspace
-# from Cocoa import NSURL
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 from gi.repository import Gtk, Gdk  # noqa: E402
+
+
+
+def get_macos_apps(apps) -> List[Result]:
+    output = []
+    for app in apps:
+        output.append(get_Result_from_path(app))
+
+    print(output)
+    print(apps)
+    return output
 
 
 def get_app_file_paths():
@@ -52,13 +59,16 @@ def get_Result_from_path(app_path: str):
     return Result(display_str=name, open_action=callable)
 
 
-# Yk what, this is tooooo hard.
-# I need to convert from MacOS bytes to python bytes
-# Then to GlibBytes then to a GdkPixbuf then to an image.
+# There is no image support because: 
+# I need to use pyobjc to load the MacOS swift dynamic libraries. (not bad)
+# Then from the URL I can load the icon as a tiff (I dont like tiffs)
+# I need to convert from MacOS bytes to python bytes (They are different for some reason)
+# Then to GlibBytes then to a GdkPixbuf then to an image. (Compounding badness)
 # Macos users dont get icons.
 
 
-# Get and print the list of installed apps
-apps = get_app_file_paths()
-for app in apps:
-    print(app)
+if __name__ == "__main__":
+    # Get and print the list of installed apps
+    apps = get_app_file_paths()
+    for app in apps:
+        print(app)

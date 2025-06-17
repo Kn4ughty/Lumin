@@ -1,7 +1,9 @@
 SHELL = bash
 MAIN_FILE_PATH = src/lumin/main.py
 
-# I dont really like this way of finding the pythonpath, but it works
+
+# It's like this so that I dont have to hardcode the directory the cpython library files are compiled to
+# I dont like it but it works.
 ARCH := $(shell uname -m)
 PYTHON_VERSION := $(shell python3 -c 'import sys; \
 				  print(f"{sys.version_info.major}{sys.version_info.minor}")')
@@ -16,6 +18,8 @@ endif
 PYTHONPATH := ./build/lib.$(PLATFORM)-$(ARCH)-cpython-$(PYTHON_VERSION)/
 
 export PYTHONPATH
+
+
 
 all: lint build_css build_cython run
 

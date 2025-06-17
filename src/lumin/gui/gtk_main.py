@@ -23,6 +23,8 @@ class MyApp(Gtk.Application):
         self.search_activated = search_activated
 
     def do_activate(self):
+        # This could be split up to improve readability
+
         # Create application window
         self.window = Gtk.ApplicationWindow(application=self)
         self.window.set_title(f"{g.APP_NAME}")
@@ -34,8 +36,6 @@ class MyApp(Gtk.Application):
             LayerShell.init_for_window(self.window)
             LayerShell.set_layer(self.window, LayerShell.Layer.OVERLAY)
             LayerShell.set_keyboard_mode(self.window, LayerShell.KeyboardMode.EXCLUSIVE)
-
-            # LayerShell.set_anchor(self.window, LayerShell.Edge.LEFT, True)
 
         """ Overview of the widget heirarchy
         ________________________lord box_______________________
@@ -87,7 +87,7 @@ class MyApp(Gtk.Application):
 
         # Desktop actions checkbox
         self.desktop_actions_checkbox = Gtk.CheckButton.new_with_label(
-            "Enable desktop actions?"
+            "Enable desktop actions? (does nothing on macos)"
         )
         self.desktop_actions_checkbox.connect("toggled", self.settings_desktop_actions)
         self.desktop_actions_checkbox.set_active(g.SHOW_DESKTOP_ACTIONS)
@@ -95,7 +95,7 @@ class MyApp(Gtk.Application):
 
         # Wayland overlay checkbox
         self.wayland_overlay_checkbox = Gtk.CheckButton.new_with_label(
-            "Should wayland window be overlay?"
+            "Should wayland window be overlay? (also does nothing on macos)"
         )
         self.wayland_overlay_checkbox.connect("toggled", self.settings_wayland_overlay)
         self.wayland_overlay_checkbox.set_active(g.WAYLAND_SHOULD_OVERLAY)
@@ -109,13 +109,12 @@ class MyApp(Gtk.Application):
         self.settings_window.set_modal(True)
 
         self.settings_window.set_child(self.settings_box)
+        # It needs to be child of something, otherwise it doesnt exist! (i think)
         self.lord_box.append(self.settings_window)
-        # self.settings_button.append(self.settings_window)
 
         self.result_box = Gtk.Box()
         self.lord_box.append(self.result_box)
 
-        # self.window.connect()
         keycont = Gtk.EventControllerKey()
         keycont.connect("key-pressed", self.check_escape, self.window)
         self.window.add_controller(keycont)
@@ -126,7 +125,6 @@ class MyApp(Gtk.Application):
     def open_settings(self, button):
         print("SETTINGS OPENED")
         self.settings_window.present()
-        # self.settings_window.popup()
 
     def settings_desktop_actions(app, checkbox):
         state: bool = checkbox.get_active()
@@ -137,7 +135,7 @@ class MyApp(Gtk.Application):
         g.WAYLAND_SHOULD_OVERLAY = state
 
     def check_escape(self, keyval, keycode, state, user_data, win):
-        # Idk where this is defined but this is the keycode i get
+        # Idk where this is defined but this is the keycode i get from just printing the sent values
         ESCAPE_KEY = 65307
         if keycode == ESCAPE_KEY:
             self.window.close()
@@ -158,6 +156,7 @@ class MyApp(Gtk.Application):
 
     def update_results(self, new_results: Gtk.Box | None):
         self.lord_box.remove(self.result_box)
+        # I think only one of these is needed but I was getting annoyed at a memory leak.
         self.result_box.unrealize()
         self.result_box.run_dispose()
         self.result_box = new_results
@@ -168,7 +167,3 @@ class MyApp(Gtk.Application):
             self.result_box.add_css_class("result_box")
 
         self.lord_box.append(self.result_box)
-
-
-if __name__ == "__main__":
-    print("This is UI. Running UI by itself doesn't make sense.")

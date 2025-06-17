@@ -60,6 +60,8 @@ def on_search_text_changed(search_box):
 
     search = app_search
 
+    # This could be abstracted but its only 2 things :P
+
     for prefix in g.SEARCH_PREFIXES["dict"]:
         if text[: len(prefix)] == prefix:
             from lumin.modules.dictionary.main import (

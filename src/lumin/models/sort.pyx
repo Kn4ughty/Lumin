@@ -13,6 +13,8 @@ cpdef score(str eval_str, str input_text):
 
     return score
  
+# I did not come up with this algorithm.
+# https://www.geeksforgeeks.org/dsa/longest-common-substring-dp-29/
 cpdef longestCommonSubstr(str s1, str s2):
     cdef int m = len(s1)
     cdef int n = len(s2)

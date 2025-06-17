@@ -3,8 +3,9 @@
 
 // https://docs.gtk.org/gtk4/css-properties.html
 
+// I use scss because GTK has very limited css. Doesnt even support variables.
+
 window {
-  /* background-color: $base; */
   background: v.$window_bg;
   color: v.$text;
   font-size: 1.2rem;
@@ -30,8 +31,6 @@ text {
 }
 
 list {
-  // margin-left: 0.5rem;
-  // margin-right: 0.5rem;
   margin-bottom: 0.5rem;
   padding: 0.5rem;
   border-radius: v.$corner-rad;
