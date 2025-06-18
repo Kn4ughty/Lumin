@@ -93,6 +93,9 @@ def on_search_text_changed(search_box):
             if not in_app_search:
                 # was not in app search last time.
                 # Need to get new results
+
+                # the invalidate callback has a reference to the listbox
+                # so it can be invalidated when the text changes
                 result_box, invalidate_callback = app_search()
                 app.update_results(result_box)
                 in_app_search = True

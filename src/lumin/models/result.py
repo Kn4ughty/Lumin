@@ -6,7 +6,6 @@ import os
 from fastlog import logger as log
 import globals as g
 
-# from sort import longestCommonSubstr as longestCommonSubstr
 from sort import sort_apps as sort_apps
 
 import gi

@@ -55,12 +55,13 @@ def search() -> Gtk.Box:
             if len(apps) != 0:
                 apps = macos_search.get_app_file_paths()
             result_list = macos_search.get_macos_apps(apps)
-
-        if g.PLATFORM_OS == "linux":
-            # Previously I had done all of the .desktop parsing myself, which was actually quite fun.
+        elif g.PLATFORM_OS == "linux":
+            # Previously I had done all of the .desktop parsing myself, which was actually quite fun. 
             # Then I found that GTK had a function for that built in. >:|
+            # However it seems to be missing some features (like desktop actions) 
             apps = Gio.AppInfo.get_all()
             result_list = get_linux_apps()
+        # No else needed as result list is empty
 
     start_time = time.perf_counter()
 
