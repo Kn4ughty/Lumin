@@ -57,7 +57,7 @@ def search() -> Gtk.Box:
             result_list = macos_search.get_macos_apps(apps)
 
         if g.PLATFORM_OS == "linux":
-            # Previously I had done all of the .desktop parsing myself, which was actually quite fun. 
+            # Previously I had done all of the .desktop parsing myself, which was actually quite fun.
             # Then I found that GTK had a function for that built in. >:|
             apps = Gio.AppInfo.get_all()
             result_list = get_linux_apps()

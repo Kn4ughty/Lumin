@@ -11,7 +11,6 @@ gi.require_version("Gdk", "4.0")
 from gi.repository import Gtk, Gdk  # noqa: E402
 
 
-
 def get_macos_apps(apps) -> List[Result]:
     output = []
     for app in apps:
@@ -59,7 +58,7 @@ def get_Result_from_path(app_path: str):
     return Result(display_str=name, open_action=callable)
 
 
-# There is no image support because: 
+# There is no image support because:
 # I need to use pyobjc to load the MacOS swift dynamic libraries. (not bad)
 # Then from the URL I can load the icon as a tiff (I dont like tiffs)
 # I need to convert from MacOS bytes to python bytes (They are different for some reason)
