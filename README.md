@@ -45,9 +45,8 @@ gtk4-layer-shell
 
 ## Final step
 
+Run this while in the project root directory:
 ```sh
-git clone "https://github ... etc"
-cd lumin
 python3 -m venv .venv
 source .venv/bin/activate
 make install
