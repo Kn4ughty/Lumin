@@ -76,42 +76,6 @@ class MyApp(Gtk.Application):
 
         self.search_box.append(self.search_entry)
 
-        # Settings whatnots
-        self.settings_button = Gtk.Button.new_from_icon_name("applications-system")
-        self.settings_button.connect("clicked", self.open_settings)
-        self.search_box.append(self.settings_button)
-
-        self.settings_box = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL,
-        )
-
-        # Desktop actions checkbox
-        self.desktop_actions_checkbox = Gtk.CheckButton.new_with_label(
-            "Enable desktop actions? (does nothing on macos)"
-        )
-        self.desktop_actions_checkbox.connect("toggled", self.settings_desktop_actions)
-        self.desktop_actions_checkbox.set_active(g.SHOW_DESKTOP_ACTIONS)
-        self.settings_box.append(self.desktop_actions_checkbox)
-
-        # Wayland overlay checkbox
-        self.wayland_overlay_checkbox = Gtk.CheckButton.new_with_label(
-            "Should wayland window be overlay? (also does nothing on macos)"
-        )
-        self.wayland_overlay_checkbox.connect("toggled", self.settings_wayland_overlay)
-        self.wayland_overlay_checkbox.set_active(g.WAYLAND_SHOULD_OVERLAY)
-        self.settings_box.append(self.wayland_overlay_checkbox)
-
-        self.save_settings = Gtk.Button.new_with_label("Save")
-        self.save_settings.connect("clicked", g.overwrite_config)
-        self.settings_box.append(self.save_settings)
-
-        self.settings_window = Gtk.Dialog.new()
-        self.settings_window.set_modal(True)
-
-        self.settings_window.set_child(self.settings_box)
-        # It needs to be child of something, otherwise it doesnt exist! (i think)
-        self.lord_box.append(self.settings_window)
-
         self.result_box = Gtk.Box()
         self.lord_box.append(self.result_box)
 
