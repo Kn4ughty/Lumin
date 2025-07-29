@@ -1,4 +1,5 @@
 use eframe::egui;
+use egui::{Key};
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -10,7 +11,7 @@ fn main() -> eframe::Result {
         "My egui App",
         options,
         Box::new(|cc| {
-            // This gives us image support:
+            // This gives us image support
             egui_extras::install_image_loaders(&cc.egui_ctx);
 
             Ok(Box::<MyApp>::default())
@@ -19,15 +20,13 @@ fn main() -> eframe::Result {
 }
 
 struct MyApp {
-    name: String,
-    age: u32,
+    search_text: String,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
         Self {
-            name: "Arthur".to_owned(),
-            age: 42,
+            search_text: "".to_owned(),
         }
     }
 }
@@ -35,21 +34,15 @@ impl Default for MyApp {
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("My egui Application");
             ui.horizontal(|ui| {
-                let name_label = ui.label("Your name: ");
-                ui.text_edit_singleline(&mut self.name)
-                    .labelled_by(name_label.id);
+                ui.text_edit_singleline(&mut self.search_text).request_focus();
+                
             });
-            ui.add(egui::Slider::new(&mut self.age, 0..=120).text("age"));
-            if ui.button("Increment").clicked() {
-                self.age += 1;
-            }
-            ui.label(format!("Hello '{}', age {}", self.name, self.age));
 
-            if self.age == 43 {
-                std::process::exit(0);
+            if ctx.input(|i| i.key_pressed(Key::A)) {
+                println!("key press");
             }
+
             // self.age += 1;
         });
     }
