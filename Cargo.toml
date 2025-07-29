@@ -4,7 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-env_logger = "0.11"
-pollster = "0.4" 
-wgpu = "26.0.0"
-winit = "0.30.8"
+eframe = "0.32.0"
+egui_extras = "0.32.0"
+# For image support:
+# egui_extras = { features = ["default", "image"] }
+
+env_logger = { version = "0.10", default-features = false, features = [
+    "auto-color",
+    "humantime",
+] }
