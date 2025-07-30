@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-eframe = "0.32.0"
+eframe = { version = "0.32.0", features = ["wayland"]}
 egui_extras = "0.32.0"
 # For image support:
 # egui_extras = { features = ["default", "image"] }
