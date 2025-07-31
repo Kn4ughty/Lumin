@@ -1,12 +1,18 @@
 use eframe::egui;
 use egui::{Key};
 
+
+
+
+
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([320.0, 240.0])
-            .with_title("test"),
+            .with_title("test")
+            .with_decorations(false)
+            .with_window_level(egui::viewport::WindowLevel::AlwaysOnTop),
         ..Default::default()
     };
     eframe::run_native(
