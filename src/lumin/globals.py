@@ -33,7 +33,7 @@ default_config = {
     "theme_file_location": "~/.config/lumin/index.css",
     "desktop_actions_enabled": False,
     "search_logging_enabled": True,
-    "wayland-should_overlay": True,
+    "wayland-should_overlay": False,
     "prefixes": {"dict": [";d"], "calc": [";c", "/"]},
 }
 
