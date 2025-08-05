@@ -1,6 +1,7 @@
 # Spotlight search for linux
 
 For people who want dynamic searching using prefixes
+![[preview.png]]
 
 # Installation
 
