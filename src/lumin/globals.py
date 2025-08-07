@@ -35,6 +35,7 @@ default_config = {
     "search_logging_enabled": True,
     "wayland-should_overlay": False,
     "prefixes": {"dict": [";d"], "calc": [";c", "/"]},
+    "max_app_name_length": 60,
 }
 
 if not os.path.exists(CONFIG_DIR):
@@ -75,6 +76,7 @@ DO_SEARCH_FREQUENCY_LOGGING: bool = joined_config["search_logging_enabled"]
 WAYLAND_SHOULD_OVERLAY: bool = joined_config["wayland-should_overlay"]
 
 SEARCH_PREFIXES: dict = joined_config["prefixes"]
+MAX_APP_LENGTH: int = joined_config["max_app_name_length"]
 
 PLATFORM_OS = sys.platform
 IS_WAYLAND = False

@@ -33,6 +33,9 @@ def get_linux_apps() -> List[Result]:
         if (generic_name := app_info.get_generic_name()) is None:
             generic_name = ""
 
+        if (overflow := (len(display_name) + len(generic_name)) - g.MAX_APP_LENGTH) > 0:
+            generic_name = generic_name[:-overflow] + "..."
+
         output.append(
             Result(
                 display_str=display_name,
