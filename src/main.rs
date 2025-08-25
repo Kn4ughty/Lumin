@@ -15,6 +15,7 @@ struct State {
     size: winit::dpi::PhysicalSize<u32>,
     surface: wgpu::Surface<'static>,
     surface_format: wgpu::TextureFormat,
+    render_pipeline: wgpu::RenderPipeline,
 }
 
 impl State {
@@ -35,6 +36,47 @@ impl State {
         let cap = surface.get_capabilities(&adapter);
         let surface_format = cap.formats[0];
 
+        let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
+        let render_pipeline_layout = 
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("Render Pipeline layout"),
+                bind_group_layouts: &[],
+                push_constant_ranges: &[],
+            });
+        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("render Pipeline"),
+            layout: Some(&render_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: Some("vs_main"),
+                buffers: &[],
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: surface_format,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Back),
+                polygon_mode: wgpu::PolygonMode::Fill,
+                unclipped_depth: false,
+                conservative: false,
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false },
+            multiview: None,
+            cache: None,
+        });
+
         let state = State {
             window,
             device,
@@ -42,6 +84,7 @@ impl State {
             size,
             surface,
             surface_format,
+            render_pipeline
         };
 
         // Configure surface for the first time
@@ -60,7 +103,7 @@ impl State {
             format: self.surface_format,
             // Request compatibility with the sRGB-format texture view we‘re going to create later.
             view_formats: vec![self.surface_format.add_srgb_suffix()],
-            alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            alpha_mode: wgpu::CompositeAlphaMode::PreMultiplied,
             width: self.size.width,
             height: self.size.height,
             desired_maximum_frame_latency: 2,
@@ -94,8 +137,8 @@ impl State {
         // Renders a GREEN screen
         let mut encoder = self.device.create_command_encoder(&Default::default());
         // Create the renderpass which will clear the screen.
-        let renderpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: None,
+        let mut renderpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("renderpass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &texture_view,
                 depth_slice: None,
@@ -111,6 +154,8 @@ impl State {
         });
 
         // If you wanted to call any drawing commands, they would go here.
+        renderpass.set_pipeline(&self.render_pipeline);
+        renderpass.draw(0..3, 0..1);
 
         // End the renderpass.
         drop(renderpass);
@@ -130,9 +175,12 @@ struct App {
 impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         // Create window object
+        let attr = Window::default_attributes();
+        // attr.transparent = true;
+
         let window = Arc::new(
             event_loop
-                .create_window(Window::default_attributes())
+                .create_window(attr)
                 .unwrap(),
         );
 
