@@ -1,12 +1,72 @@
 use std::sync::Arc;
 
+use wgpu::util::DeviceExt;
 use winit::{
     application::ApplicationHandler,
-    event::{WindowEvent, KeyEvent},
+    event::{KeyEvent, WindowEvent},
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
+    keyboard::{KeyCode, PhysicalKey},
     window::{Window, WindowId},
-    keyboard::{KeyCode, PhysicalKey}
 };
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+struct Vertex {
+    position: [f32; 3],
+    color: [f32; 4],
+}
+
+const VERTICIES: &[Vertex] = &[
+    Vertex {
+        position: [0.0, 0.5, 0.0],
+        color: [1.0, 0.0, 0.0, 1.0],
+    },
+    Vertex {
+        position: [-0.5, -0.5, 0.0],
+        color: [0.0, 1.0, 0.0, 1.0],
+    },
+    Vertex {
+        position: [0.5, -0.5, 0.0],
+        color: [0.0, 0.0, 1.0, 1.0],
+    },
+];
+
+impl Vertex {
+    const ATTRIBS: [wgpu::VertexAttribute; 2] =
+        wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x4];
+
+    fn desc() -> wgpu::VertexBufferLayout<'static> {
+        use std::mem;
+
+        wgpu::VertexBufferLayout {
+            array_stride: mem::size_of::<Self>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &Self::ATTRIBS,
+        }
+    }
+}
+
+
+// impl Vertex {
+//     fn desc() -> wgpu::VertexBufferLayout<'static> {
+//         wgpu::VertexBufferLayout {
+//             array_stride: std::mem::size_of::<Vertex> as wgpu::BufferAddress,
+//             step_mode: wgpu::VertexStepMode::Vertex,
+//             attributes: &[
+//                 wgpu::VertexAttribute {
+//                     offset: 0,
+//                     shader_location: 0,
+//                     format: wgpu::VertexFormat::Float32x3,
+//                 },
+//                 wgpu::VertexAttribute {
+//                     offset: std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
+//                     shader_location: 1,
+//                     format: wgpu::VertexFormat::Float32x4,
+//                 },
+//             ],
+//         }
+//     }
+// }
 
 struct State {
     window: Arc<Window>,
@@ -16,6 +76,8 @@ struct State {
     surface: wgpu::Surface<'static>,
     surface_format: wgpu::TextureFormat,
     render_pipeline: wgpu::RenderPipeline,
+    vertex_buffer: wgpu::Buffer,
+    num_vertices: u32,
 }
 
 impl State {
@@ -37,7 +99,7 @@ impl State {
         let surface_format = cap.formats[0];
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
-        let render_pipeline_layout = 
+        let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline layout"),
                 bind_group_layouts: &[],
@@ -49,7 +111,7 @@ impl State {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: Some("vs_main"),
-                buffers: &[],
+                buffers: &[Vertex::desc()],
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
             },
             fragment: Some(wgpu::FragmentState {
@@ -72,10 +134,21 @@ impl State {
                 conservative: false,
             },
             depth_stencil: None,
-            multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false },
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
             multiview: None,
             cache: None,
         });
+
+        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex buffer"),
+            contents: bytemuck::cast_slice(VERTICIES),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+        let num_vertices = VERTICIES.len() as u32;
 
         let state = State {
             window,
@@ -84,7 +157,9 @@ impl State {
             size,
             surface,
             surface_format,
-            render_pipeline
+            render_pipeline,
+            vertex_buffer,
+            num_vertices,
         };
 
         // Configure surface for the first time
@@ -144,7 +219,7 @@ impl State {
                 depth_slice: None,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
+                    load: wgpu::LoadOp::Clear(wgpu::Color {r: 0.1, g: 0.1, b: 0.1, a: 0.1}),
                     store: wgpu::StoreOp::Store,
                 },
             })],
@@ -155,7 +230,8 @@ impl State {
 
         // If you wanted to call any drawing commands, they would go here.
         renderpass.set_pipeline(&self.render_pipeline);
-        renderpass.draw(0..3, 0..1);
+        renderpass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+        renderpass.draw(0..self.num_vertices, 0..1);
 
         // End the renderpass.
         drop(renderpass);
@@ -178,11 +254,7 @@ impl ApplicationHandler for App {
         let attr = Window::default_attributes();
         // attr.transparent = true;
 
-        let window = Arc::new(
-            event_loop
-                .create_window(attr)
-                .unwrap(),
-        );
+        let window = Arc::new(event_loop.create_window(attr).unwrap());
 
         let state = pollster::block_on(State::new(window.clone()));
         self.state = Some(state);
@@ -217,8 +289,10 @@ impl ApplicationHandler for App {
                 ..
             } => match (code, state.is_pressed()) {
                 (KeyCode::Escape, true) => event_loop.exit(),
-                _ => {println!("Unhandled KeyCode: {code:#?} {state:#?}")}
-            }
+                _ => {
+                    println!("Unhandled KeyCode: {code:#?} {state:#?}")
+                }
+            },
             _ => (),
         }
     }
