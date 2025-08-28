@@ -9,3 +9,8 @@ pollster = "0.4"
 wgpu = "26.0.0"
 winit = "0.30.8"
 bytemuck = { version = "1.16", features = [ "derive" ] }
+
+[dependencies.image]
+version = "0.24"
+default-features = false
+features = ["png", "jpeg"]
