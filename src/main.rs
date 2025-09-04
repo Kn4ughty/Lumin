@@ -1,5 +1,6 @@
 use iced::{Task, widget};
 mod log;
+mod apps;
 
 #[derive(Clone, Debug)]
 enum Message {
