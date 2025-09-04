@@ -1,4 +1,5 @@
 use iced::{Task, widget};
+mod log;
 
 #[derive(Clone, Debug)]
 enum Message {
@@ -22,36 +23,41 @@ impl std::default::Default for State {
 
 impl State {
     fn update(&mut self, message: Message) -> Task<Message> {
-        println!("update fn run");
+        log::info("update fn run");
         match message {
             Message::TextInputChanged(content) => {
                 self.text_value = content;
                 Task::none()
             }
-            Message::FocusTextInput => {
-                widget::text_input::focus(self.text_id.clone())
-            }
+            Message::FocusTextInput => widget::text_input::focus(self.text_id.clone()),
         }
     }
 
-    fn view(&self) -> widget::Column<'_, Message> {
+    fn view(&self) -> iced::Element<'_, Message> {
         // the heck is a '_
-        println!("view fn run");
+        log::info("view fn run");
         let text_input = widget::text_input("placeholder", &self.text_value)
-            .on_input(Message::TextInputChanged)
             .id(self.text_id.clone())
             .on_input(Message::TextInputChanged);
 
-        widget::column![text_input,]
+        let root_continer = widget::container(text_input)
+            .padding(10)
+            .center(iced::Fill);
+
+
+        root_continer.into()
     }
 }
 
 pub fn main() -> iced::Result {
+    log::warn("aaa");
     iced::application("Lumin", State::update, State::view)
         .subscription(capture_keyboard_input_subscription)
         .level(iced::window::Level::AlwaysOnTop)
         .resizable(false)
         .decorations(false)
+        .window_size((800.0, 1.0))
+        .theme(|_s| iced::Theme::CatppuccinMocha)
         .run()
 }
 
