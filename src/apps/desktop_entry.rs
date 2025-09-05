@@ -1,5 +1,5 @@
 // https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
-// 2hr
+// 6hr
 //
 // #![allow(dead_code)]
 
@@ -112,17 +112,20 @@ fn parse_from_ini(input: Ini) -> Result<DesktopEntry, ParseError> {
     };
 
     let entry = DesktopEntry {
-        entry_type: entry_type,
+        entry_type,
         version: entry_keys.get("Version").map(|s| s.to_string()),
-        name: entry_keys
+        name: entry_keys // TODO. handle different languages
             .get("Name")
             .ok_or(ParseError::MissingRequiredField)?
             .to_string(),
         try_exec: entry_keys.get("TryExec").map(|s| s.to_string()),
-        exec: entry_keys
-            .get("Exec")
-            .ok_or(ParseError::MissingRequiredField)?
-            .to_string(),
+        exec: parse_exec_key(
+            entry_keys
+                .get("Exec")
+                .ok_or(ParseError::MissingRequiredField)?,
+            entry_keys.get("Icon"),
+            entry_keys.get("Name"),
+        ),
         generic_name: entry_keys.get("GenericName").map(|s| s.to_string()),
         comment: entry_keys.get("Comment").map(|s| s.to_string()),
         icon_string: entry_keys.get("Icon").map(|s| s.to_string()),
@@ -145,12 +148,22 @@ fn parse_from_ini(input: Ini) -> Result<DesktopEntry, ParseError> {
                     .section(Some(format!("Desktop Action {}", name)))
                     .ok_or(ParseError::BadGroupHeader)?;
                 return Ok::<Action, ParseError>(Action {
-                    name: section.get("Name").ok_or(ParseError::ActionMissingName)?.to_string(),
+                    name: section
+                        .get("Name")
+                        .ok_or(ParseError::ActionMissingName)?
+                        .to_string(),
                     exec: section.get("Exec").map(|s| s.to_string()),
                     icon: section.get("Icon").map(|s| s.to_string()),
                 });
             })
-            .filter_map(|a| if a.is_ok() {a.ok()} else {log::warn(format!("Action was invalid {:#?}", a.err())); None})
+            .filter_map(|a| {
+                if a.is_ok() {
+                    a.ok()
+                } else {
+                    log::warn(format!("Action was invalid {:#?}", a.err()));
+                    None
+                }
+            })
             .collect(),
     };
 
@@ -181,7 +194,6 @@ fn parse_string_list(input: Option<&str>) -> Vec<String> {
     if !current.is_empty() {
         result.push(current);
     }
-
     return result;
 }
 
@@ -191,6 +203,82 @@ fn can_parse_string_list() {
     let output = parse_string_list(input);
     println!("{output:#?}");
     debug_assert!(output == vec!["t1".to_string(), "t2".to_string(), "t;3".to_string()])
+}
+
+fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String {
+    // https://specifications.freedesktop.org/desktop-entry-spec/latest/exec-variables.html
+    // maybe send to ai
+    let mut escaped_result = "".to_string();
+    let mut chars = input.chars().peekable();
+
+    // Lots of nesting here..
+    while let Some(c) = chars.next() {
+        match c {
+            // literal \
+            '\\' => {
+                let Some(n) = chars.next() else {
+                    log::warn(format!(
+                        "No character after backslash in escape sequence {}",
+                        input
+                    ));
+                    continue;
+                };
+
+                match n {
+                    // Quoting must be done by enclosing the argument between double quotes
+                    // and escaping the double quote character , ("`"), ("$"), ("\") by preceding it with an additional backslash character
+                    '\\' | '`' | '"' | '$' | '%' => escaped_result.push(n),
+
+                    s => log::info(format!("unknown escape sequence \\{}. Ignoring.", s)),
+                }
+            }
+            // a literal % is escaped as %%
+            '%' => {
+                let Some(n) = chars.next() else {
+                    panic!("No character after percent")
+                };
+                match n {
+                    '%' => escaped_result.push(n),
+                    'i' => {
+                        if let Some(icon) = icon {
+                            log::info(format!(
+                                "Hit funny %i (sub in icon) escape sequence for app with icon {icon}"
+                            ));
+                            escaped_result += format!("--icon {icon}").as_str();
+                        };
+                    }
+                    'c' => {
+                        if let Some(name) = name {
+                            log::info(format!(
+                                "Hit funny %c (sub in name) escape sequence for app with name {name}"
+                            ));
+                            escaped_result += name;
+                        }
+                    }
+                    _ => {} // do nothing
+                }
+            }
+            _ => escaped_result.push(c),
+        }
+    }
+
+    return escaped_result;
+}
+
+#[test]
+fn can_parse_exec_key() {
+    assert_eq!(parse_exec_key(r#"\\"#, None, None), "\\".to_string());
+    assert_eq!(parse_exec_key(r#"\`"#, None, None), "`".to_string());
+    assert_eq!(parse_exec_key(r#"\%"#, None, None), "%".to_string());
+    // Test % escaping
+    assert_eq!(
+        parse_exec_key(r#"%i"#, Some("Sylvan Franklin"), None),
+        "--icon Sylvan Franklin".to_string()
+    );
+    assert_eq!(
+        parse_exec_key(r#"%c"#, None, Some("name")),
+        "name".to_string()
+    );
 }
 
 fn parse_bool(s: &str) -> Option<bool> {
@@ -226,10 +314,20 @@ Exec=testaction
 
     // println!("{entry:#?}");
 
-    assert!(entry.name == "Test Name");
-    assert!(entry.entry_type == EntryType::Application);
-    assert!(entry.categories == vec!["System".to_string(), "TerminalEmulator".to_string()]);
-    assert!(entry.action_list[0] == Action {name: "New Terminal".to_string(), exec: Some("testaction".to_string()), icon: None});
+    assert_eq!(entry.name, "Test Name");
+    assert_eq!(entry.entry_type, EntryType::Application);
+    assert_eq!(
+        entry.categories,
+        vec!["System".to_string(), "TerminalEmulator".to_string()]
+    );
+    assert_eq!(
+        entry.action_list[0],
+        Action {
+            name: "New Terminal".to_string(),
+            exec: Some("testaction".to_string()),
+            icon: None
+        }
+    );
 }
 
 #[test]
