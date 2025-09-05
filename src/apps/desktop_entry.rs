@@ -6,20 +6,23 @@
 use ini::Ini;
 use std::vec::Vec;
 
+use crate::log;
+
+#[derive(Debug, PartialEq)]
 pub struct Action {
-    action_identifier: String,
     name: String,
     icon: Option<String>,
     exec: Option<String>,
 }
 
+#[derive(PartialEq, Debug, Clone, Copy)]
 enum EntryType {
     Application,
     Link,
     Directory,
 }
 
-// For Vec<String>, maybe just leave as 0 length vector?
+#[derive(Debug)]
 pub struct DesktopEntry {
     entry_type: EntryType,
     version: Option<String>,
@@ -32,16 +35,16 @@ pub struct DesktopEntry {
     only_show_in: Vec<String>,
     not_show_in: Vec<String>,
     // I do not support dbus activation idk what that is
+    try_exec: Option<String>,
     exec: String, // Techicially optional, nuh uh.
     path: Option<String>,
-    terminal: Option<String>,
+    terminal: bool,
     action_list: Vec<Action>,
     // mime_types: Option<
     categories: Vec<String>,
     // No impliments
     keywords: Vec<String>,
     url: Option<String>,
-    single_main_window: Option<bool>,
 }
 
 impl std::default::Default for DesktopEntry {
@@ -55,27 +58,27 @@ impl std::default::Default for DesktopEntry {
             icon_string: None,
             only_show_in: Vec::new(),
             not_show_in: Vec::new(),
+            try_exec: None,
             exec: "".to_string(),
             path: None,
-            terminal: None,
+            terminal: false,
             action_list: Vec::new(),
             categories: Vec::new(),
             keywords: Vec::new(),
             url: None,
-            single_main_window: None,
         }
     }
 }
 
 #[derive(Debug)]
 enum ParseError {
-    InvalidKey,
     MissingRequiredField,
     BadGroupHeader,
     CouldNotLoadFile,
     DesktopEntryHeaderNotFound,
     UnknownApplicationType,
     NoDisplayTrue,
+    ActionMissingName,
 }
 
 fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseError> {
@@ -98,29 +101,58 @@ fn parse_from_ini(input: Ini) -> Result<DesktopEntry, ParseError> {
         return Err(ParseError::NoDisplayTrue);
     }
 
+    let entry_keys: &ini::Properties = entry_keys;
+
+    let entry_type = match entry_keys.get("Type") {
+        Some("Application") => EntryType::Application,
+        Some("Link") => EntryType::Link,
+        Some("Directory") => EntryType::Directory,
+        Some(_) => return Err(ParseError::UnknownApplicationType),
+        None => return Err(ParseError::MissingRequiredField),
+    };
+
     let entry = DesktopEntry {
-        // use matches! here.
-        entry_type: match entry_keys.get("Type") {
-            Some("Application") => EntryType::Application,
-            Some("Link") => EntryType::Link,
-            Some("Directory") => EntryType::Directory,
-            Some(_) => return Err(ParseError::UnknownApplicationType),
-            None => return Err(ParseError::MissingRequiredField),
-        },
+        entry_type: entry_type,
         version: entry_keys.get("Version").map(|s| s.to_string()),
         name: entry_keys
             .get("Name")
+            .ok_or(ParseError::MissingRequiredField)?
+            .to_string(),
+        try_exec: entry_keys.get("TryExec").map(|s| s.to_string()),
+        exec: entry_keys
+            .get("Exec")
             .ok_or(ParseError::MissingRequiredField)?
             .to_string(),
         generic_name: entry_keys.get("GenericName").map(|s| s.to_string()),
         comment: entry_keys.get("Comment").map(|s| s.to_string()),
         icon_string: entry_keys.get("Icon").map(|s| s.to_string()),
         only_show_in: parse_string_list(entry_keys.get("OnlyShowIn")),
-        ..Default::default()
+        not_show_in: parse_string_list(entry_keys.get("NotShowIn")),
+        path: entry_keys.get("Path").map(|s| s.to_string()),
+        terminal: entry_keys.get("Terminal").map_or(false, |b| b == "true"),
+        categories: parse_string_list(entry_keys.get("Categories")),
+        keywords: parse_string_list(entry_keys.get("Keywords")),
+        url: match entry_keys.get("URL") {
+            Some(s) => Some(s.to_string()),
+            _ if entry_type == EntryType::Link => return Err(ParseError::MissingRequiredField),
+            _ => None,
+        },
+        action_list: parse_string_list(entry_keys.get("Actions")) // i dont like this whole thing
+            .into_iter()
+            .map(|name: String| {
+                println!("{name}");
+                let section: &ini::Properties = input
+                    .section(Some(format!("Desktop Action {}", name)))
+                    .ok_or(ParseError::BadGroupHeader)?;
+                return Ok::<Action, ParseError>(Action {
+                    name: section.get("Name").ok_or(ParseError::ActionMissingName)?.to_string(),
+                    exec: section.get("Exec").map(|s| s.to_string()),
+                    icon: section.get("Icon").map(|s| s.to_string()),
+                });
+            })
+            .filter_map(|a| if a.is_ok() {a.ok()} else {log::warn(format!("Action was invalid {:#?}", a.err())); None})
+            .collect(),
     };
-
-    println!("hello");
-    println!("{input:#?}");
 
     Ok(entry)
 }
@@ -169,33 +201,35 @@ fn parse_bool(s: &str) -> Option<bool> {
     }
 }
 
-
 #[test]
-fn can_parse_file() {
+fn can_parse_full_app() {
     let test = r#"
 [Desktop Entry]
 Type=Application
-TryExec=alacritty
+TryExec=execme
+Name=Test Name
 Exec=alacritty
 Icon=Alacritty
 Terminal=false
 Categories=System;TerminalEmulator;
-
-Name=Alacritty
 GenericName=Terminal
 Comment=A fast, cross-platform, OpenGL terminal emulator
-StartupNotify=true
-StartupWMClass=Alacritty
 Actions=New;
-X-Desktop-File-Install-Version=0.28
 
 [Desktop Action New]
 Name=New Terminal
-Exec=alacritty
+Exec=testaction
     "#;
     // a
 
-    parse_from_ini(Ini::load_from_str(test).unwrap()).unwrap();
+    let entry = parse_from_ini(Ini::load_from_str(test).unwrap()).unwrap();
+
+    // println!("{entry:#?}");
+
+    assert!(entry.name == "Test Name");
+    assert!(entry.entry_type == EntryType::Application);
+    assert!(entry.categories == vec!["System".to_string(), "TerminalEmulator".to_string()]);
+    assert!(entry.action_list[0] == Action {name: "New Terminal".to_string(), exec: Some("testaction".to_string()), icon: None});
 }
 
 #[test]
