@@ -5,6 +5,7 @@
 
 use ini::Ini;
 use std::vec::Vec;
+use walkdir::WalkDir;
 
 use crate::log;
 
@@ -79,6 +80,46 @@ enum ParseError {
     UnknownApplicationType,
     NoDisplayTrue,
     ActionMissingName,
+    MissingDataDirsEnvVar,
+    FailedToReadDataDirs,
+}
+
+fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
+    let mut entries = Vec::new();
+    let Ok(raw_data_dirs) = std::env::var("XDG_DATA_DIRS") else {
+        return Err(ParseError::MissingDataDirsEnvVar);
+    };
+    println!("raw data dirs = {raw_data_dirs}");
+    for dir in raw_data_dirs.split(":") {
+        for entry in WalkDir::new(dir.to_owned() + "/applications/")
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
+            println!("{}", entry.path().display());
+            entries.push(parse_from_file(entry.path()).map_err(
+                |e| {
+                    log::warn(format!(
+                        "error parsing file {:#?} with error: {:?}",
+                        entry.path(),
+                        e
+                    ))
+                },
+            ));
+        }
+    }
+
+    // panic!();
+    Ok(entries.into_iter().filter_map(|a| a.ok()).collect())
+}
+
+#[cfg(unix)]
+#[test]
+fn can_load_system_desktop_entries() {
+    let r = load_desktop_entries();
+    assert!(r.is_ok());
+    let r = r.unwrap();
+    println!("{r:#?}");
+    assert_ne!(r.len(), 0);
 }
 
 fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseError> {
@@ -194,12 +235,12 @@ fn parse_string_list(input: Option<&str>) -> Vec<String> {
     if !current.is_empty() {
         result.push(current);
     }
-    return result;
+    result
 }
 
 #[test]
 fn can_parse_string_list() {
-    let input = Some("t1;t2;t\\;3");
+    let input = Some("t1;t2;t\\;3;");
     let output = parse_string_list(input);
     println!("{output:#?}");
     debug_assert!(output == vec!["t1".to_string(), "t2".to_string(), "t;3".to_string()])
@@ -235,7 +276,11 @@ fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String
             // a literal % is escaped as %%
             '%' => {
                 let Some(n) = chars.next() else {
-                    panic!("No character after percent")
+                    log::warn(format!(
+                        "No character after percentage in escape sequence {}",
+                        input
+                    ));
+                    continue;
                 };
                 match n {
                     '%' => escaped_result.push(n),
@@ -262,7 +307,7 @@ fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String
         }
     }
 
-    return escaped_result;
+    escaped_result
 }
 
 #[test]
