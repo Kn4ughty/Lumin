@@ -11,9 +11,9 @@ use crate::log;
 
 #[derive(Debug, PartialEq)]
 pub struct Action {
-    name: String,
-    icon: Option<String>,
-    exec: Option<String>,
+    pub name: String,
+    pub icon_path: Option<String>,
+    pub exec: Option<String>,
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
@@ -25,26 +25,26 @@ enum EntryType {
 
 #[derive(Debug)]
 pub struct DesktopEntry {
-    entry_type: EntryType,
+    pub entry_type: EntryType,
     version: Option<String>,
-    name: String,
-    generic_name: Option<String>,
+    pub name: String,
+    pub generic_name: Option<String>,
     // No display not included since its irrelevant. Should be handled in parsing
-    comment: Option<String>,
-    icon_string: Option<String>, // https://specifications.freedesktop.org/icon-theme-spec/latest/
+    pub comment: Option<String>,
+    pub icon_path: Option<String>, // https://specifications.freedesktop.org/icon-theme-spec/latest/
     // Handle files with Hidden at parsing level
     only_show_in: Vec<String>,
     not_show_in: Vec<String>,
     // I do not support dbus activation idk what that is
     try_exec: Option<String>,
-    exec: String, // Techicially optional, nuh uh.
-    path: Option<String>,
-    terminal: bool,
-    action_list: Vec<Action>,
+    pub exec: String, // Techicially optional, nuh uh.
+    pub path: Option<String>,
+    pub terminal: bool,
+    pub action_list: Vec<Action>,
     // mime_types: Option<
     categories: Vec<String>,
     // No impliments
-    keywords: Vec<String>,
+    pub keywords: Vec<String>,
     url: Option<String>,
 }
 
@@ -56,7 +56,7 @@ impl std::default::Default for DesktopEntry {
             name: "".to_string(),
             generic_name: None,
             comment: None,
-            icon_string: None,
+            icon_path: None,
             only_show_in: Vec::new(),
             not_show_in: Vec::new(),
             try_exec: None,
@@ -169,7 +169,7 @@ fn parse_from_ini(input: Ini) -> Result<DesktopEntry, ParseError> {
         ),
         generic_name: entry_keys.get("GenericName").map(|s| s.to_string()),
         comment: entry_keys.get("Comment").map(|s| s.to_string()),
-        icon_string: entry_keys.get("Icon").map(|s| s.to_string()),
+        icon_path: entry_keys.get("Icon").map(|s| s.to_string()),
         only_show_in: parse_string_list(entry_keys.get("OnlyShowIn")),
         not_show_in: parse_string_list(entry_keys.get("NotShowIn")),
         path: entry_keys.get("Path").map(|s| s.to_string()),
@@ -194,7 +194,7 @@ fn parse_from_ini(input: Ini) -> Result<DesktopEntry, ParseError> {
                         .ok_or(ParseError::ActionMissingName)?
                         .to_string(),
                     exec: section.get("Exec").map(|s| s.to_string()),
-                    icon: section.get("Icon").map(|s| s.to_string()),
+                    icon_path: section.get("Icon").map(|s| s.to_string()),
                 });
             })
             .filter_map(|a| {
@@ -370,7 +370,7 @@ Exec=testaction
         Action {
             name: "New Terminal".to_string(),
             exec: Some("testaction".to_string()),
-            icon: None
+            icon_path: None
         }
     );
 }

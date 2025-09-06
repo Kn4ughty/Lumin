@@ -1740,6 +1740,7 @@ name = "lumin"
 version = "0.1.0"
 dependencies = [
  "iced",
+ "libc",
  "rust-ini 0.21.3",
  "walkdir",
 ]
