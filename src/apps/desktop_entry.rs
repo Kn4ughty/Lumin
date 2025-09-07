@@ -1,13 +1,11 @@
 // https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
 // 6hr
-//
-// #![allow(dead_code)]
 
 use ini::Ini;
 use std::vec::Vec;
 use walkdir::WalkDir;
 
-use crate::log;
+use log;
 
 #[derive(Debug, PartialEq)]
 pub struct Action {
@@ -31,6 +29,7 @@ pub struct DesktopEntry {
     pub generic_name: Option<String>,
     // No display not included since its irrelevant. Should be handled in parsing
     pub comment: Option<String>,
+    // pub icon_path: Option<std::path::PathBuf>, // https://specifications.freedesktop.org/icon-theme-spec/latest/
     pub icon_path: Option<String>, // https://specifications.freedesktop.org/icon-theme-spec/latest/
     // Handle files with Hidden at parsing level
     only_show_in: Vec<String>,
@@ -38,7 +37,7 @@ pub struct DesktopEntry {
     // I do not support dbus activation idk what that is
     try_exec: Option<String>,
     pub exec: String, // Techicially optional, nuh uh.
-    pub path: Option<String>,
+    pub working_dir: Option<String>,
     pub terminal: bool,
     pub action_list: Vec<Action>,
     // mime_types: Option<
@@ -61,7 +60,7 @@ impl std::default::Default for DesktopEntry {
             not_show_in: Vec::new(),
             try_exec: None,
             exec: "".to_string(),
-            path: None,
+            working_dir: None,
             terminal: false,
             action_list: Vec::new(),
             categories: Vec::new(),
@@ -72,7 +71,7 @@ impl std::default::Default for DesktopEntry {
 }
 
 #[derive(Debug)]
-enum ParseError {
+pub enum ParseError {
     MissingRequiredField,
     BadGroupHeader,
     CouldNotLoadFile,
@@ -84,27 +83,21 @@ enum ParseError {
     FailedToReadDataDirs,
 }
 
-fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
+pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
     let mut entries = Vec::new();
     let Ok(raw_data_dirs) = std::env::var("XDG_DATA_DIRS") else {
         return Err(ParseError::MissingDataDirsEnvVar);
     };
-    println!("raw data dirs = {raw_data_dirs}");
+    log::info!("raw data dirs = {raw_data_dirs}");
     for dir in raw_data_dirs.split(":") {
         for entry in WalkDir::new(dir.to_owned() + "/applications/")
             .into_iter()
             .filter_map(|e| e.ok())
         {
-            println!("{}", entry.path().display());
-            entries.push(parse_from_file(entry.path()).map_err(
-                |e| {
-                    log::warn(format!(
-                        "error parsing file {:#?} with error: {:?}",
-                        entry.path(),
-                        e
-                    ))
-                },
-            ));
+            log::info!("{}", entry.path().display());
+            entries.push(parse_from_file(entry.path()).map_err(|e| {
+                log::warn!("error parsing file {:#?} with error: {:?}", entry.path(), e)
+            }));
         }
     }
 
@@ -172,7 +165,7 @@ fn parse_from_ini(input: Ini) -> Result<DesktopEntry, ParseError> {
         icon_path: entry_keys.get("Icon").map(|s| s.to_string()),
         only_show_in: parse_string_list(entry_keys.get("OnlyShowIn")),
         not_show_in: parse_string_list(entry_keys.get("NotShowIn")),
-        path: entry_keys.get("Path").map(|s| s.to_string()),
+        working_dir: entry_keys.get("Path").map(|s| s.to_string()),
         terminal: entry_keys.get("Terminal").map_or(false, |b| b == "true"),
         categories: parse_string_list(entry_keys.get("Categories")),
         keywords: parse_string_list(entry_keys.get("Keywords")),
@@ -184,7 +177,6 @@ fn parse_from_ini(input: Ini) -> Result<DesktopEntry, ParseError> {
         action_list: parse_string_list(entry_keys.get("Actions")) // i dont like this whole thing
             .into_iter()
             .map(|name: String| {
-                println!("{name}");
                 let section: &ini::Properties = input
                     .section(Some(format!("Desktop Action {}", name)))
                     .ok_or(ParseError::BadGroupHeader)?;
@@ -201,7 +193,7 @@ fn parse_from_ini(input: Ini) -> Result<DesktopEntry, ParseError> {
                 if a.is_ok() {
                     a.ok()
                 } else {
-                    log::warn(format!("Action was invalid {:#?}", a.err()));
+                    log::warn!("Action was invalid {:#?}", a.err());
                     None
                 }
             })
@@ -258,10 +250,7 @@ fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String
             // literal \
             '\\' => {
                 let Some(n) = chars.next() else {
-                    log::warn(format!(
-                        "No character after backslash in escape sequence {}",
-                        input
-                    ));
+                    log::warn!("No character after backslash in escape sequence {}", input);
                     continue;
                 };
 
@@ -270,33 +259,30 @@ fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String
                     // and escaping the double quote character , ("`"), ("$"), ("\") by preceding it with an additional backslash character
                     '\\' | '`' | '"' | '$' | '%' => escaped_result.push(n),
 
-                    s => log::info(format!("unknown escape sequence \\{}. Ignoring.", s)),
+                    s => log::info!("unknown escape sequence \\{}. Ignoring.", s),
                 }
             }
             // a literal % is escaped as %%
             '%' => {
                 let Some(n) = chars.next() else {
-                    log::warn(format!(
-                        "No character after percentage in escape sequence {}",
-                        input
-                    ));
+                    log::warn!("No character after percentage in escape sequence {}", input);
                     continue;
                 };
                 match n {
                     '%' => escaped_result.push(n),
                     'i' => {
                         if let Some(icon) = icon {
-                            log::info(format!(
+                            log::info!(
                                 "Hit funny %i (sub in icon) escape sequence for app with icon {icon}"
-                            ));
+                            );
                             escaped_result += format!("--icon {icon}").as_str();
                         };
                     }
                     'c' => {
                         if let Some(name) = name {
-                            log::info(format!(
+                            log::info!(
                                 "Hit funny %c (sub in name) escape sequence for app with name {name}"
-                            ));
+                            );
                             escaped_result += name;
                         }
                     }
@@ -333,6 +319,21 @@ fn parse_bool(s: &str) -> Option<bool> {
         _ => None,
     }
 }
+
+// fn find_icon(name: &str, size: i32, scale: i32) -> std::path::PathBuf {
+    // gsettings get org.gnome.desktop.interface gtk-theme
+    // let user_theme = std::process::Command::new("gsettings")
+    //     .args(["get", "org.gnome.desktop.interface", "gtk-theme"])
+    //     .spawn()
+    //     .or_else(|e| {
+    //         log::warn!("failed ");
+    //     });
+
+    // filename = find_icon_helper(name, size, scale, user_theme);
+    // if filename.
+// }
+
+// fn find_icon_helper(name: &str, size: i32, scale: i32, user_theme: &str) -> std::path::PathBuf {}
 
 #[test]
 fn can_parse_full_app() {

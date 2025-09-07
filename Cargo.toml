@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 iced = { version = "0.13.1", features = ["advanced"] }
 libc = "0.2.175"
+log = "0.4.28"
 rust-ini = "0.21.3"
 walkdir = "2.5.0"
 

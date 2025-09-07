@@ -6,11 +6,16 @@ use libc;
 use std::io;
 use std::process;
 
-struct App {
+pub struct App {
     cmd: String,
     args: Vec<String>,
     working_dir: String,
-    name: String,
+    pub name: String,
+}
+
+#[cfg(unix)]
+pub fn get_apps() -> Vec<App> {
+    return desktop_entry::load_desktop_entries().expect("Can load apps").into_iter().map(|a| App::from(a)).collect();
 }
 
 impl App {
@@ -42,6 +47,7 @@ impl App {
 
 impl From<DesktopEntry> for App {
     fn from(value: DesktopEntry) -> Self {
+        // https://docs.iced.rs/iced/advanced/image/index.html
         let (cmd, args) = match value.exec.split_once(' ') {
             Some((cmd, args)) => (
                 cmd.to_string(),
@@ -54,7 +60,7 @@ impl From<DesktopEntry> for App {
             name: value.name,
             cmd,
             args,
-            working_dir: value.working_dir,
+            working_dir: value.working_dir.unwrap_or("/".to_string()), // Should be $HOME
         }
     }
 }

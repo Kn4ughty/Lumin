@@ -1,5 +1,5 @@
 use iced::{Task, widget};
-mod log;
+use log;
 mod apps;
 
 #[derive(Clone, Debug)]
@@ -24,7 +24,7 @@ impl std::default::Default for State {
 
 impl State {
     fn update(&mut self, message: Message) -> Task<Message> {
-        log::info("update fn run");
+        log::info!("update fn run");
         match message {
             Message::TextInputChanged(content) => {
                 self.text_value = content;
@@ -36,28 +36,31 @@ impl State {
 
     fn view(&self) -> iced::Element<'_, Message> {
         // the heck is a '_
-        log::info("view fn run");
+        log::info!("view fn run");
         let text_input = widget::text_input("placeholder", &self.text_value)
             .id(self.text_id.clone())
             .on_input(Message::TextInputChanged);
 
-        let root_continer = widget::container(text_input)
+
+
+        let result = widget::scrollable(widget::column(apps::get_apps().into_iter().map(|app| widget::text(app.name).into())));
+
+        let root_continer = widget::container(widget::column![text_input, result])
             .padding(10)
             .center(iced::Fill);
-
 
         root_continer.into()
     }
 }
 
 pub fn main() -> iced::Result {
-    log::warn("aaa");
+    log::warn!("aaa");
     iced::application("Lumin", State::update, State::view)
         .subscription(capture_keyboard_input_subscription)
         .level(iced::window::Level::AlwaysOnTop)
         .resizable(false)
         .decorations(false)
-        .window_size((800.0, 1.0))
+        .window_size((800.0, 100.0))
         .theme(|_s| iced::Theme::CatppuccinMocha)
         .run()
 }
