@@ -1,6 +1,9 @@
 use iced::{Task, widget};
+use pretty_env_logger;
+
 use log;
 mod apps;
+use apps::App;
 
 #[derive(Clone, Debug)]
 enum Message {
@@ -11,6 +14,7 @@ enum Message {
 struct State {
     text_value: String,
     text_id: widget::text_input::Id,
+    app_list: Vec<App>,
 }
 
 impl std::default::Default for State {
@@ -18,6 +22,7 @@ impl std::default::Default for State {
         State {
             text_value: "".to_string(),
             text_id: widget::text_input::Id::new("text_entry"),
+            app_list: Vec::new(),
         }
     }
 }
@@ -28,6 +33,16 @@ impl State {
         match message {
             Message::TextInputChanged(content) => {
                 self.text_value = content;
+                if self.app_list.len() == 0 {
+                    log::info!("Regenerating app_list");
+                    let start = std::time::Instant::now();
+                    self.app_list = apps::get_apps();
+                    log::info!(
+                        "Time to get #{} apps: {:#?}",
+                        self.app_list.len(),
+                        start.elapsed()
+                    )
+                }
                 Task::none()
             }
             Message::FocusTextInput => widget::text_input::focus(self.text_id.clone()),
@@ -41,9 +56,12 @@ impl State {
             .id(self.text_id.clone())
             .on_input(Message::TextInputChanged);
 
-
-
-        let result = widget::scrollable(widget::column(apps::get_apps().into_iter().map(|app| widget::text(app.name).into())));
+        let result = widget::scrollable(widget::column(
+            self.app_list
+                .clone()
+                .into_iter()
+                .map(|app| widget::text(app.name).into()),
+        ));
 
         let root_continer = widget::container(widget::column![text_input, result])
             .padding(10)
@@ -54,6 +72,7 @@ impl State {
 }
 
 pub fn main() -> iced::Result {
+    pretty_env_logger::init();
     log::warn!("aaa");
     iced::application("Lumin", State::update, State::view)
         .subscription(capture_keyboard_input_subscription)
@@ -68,3 +87,6 @@ pub fn main() -> iced::Result {
 fn capture_keyboard_input_subscription(_state: &State) -> iced::Subscription<Message> {
     iced::window::open_events().map(|_id| Message::FocusTextInput)
 }
+
+// fn window_initialised_subscription(_state: &State) -> iced::Subscription<Message> {
+// }

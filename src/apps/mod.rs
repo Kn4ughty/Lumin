@@ -7,6 +7,7 @@ use std::io;
 use std::process;
 use log;
 
+#[derive(Clone)]
 pub struct App {
     cmd: String,
     args: Vec<String>,

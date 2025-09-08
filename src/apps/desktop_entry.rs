@@ -88,15 +88,15 @@ pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
     let Ok(raw_data_dirs) = std::env::var("XDG_DATA_DIRS") else {
         return Err(ParseError::MissingDataDirsEnvVar);
     };
-    log::info!("raw data dirs = {raw_data_dirs}");
+    log::trace!("raw data dirs = {raw_data_dirs}");
     for dir in raw_data_dirs.split(":") {
         for entry in WalkDir::new(dir.to_owned() + "/applications/")
             .into_iter()
             .filter_map(|e| e.ok())
         {
-            log::info!("{}", entry.path().display());
+            log::trace!("{}", entry.path().display());
             entries.push(parse_from_file(entry.path()).map_err(|e| {
-                log::warn!("error parsing file {:#?} with error: {:?}", entry.path(), e)
+                log::trace!("error parsing file {:#?} with error: {:?}", entry.path(), e)
             }));
         }
     }
