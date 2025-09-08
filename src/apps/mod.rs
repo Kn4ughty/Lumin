@@ -5,6 +5,7 @@ use desktop_entry::DesktopEntry;
 use libc;
 use std::io;
 use std::process;
+use log;
 
 pub struct App {
     cmd: String,
@@ -17,6 +18,16 @@ pub struct App {
 pub fn get_apps() -> Vec<App> {
     return desktop_entry::load_desktop_entries().expect("Can load apps").into_iter().map(|a| App::from(a)).collect();
 }
+
+// #[test]
+// fn becnhapps() {
+//     let now = std::time::Instant::now();
+//
+//     let _a = get_apps();
+//
+//     println!("time: {:?}", now.elapsed());
+//     assert!(1==2);
+// }
 
 impl App {
     #[cfg(unix)]
@@ -64,3 +75,4 @@ impl From<DesktopEntry> for App {
         }
     }
 }
+

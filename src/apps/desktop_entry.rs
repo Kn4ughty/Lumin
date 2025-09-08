@@ -112,7 +112,7 @@ fn can_load_system_desktop_entries() {
     assert!(r.is_ok());
     let r = r.unwrap();
     println!("{r:#?}");
-    assert_ne!(r.len(), 0);
+    assert_ne!(r.len(), 0); // this might break if i use github CI
 }
 
 fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseError> {
