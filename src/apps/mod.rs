@@ -3,9 +3,9 @@ use iced::advanced::image;
 mod desktop_entry;
 use desktop_entry::DesktopEntry;
 use libc;
+use log;
 use std::io;
 use std::process;
-use log;
 
 #[derive(Clone)]
 pub struct App {
@@ -17,7 +17,11 @@ pub struct App {
 
 #[cfg(unix)]
 pub fn get_apps() -> Vec<App> {
-    return desktop_entry::load_desktop_entries().expect("Can load apps").into_iter().map(|a| App::from(a)).collect();
+    return desktop_entry::load_desktop_entries()
+        .expect("Can load apps")
+        .into_iter()
+        .map(|a| App::from(a))
+        .collect();
 }
 
 // #[test]
@@ -51,6 +55,7 @@ impl App {
 
                     Ok(())
                 });
+            log::info!("Executing app {:#?}", cmd);
             cmd.spawn()?;
         }
         Ok(())
@@ -60,20 +65,38 @@ impl App {
 impl From<DesktopEntry> for App {
     fn from(value: DesktopEntry) -> Self {
         // https://docs.iced.rs/iced/advanced/image/index.html
+        log::trace!("{}", value.exec.replace(' ', "*"));
         let (cmd, args) = match value.exec.split_once(' ') {
-            Some((cmd, args)) => (
-                cmd.to_string(),
-                args.split(" ").map(|s| s.to_string()).collect(),
-            ),
+            Some((cmd, args)) => {
+
+                let mut arg: Vec<String> = args.split(" ").map(|s| s.to_string()).collect();
+
+                log::trace!("arg is: {:#?}", arg);
+
+                // There has got to be something wrong here
+                // Surely there is a better way
+                if arg == vec!["".to_string()] {
+                    log::trace!("ARGS LEN 0");
+                    arg.clear();
+                }
+
+                (
+                    cmd.to_string(),
+                    arg
+                )
+            }
             None => (value.exec, vec!["".to_string()]),
         };
+
+        let working_dir = value.working_dir.unwrap_or(
+            std::env::var("HOME").unwrap_or("/".to_string())
+        );
 
         App {
             name: value.name,
             cmd,
             args,
-            working_dir: value.working_dir.unwrap_or("/".to_string()), // Should be $HOME
+            working_dir
         }
     }
 }
-

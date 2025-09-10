@@ -66,6 +66,7 @@ impl State {
             }
             Message::TextInputSubmitted(_text) => {
                 log::info!("Text input submitted");
+                // TODO. Dont just unwrap
                 self.app_list.first().unwrap().execute().unwrap();
                 iced::exit()
             }
