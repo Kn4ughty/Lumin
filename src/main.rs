@@ -6,6 +6,10 @@ use pretty_env_logger;
 use log;
 mod apps;
 use apps::AppModule;
+
+// mod calculator;
+// use calculator::Calc;
+
 mod module;
 mod util;
 use module::Module;
