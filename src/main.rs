@@ -4,11 +4,13 @@ use pretty_env_logger;
 use log;
 mod apps;
 use apps::App;
+mod util;
 
 #[derive(Clone, Debug)]
 enum Message {
     TextInputChanged(String),
     FocusTextInput,
+    TextInputSubmitted(String),
 }
 
 struct State {
@@ -29,21 +31,43 @@ impl std::default::Default for State {
 
 impl State {
     fn update(&mut self, message: Message) -> Task<Message> {
-        log::info!("update fn run");
+        log::trace!("update fn run");
         match message {
             Message::TextInputChanged(content) => {
                 self.text_value = content;
+
                 if self.app_list.len() == 0 {
-                    log::info!("Regenerating app_list");
+                    log::trace!("Regenerating app_list");
                     let start = std::time::Instant::now();
                     self.app_list = apps::get_apps();
-                    log::info!(
+                    log::debug!(
                         "Time to get #{} apps: {:#?}",
                         self.app_list.len(),
                         start.elapsed()
                     )
                 }
+
+
+                let start = std::time::Instant::now();
+                // Cached_key seems to be much faster which is interesting
+                self.app_list.sort_by_cached_key(|app| {
+                    let score = util::longest_common_substr(&app.name, &self.text_value);
+                    // TODO. Add aditional weighting for first character matching
+                    return score * -1;
+                });
+
+                log::debug!(
+                    "Time to sort #{} apps: {:#?}",
+                    self.app_list.len(),
+                    start.elapsed()
+                );
+
                 Task::none()
+            }
+            Message::TextInputSubmitted(_text) => {
+                log::info!("Text input submitted");
+                self.app_list.first().unwrap().execute().unwrap();
+                iced::exit()
             }
             Message::FocusTextInput => widget::text_input::focus(self.text_id.clone()),
         }
@@ -51,26 +75,18 @@ impl State {
 
     fn view(&self) -> iced::Element<'_, Message> {
         // the heck is a '_
-        log::info!("view fn run");
+        log::trace!("view fn run");
         let text_input = widget::text_input("placeholder", &self.text_value)
             .id(self.text_id.clone())
-            .on_input(Message::TextInputChanged);
+            .on_input(Message::TextInputChanged)
+            .on_submit(Message::TextInputSubmitted("test".to_string()));
 
         let result = match self.text_value {
             _ => {
-                // Do app search
-                // cpdef score(str eval_str, str input_text):
-                // cdef int score = longestCommonSubstr(eval_str, input_text)
-                // if len(eval_str) >= 1 and len(input_text) >= 1:
-                //     if input_text[0] == eval_str[0]:
-                //         score += 1
-                // return score
-                let mut app_list = self.app_list.clone();
-                app_list.sort_by_key(|app| return (app.name.len() as i32) * -1);
 
                 widget::scrollable(
                     widget::column(
-                        app_list
+                        self.app_list.clone()
                             .into_iter()
                             .map(|app| widget::text(app.name).into()),
                     )
@@ -78,7 +94,6 @@ impl State {
                 )
             }
         };
-
 
         let root_continer = widget::container(widget::column![text_input, result])
             .padding(10)

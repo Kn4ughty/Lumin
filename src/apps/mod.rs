@@ -32,7 +32,7 @@ pub fn get_apps() -> Vec<App> {
 
 impl App {
     #[cfg(unix)]
-    fn execute_detached(&self) -> io::Result<()> {
+    pub fn execute(&self) -> io::Result<()> {
         use std::os::unix::process::CommandExt;
         let mut cmd = process::Command::new(self.cmd.clone());
         unsafe {
