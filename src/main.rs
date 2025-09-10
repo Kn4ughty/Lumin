@@ -1,10 +1,14 @@
+use std::collections::HashMap;
+
 use iced::{Task, keyboard, widget};
 use pretty_env_logger;
 
 use log;
 mod apps;
-use apps::App;
+use apps::AppModule;
+mod module;
 mod util;
+use module::Module;
 
 #[derive(Clone, Debug)]
 enum Message {
@@ -12,20 +16,24 @@ enum Message {
     FocusTextInput,
     TextInputSubmitted(String),
     Close,
+    PluginMessage(String),
 }
 
 struct State {
     text_value: String,
     text_id: widget::text_input::Id,
-    app_list: Vec<App>,
+    modules: HashMap<String, Box<dyn Module>>,
 }
 
 impl std::default::Default for State {
     fn default() -> State {
+        let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
+        modules.insert("".to_string(), Box::new(AppModule::new()));
+
         State {
             text_value: "".to_string(),
             text_id: widget::text_input::Id::new("text_entry"),
-            app_list: Vec::new(),
+            modules,
         }
     }
 }
@@ -36,46 +44,28 @@ impl State {
         match message {
             Message::TextInputChanged(content) => {
                 self.text_value = content;
-
-                if self.app_list.len() == 0 {
-                    log::trace!("Regenerating app_list");
-                    let start = std::time::Instant::now();
-                    self.app_list = apps::get_apps();
-                    log::debug!(
-                        "Time to get #{} apps: {:#?}",
-                        self.app_list.len(),
-                        start.elapsed()
-                    )
+                // Lookup module and pass in text
+                let input = self.text_value.clone();
+                if let Some(module) = self.find_module_mut() {
+                    module.update(&input);
                 }
-
-                let start = std::time::Instant::now();
-                // Cached_key seems to be much faster which is interesting since text_value is
-                // always changing
-                self.app_list.sort_by_cached_key(|app| {
-                    let score = util::longest_common_substr(&app.name, &self.text_value);
-                    // TODO. Add aditional weighting for first character matching
-                    return score * -1;
-                });
-
-                log::debug!(
-                    "Time to sort #{} apps: {:#?}",
-                    self.app_list.len(),
-                    start.elapsed()
-                );
-
                 Task::none()
             }
             Message::TextInputSubmitted(_text) => {
                 log::info!("Text input submitted");
+
                 // TODO. Dont just unwrap
-                // Getting into this situation seems unlikely
-                self.app_list.first().unwrap().execute().unwrap();
+                self.find_module().unwrap().run();
                 iced::exit()
             }
             Message::FocusTextInput => widget::text_input::focus(self.text_id.clone()),
             Message::Close => {
                 log::info!("App is exiting");
                 iced::exit()
+            }
+            Message::PluginMessage(a) => {
+                log::info!("Ignoring plugin message {a}");
+                Task::none()
             }
         }
     }
@@ -88,24 +78,27 @@ impl State {
             .on_input(Message::TextInputChanged)
             .on_submit(Message::TextInputSubmitted("test".to_string()));
 
-        let result = match self.text_value {
-            // where different search modes will go
-            _ => widget::scrollable(
-                widget::column(
-                    self.app_list
-                        .clone()
-                        .into_iter()
-                        .map(|app| widget::text(app.name).into()),
-                )
-                .width(iced::Fill),
-            ),
-        };
+        let result = self.find_module().unwrap().view().map(|s: String| Message::PluginMessage(s));
 
         let root_continer = widget::container(widget::column![text_input, result])
             .padding(10)
             .align_top(iced::Fill);
 
         root_continer.into()
+    }
+
+    fn find_module(&self) -> Option<&Box<dyn Module>> {
+        self.modules
+            .iter()
+            .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
+            .map(|(_s, m)| m)
+    }
+
+    fn find_module_mut(&mut self) -> Option<&mut Box<dyn Module>> {
+        self.modules
+            .iter_mut()
+            .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
+            .map(|(_s, m)| m)
     }
 }
 

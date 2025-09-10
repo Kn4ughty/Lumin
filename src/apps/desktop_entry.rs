@@ -272,7 +272,7 @@ fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String
                     '%' => escaped_result.push(n),
                     'i' => {
                         if let Some(icon) = icon {
-                            log::info!(
+                            log::trace!(
                                 "Hit funny %i (sub in icon) escape sequence for app with icon {icon}"
                             );
                             escaped_result += format!("--icon {icon}").as_str();
@@ -280,7 +280,7 @@ fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String
                     }
                     'c' => {
                         if let Some(name) = name {
-                            log::info!(
+                            log::trace!(
                                 "Hit funny %c (sub in name) escape sequence for app with name {name}"
                             );
                             escaped_result += name;

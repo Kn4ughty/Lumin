@@ -1,11 +1,72 @@
-use iced::advanced::image;
-
-mod desktop_entry;
-use desktop_entry::DesktopEntry;
-use libc;
+use iced::widget;
 use log;
 use std::io;
 use std::process;
+use libc;
+
+mod desktop_entry;
+use desktop_entry::DesktopEntry;
+use crate::module::Module;
+use crate::util;
+
+pub struct AppModule {
+    app_list: Vec<App>,
+}
+
+impl AppModule {
+    pub fn new() -> Self {
+        AppModule {
+            app_list: Vec::new(),
+        }
+    }
+}
+
+impl Module for AppModule {
+    fn view(&self) -> iced::Element<'_, String> {
+        widget::scrollable(
+            widget::column(
+                self.app_list
+                    .clone()
+                    .into_iter()
+                    .map(|app| widget::text(app.name).into()),
+            )
+            .width(iced::Fill),
+        )
+        .into()
+    }
+
+    fn update(&mut self, input: &str) {
+        if self.app_list.len() == 0 {
+            log::trace!("Regenerating app_list");
+            let start = std::time::Instant::now();
+            self.app_list = get_apps();
+            log::info!(
+                "Time to get #{} apps: {:#?}",
+                self.app_list.len(),
+                start.elapsed()
+            )
+        }
+
+        let start = std::time::Instant::now();
+        // Cached_key seems to be much faster which is interesting since text_value is
+        // always changing
+        self.app_list.sort_by_cached_key(|app| {
+            let score = util::longest_common_substr(&app.name, input);
+            // TODO. Add aditional weighting for first character matching
+            return score * -1;
+        });
+
+        log::debug!(
+            "Time to sort #{} apps: {:#?}",
+            self.app_list.len(),
+            start.elapsed()
+        );
+    }
+
+    fn run(&self) {
+        self.app_list.first().unwrap().execute().unwrap()
+    }
+}
 
 #[derive(Clone)]
 pub struct App {
@@ -68,7 +129,6 @@ impl From<DesktopEntry> for App {
         log::trace!("{}", value.exec.replace(' ', "*"));
         let (cmd, args) = match value.exec.split_once(' ') {
             Some((cmd, args)) => {
-
                 let mut arg: Vec<String> = args.split(" ").map(|s| s.to_string()).collect();
 
                 log::trace!("arg is: {:#?}", arg);
@@ -80,23 +140,20 @@ impl From<DesktopEntry> for App {
                     arg.clear();
                 }
 
-                (
-                    cmd.to_string(),
-                    arg
-                )
+                (cmd.to_string(), arg)
             }
             None => (value.exec, vec!["".to_string()]),
         };
 
-        let working_dir = value.working_dir.unwrap_or(
-            std::env::var("HOME").unwrap_or("/".to_string())
-        );
+        let working_dir = value
+            .working_dir
+            .unwrap_or(std::env::var("HOME").unwrap_or("/".to_string()));
 
         App {
             name: value.name,
             cmd,
             args,
-            working_dir
+            working_dir,
         }
     }
 }
