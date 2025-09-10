@@ -56,12 +56,29 @@ impl State {
             .id(self.text_id.clone())
             .on_input(Message::TextInputChanged);
 
-        let result = widget::scrollable(widget::column(
-            self.app_list
-                .clone()
-                .into_iter()
-                .map(|app| widget::text(app.name).into()),
-        ));
+        let result = match self.text_value {
+            _ => {
+                // Do app search
+                // cpdef score(str eval_str, str input_text):
+                // cdef int score = longestCommonSubstr(eval_str, input_text)
+                // if len(eval_str) >= 1 and len(input_text) >= 1:
+                //     if input_text[0] == eval_str[0]:
+                //         score += 1
+                // return score
+                let mut app_list = self.app_list.clone();
+                app_list.sort_by_key(|app| return (app.name.len() as i32) * -1);
+
+                widget::scrollable(
+                    widget::column(
+                        app_list
+                            .into_iter()
+                            .map(|app| widget::text(app.name).into()),
+                    )
+                    .width(iced::Fill),
+                )
+            }
+        };
+
 
         let root_continer = widget::container(widget::column![text_input, result])
             .padding(10)
@@ -73,13 +90,12 @@ impl State {
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
-    log::warn!("aaa");
     iced::application("Lumin", State::update, State::view)
         .subscription(capture_keyboard_input_subscription)
         .level(iced::window::Level::AlwaysOnTop)
         .resizable(false)
         .decorations(false)
-        .window_size((800.0, 100.0))
+        .window_size((800.0, 200.0))
         .theme(|_s| iced::Theme::CatppuccinMocha)
         .run()
 }

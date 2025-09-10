@@ -2,13 +2,21 @@
 name = "lumin"
 version = "0.1.0"
 edition = "2024"
+
+[[bin]]
+name = "lumin"
+path = "src/main.rs"
+
 [profile.release]
 debug = true
 
-[[bin]]
-name = "app_get_test"
-path = "src/app_perf.rs"
-bench = true
+# [[bin]]
+# name = "app_get_test"
+# path = "src/app_perf.rs"
+# bench = true
+
+[profile.dev.package.rust-ini]
+opt-level = 3
 
 [dependencies]
 iced = { version = "0.13.1", features = ["advanced"] }
