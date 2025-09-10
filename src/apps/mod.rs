@@ -50,8 +50,12 @@ impl Module for AppModule {
         let start = std::time::Instant::now();
         // Cached_key seems to be much faster which is interesting since text_value is
         // always changing
+        let input = &input.to_lowercase();
         self.app_list.sort_by_cached_key(|app| {
-            let score = util::longest_common_substr(&app.name, input);
+            let mut score = util::longest_common_substr(&app.name.to_lowercase(), input);
+            if app.name.to_lowercase().starts_with(input) {
+                score += 2;
+            }
             // TODO. Add aditional weighting for first character matching
             return score * -1;
         });
