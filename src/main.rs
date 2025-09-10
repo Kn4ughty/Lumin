@@ -1,4 +1,4 @@
-use iced::{Task, widget};
+use iced::{Task, keyboard, widget};
 use pretty_env_logger;
 
 use log;
@@ -11,6 +11,7 @@ enum Message {
     TextInputChanged(String),
     FocusTextInput,
     TextInputSubmitted(String),
+    Close,
 }
 
 struct State {
@@ -47,9 +48,9 @@ impl State {
                     )
                 }
 
-
                 let start = std::time::Instant::now();
-                // Cached_key seems to be much faster which is interesting
+                // Cached_key seems to be much faster which is interesting since text_value is
+                // always changing
                 self.app_list.sort_by_cached_key(|app| {
                     let score = util::longest_common_substr(&app.name, &self.text_value);
                     // TODO. Add aditional weighting for first character matching
@@ -67,10 +68,15 @@ impl State {
             Message::TextInputSubmitted(_text) => {
                 log::info!("Text input submitted");
                 // TODO. Dont just unwrap
+                // Getting into this situation seems unlikely
                 self.app_list.first().unwrap().execute().unwrap();
                 iced::exit()
             }
             Message::FocusTextInput => widget::text_input::focus(self.text_id.clone()),
+            Message::Close => {
+                log::info!("App is exiting");
+                iced::exit()
+            }
         }
     }
 
@@ -83,22 +89,21 @@ impl State {
             .on_submit(Message::TextInputSubmitted("test".to_string()));
 
         let result = match self.text_value {
-            _ => {
-
-                widget::scrollable(
-                    widget::column(
-                        self.app_list.clone()
-                            .into_iter()
-                            .map(|app| widget::text(app.name).into()),
-                    )
-                    .width(iced::Fill),
+            // where different search modes will go
+            _ => widget::scrollable(
+                widget::column(
+                    self.app_list
+                        .clone()
+                        .into_iter()
+                        .map(|app| widget::text(app.name).into()),
                 )
-            }
+                .width(iced::Fill),
+            ),
         };
 
         let root_continer = widget::container(widget::column![text_input, result])
             .padding(10)
-            .center(iced::Fill);
+            .align_top(iced::Fill);
 
         root_continer.into()
     }
@@ -107,7 +112,7 @@ impl State {
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
     iced::application("Lumin", State::update, State::view)
-        .subscription(capture_keyboard_input_subscription)
+        .subscription(subscription)
         .level(iced::window::Level::AlwaysOnTop)
         .resizable(false)
         .decorations(false)
@@ -116,9 +121,18 @@ pub fn main() -> iced::Result {
         .run()
 }
 
-fn capture_keyboard_input_subscription(_state: &State) -> iced::Subscription<Message> {
-    iced::window::open_events().map(|_id| Message::FocusTextInput)
+fn subscription(_state: &State) -> iced::Subscription<Message> {
+    iced::Subscription::batch(vec![
+        iced::window::open_events().map(|_id| Message::FocusTextInput),
+        iced::keyboard::on_key_release(handle_hotkeys),
+    ])
 }
 
-// fn window_initialised_subscription(_state: &State) -> iced::Subscription<Message> {
-// }
+// Thank you https://kressle.in/keystrokes
+fn handle_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) -> Option<Message> {
+    match key.as_ref() {
+        // This is a bit silly
+        keyboard::Key::Named(keyboard::key::Named::Escape) => Some(Message::Close),
+        _ => None,
+    }
+}
