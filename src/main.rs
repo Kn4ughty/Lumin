@@ -77,7 +77,7 @@ impl State {
     fn view(&self) -> iced::Element<'_, Message> {
         // the heck is a '_
         log::trace!("view fn run");
-        let text_input = widget::text_input("placeholder", &self.text_value)
+        let text_input = widget::text_input("Type to search", &self.text_value)
             .id(self.text_id.clone())
             .on_input(Message::TextInputChanged)
             .on_submit(Message::TextInputSubmitted("test".to_string()));

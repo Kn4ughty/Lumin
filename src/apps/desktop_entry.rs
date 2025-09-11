@@ -240,7 +240,6 @@ fn can_parse_string_list() {
 
 fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String {
     // https://specifications.freedesktop.org/desktop-entry-spec/latest/exec-variables.html
-    // maybe send to ai
     let mut escaped_result = "".to_string();
     let mut chars = input.chars().peekable();
 
