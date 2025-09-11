@@ -7,7 +7,7 @@ use log;
 mod apps;
 use apps::AppModule;
 
-// mod calculator;
+mod calculator;
 // use calculator::Calc;
 
 mod module;
