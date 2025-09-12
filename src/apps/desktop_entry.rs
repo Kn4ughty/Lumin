@@ -15,7 +15,7 @@ pub struct Action {
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
-enum EntryType {
+pub enum EntryType {
     Application,
     Link,
     Directory,
@@ -24,7 +24,7 @@ enum EntryType {
 #[derive(Debug)]
 pub struct DesktopEntry {
     pub entry_type: EntryType,
-    version: Option<String>,
+    pub version: Option<String>,
     pub name: String,
     pub generic_name: Option<String>,
     // No display not included since its irrelevant. Should be handled in parsing
@@ -32,19 +32,19 @@ pub struct DesktopEntry {
     // pub icon_path: Option<std::path::PathBuf>, // https://specifications.freedesktop.org/icon-theme-spec/latest/
     pub icon_path: Option<String>, // https://specifications.freedesktop.org/icon-theme-spec/latest/
     // Handle files with Hidden at parsing level
-    only_show_in: Vec<String>,
-    not_show_in: Vec<String>,
+    pub only_show_in: Vec<String>,
+    pub not_show_in: Vec<String>,
     // I do not support dbus activation idk what that is
-    try_exec: Option<String>,
+    pub try_exec: Option<String>,
     pub exec: String, // Techicially optional, nuh uh.
     pub working_dir: Option<String>,
     pub terminal: bool,
     pub action_list: Vec<Action>,
     // mime_types: Option<
-    categories: Vec<String>,
+    pub categories: Vec<String>,
     // No impliments
     pub keywords: Vec<String>,
-    url: Option<String>,
+    pub url: Option<String>,
 }
 
 impl std::default::Default for DesktopEntry {
@@ -320,16 +320,16 @@ fn parse_bool(s: &str) -> Option<bool> {
 }
 
 // fn find_icon(name: &str, size: i32, scale: i32) -> std::path::PathBuf {
-    // gsettings get org.gnome.desktop.interface gtk-theme
-    // let user_theme = std::process::Command::new("gsettings")
-    //     .args(["get", "org.gnome.desktop.interface", "gtk-theme"])
-    //     .spawn()
-    //     .or_else(|e| {
-    //         log::warn!("failed ");
-    //     });
+// gsettings get org.gnome.desktop.interface gtk-theme
+// let user_theme = std::process::Command::new("gsettings")
+//     .args(["get", "org.gnome.desktop.interface", "gtk-theme"])
+//     .spawn()
+//     .or_else(|e| {
+//         log::warn!("failed ");
+//     });
 
-    // filename = find_icon_helper(name, size, scale, user_theme);
-    // if filename.
+// filename = find_icon_helper(name, size, scale, user_theme);
+// if filename.
 // }
 
 // fn find_icon_helper(name: &str, size: i32, scale: i32, user_theme: &str) -> std::path::PathBuf {}

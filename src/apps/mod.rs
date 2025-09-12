@@ -1,13 +1,13 @@
 use iced::widget;
+use libc;
 use log;
 use std::io;
 use std::process;
-use libc;
 
 mod desktop_entry;
-use desktop_entry::DesktopEntry;
 use crate::module::Module;
 use crate::util;
+use desktop_entry::DesktopEntry;
 
 pub struct AppModule {
     app_list: Vec<App>,
@@ -72,7 +72,7 @@ impl Module for AppModule {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct App {
     cmd: String,
     args: Vec<String>,
@@ -103,9 +103,13 @@ impl App {
     #[cfg(unix)]
     pub fn execute(&self) -> io::Result<()> {
         use std::os::unix::process::CommandExt;
-        let mut cmd = process::Command::new(self.cmd.clone());
+
+        log::trace!("Execute function being run on app: {self:#?}");
+
+        let mut command = process::Command::new(self.cmd.clone());
         unsafe {
-            cmd.args(self.args.clone())
+            command
+                .args(self.args.clone())
                 .current_dir(self.working_dir.clone())
                 .stdin(process::Stdio::null())
                 .stdout(process::Stdio::null())
@@ -117,11 +121,10 @@ impl App {
                     if libc::signal(libc::SIGHUP, libc::SIG_IGN) == libc::SIG_ERR {
                         return Err(io::Error::last_os_error());
                     }
-
                     Ok(())
                 });
-            log::info!("Executing app {:#?}", cmd);
-            cmd.spawn()?;
+            log::info!("Executing app {:#?}", command);
+            command.spawn()?;
         }
         Ok(())
     }
@@ -133,7 +136,11 @@ impl From<DesktopEntry> for App {
         log::trace!("{}", value.exec.replace(' ', "*"));
         let (cmd, args) = match value.exec.split_once(' ') {
             Some((cmd, args)) => {
-                let mut arg: Vec<String> = args.split(" ").map(|s| s.to_string()).collect();
+                let mut arg: Vec<String> = args
+                    .split(" ")
+                    .map(|s| s.to_string())
+                    .filter(|x| x.len() > 0)
+                    .collect();
 
                 log::trace!("arg is: {:#?}", arg);
 
@@ -160,4 +167,25 @@ impl From<DesktopEntry> for App {
             working_dir,
         }
     }
+}
+
+#[test]
+fn can_parse_app_from_desktop_entry() {
+    let entry = DesktopEntry {
+        name: "anki".to_string(),
+        exec: "/usr/bin/flatpak run --branch=stable net.ankiweb.Anki @@ @@".to_string(),
+        working_dir: Some("/".to_string()),
+        ..Default::default()
+    };
+    let app = App {
+        name: "anki".to_string(),
+        cmd: "/usr/bin/flatpak".to_string(),
+        args: vec!["run", "--branch=stable", "net.ankiweb.Anki", "@@", "@@"]
+            .iter()
+            .map(|k| k.to_string())
+            .collect(),
+        working_dir: "/".to_string(),
+    };
+
+    assert_eq!(app, App::from(entry));
 }
