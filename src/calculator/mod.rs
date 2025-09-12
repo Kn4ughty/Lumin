@@ -1,17 +1,50 @@
 use anyhow;
 use anyhow::bail;
+use arboard::Clipboard;
+use iced::{Element, futures::future::OkInto, widget};
 use thiserror::Error;
-// use iced::{Element, futures::future::OkInto, widget};
 
 // This is my fav so far
 // https://docs.rs/crate/calculator-lib/0.1.1/source/src/lib.rs
+// stealing >:)
 
-// https://itnext.io/writing-a-mathematical-expression-parser-35b0b78f869e
-// https://compilers.iecc.com/crenshaw/
-// https://craftinginterpreters.com/contents.html
-
-// use crate::module::Module;
+use crate::module::Module;
 //
+
+const BASE: u32 = 10;
+
+pub struct Calc {
+    // parsed_expr: Vec<Expr>,
+    answer: String,
+}
+
+impl Calc {
+    pub fn new() -> Self {
+        Calc {
+            answer: "0".to_string(),
+        }
+    }
+}
+
+impl Module for Calc {
+    fn view(&self) -> Element<'_, String> {
+        widget::container(widget::text(self.answer.clone())).into()
+    }
+
+    fn update(&mut self, input: &str) {
+        self.answer = match Calc::calculate_str(input) {
+            Ok(num) => num.to_string(),
+            Err(err) => err.to_string(),
+        }
+    }
+
+    fn run(&self) {
+        // ToDo. Make own clipboard library
+        let mut clipboard = Clipboard::new().unwrap();
+        clipboard.set_text(self.answer.clone()).unwrap();
+    }
+}
+
 #[derive(PartialEq, Debug, Clone)]
 enum Expr {
     Number(f64),
@@ -67,12 +100,6 @@ impl Expr {
 //     }
 // }
 
-const BASE: u32 = 10;
-
-pub struct Calc {
-    inner: Vec<Expr>,
-}
-
 impl Calc {
     fn tokenize(source: &str) -> anyhow::Result<Vec<Expr>> {
         // TODO. Clean mne up
@@ -90,7 +117,7 @@ impl Calc {
                 number_buf.push(c);
                 match chars.peek() {
                     Some('.') | Some('0'..='9') => {
-                        let next = chars.next().unwrap(); 
+                        let next = chars.next().unwrap();
                         log::trace!("Next character ({next}) was a num or .");
                         number_buf.push(next)
                     }
@@ -450,7 +477,13 @@ fn can_do_math() {
     //
     // assert_eq!(Calc::calculate_str("((5^3 + 4^2) * (12^2 - 6^3)) / (3^2 + 7)").unwrap(), -634.5);
 
-    assert_eq!(Calc::calculate_str("((5^3 + 4^2) * (12^2 - 6^3)) / (3^2 + 7) + (144/12 + 8^2) - (2^4 * 7) + 3^3 + 0.5").unwrap(), -643.0);
+    assert_eq!(
+        Calc::calculate_str(
+            "((5^3 + 4^2) * (12^2 - 6^3)) / (3^2 + 7) + (144/12 + 8^2) - (2^4 * 7) + 3^3 + 0.5"
+        )
+        .unwrap(),
+        -643.0
+    );
 }
 
 // fn evaluate(mut input: Vec<Expr>) -> anyhow::Result<Vec<Expr>> {

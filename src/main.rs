@@ -4,11 +4,12 @@ use iced::{Task, keyboard, widget};
 use pretty_env_logger;
 
 use log;
+
 mod apps;
 use apps::AppModule;
 
 mod calculator;
-// use calculator::Calc;
+use calculator::Calc;
 
 mod module;
 mod util;
@@ -32,6 +33,7 @@ struct State {
 impl std::default::Default for State {
     fn default() -> State {
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
+        modules.insert(";c".to_string(), Box::new(Calc::new()));
         modules.insert("".to_string(), Box::new(AppModule::new()));
 
         State {
@@ -50,16 +52,17 @@ impl State {
                 self.text_value = content;
                 // Lookup module and pass in text
                 let input = self.text_value.clone();
-                if let Some(module) = self.find_module_mut() {
-                    module.update(&input);
+                if let Some((module, prefix_size)) = self.find_module_mut() {
+                    module.update(&input[prefix_size..]);
                 }
+
                 Task::none()
             }
             Message::TextInputSubmitted(_text) => {
                 log::info!("Text input submitted");
 
                 // TODO. Dont just unwrap
-                self.find_module().unwrap().run();
+                self.find_module().unwrap().0.run();
                 iced::exit()
             }
             Message::FocusTextInput => widget::text_input::focus(self.text_id.clone()),
@@ -82,7 +85,12 @@ impl State {
             .on_input(Message::TextInputChanged)
             .on_submit(Message::TextInputSubmitted("test".to_string()));
 
-        let result = self.find_module().unwrap().view().map(|s: String| Message::PluginMessage(s));
+        let result = self
+            .find_module()
+            .unwrap()
+            .0
+            .view()
+            .map(|s: String| Message::PluginMessage(s));
 
         let root_continer = widget::container(widget::column![text_input, result])
             .padding(10)
@@ -91,18 +99,23 @@ impl State {
         root_continer.into()
     }
 
-    fn find_module(&self) -> Option<&Box<dyn Module>> {
+    fn find_module(&self) -> Option<(&Box<dyn Module>, usize)> {
         self.modules
             .iter()
-            .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
-            .map(|(_s, m)| m)
+            .filter(|(k, _)| self.text_value.starts_with(k.as_str()))
+            .max_by_key(|(prefix, _)| prefix.len())
+            .map(|(prefix, m)| (m, prefix.len()))
+            // .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
     }
 
-    fn find_module_mut(&mut self) -> Option<&mut Box<dyn Module>> {
+    fn find_module_mut(&mut self) -> Option<(&mut Box<dyn Module>, usize)> {
         self.modules
             .iter_mut()
-            .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
-            .map(|(_s, m)| m)
+            .filter(|(k, _)| self.text_value.starts_with(k.as_str()))
+            .max_by_key(|(prefix, _)| prefix.len())
+            .map(|(prefix, m)| (m, prefix.len()))
+            // .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
+            // .map(|(_s, m)| m)
     }
 }
 

@@ -20,6 +20,7 @@ opt-level = 3
 
 [dependencies]
 anyhow = "1.0.99"
+arboard = "3.6.1"
 iced = { version = "0.13.1", features = ["advanced"] }
 libc = "0.2.175"
 log = "0.4.28"
