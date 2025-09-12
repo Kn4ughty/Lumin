@@ -102,7 +102,7 @@ impl Expr {
 
 impl Calc {
     fn tokenize(source: &str) -> anyhow::Result<Vec<Expr>> {
-        // TODO. Clean mne up
+        // TODO. this function sucks. So ugly and buggy and repeated code
         log::trace!("raw tokenize input: {source}");
         let mut out = Vec::new();
         let mut chars = source.chars().peekable();
@@ -158,6 +158,12 @@ impl Calc {
             });
 
             log::trace!("Output at end of tokn while loop: {out:?}");
+        }
+
+        if number_buf.len() != 0 {
+            log::trace!("Number buf len was not 0 at end of function");
+            out.push(Expr::Number(number_buf.parse().unwrap()));
+            number_buf.clear();
         }
 
         Ok(out)
@@ -422,11 +428,11 @@ impl Calc {
 #[test]
 fn can_convert_source_to_tokenvec() {
     assert_eq!(
-        Calc::tokenize("1 + 1-1*2.7 + 12^2").unwrap(),
+        Calc::tokenize("1 + 22-1*2.7 + 12^2").unwrap(),
         vec![
             Expr::Number(1.0),
             Expr::Plus,
-            Expr::Number(1.0),
+            Expr::Number(22.0),
             Expr::Minus,
             Expr::Number(1.0),
             Expr::Multiply,
@@ -436,7 +442,16 @@ fn can_convert_source_to_tokenvec() {
             Expr::Power,
             Expr::Number(2.0),
         ]
-    )
+    );
+    assert_eq!(
+        Calc::tokenize("1+22").unwrap(),
+        vec![
+            Expr::Number(1.0),
+            Expr::Plus,
+            Expr::Number(22.0),
+        ]
+    );
+
 }
 
 #[test]
@@ -473,9 +488,8 @@ fn can_do_math() {
         -8.5
     );
 
-    assert_eq!(Calc::calculate_str("12^2").unwrap(), 144.0); // HERE. Bad tokenisation
-    //
-    // assert_eq!(Calc::calculate_str("((5^3 + 4^2) * (12^2 - 6^3)) / (3^2 + 7)").unwrap(), -634.5);
+    assert_eq!(Calc::calculate_str("12^2").unwrap(), 144.0);
+    // assert_eq!(Calc::calculate_str("1+22").unwrap(), 23.0);
 
     assert_eq!(
         Calc::calculate_str(
@@ -486,17 +500,6 @@ fn can_do_math() {
     );
 }
 
-// fn evaluate(mut input: Vec<Expr>) -> anyhow::Result<Vec<Expr>> {
-//     // BODMAS
-//     // Walk with stack of brackets. Evaluate first closed item found
-//     let mut stack = Vec::new();
-//     let mut values = Vec::new();
-//
-//     for (i, tok) in input.iter().enumerate() {
-//     }
-//
-//     Ok(input)
-// }
 
 #[derive(Debug, Error)]
 struct CalcError {
