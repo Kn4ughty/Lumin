@@ -32,7 +32,10 @@ impl Module for Calc {
     }
 
     fn update(&mut self, input: &str) {
-        self.answer = match Calc::calculate_str(input) {
+        let start = std::time::Instant::now();
+        let res = Calc::calculate_str(input);
+        log::debug!("Time to calculate calculator was: {:#?}", start.elapsed());
+        self.answer = match res {
             Ok(num) => num.to_string(),
             Err(err) => err.to_string(),
         }
