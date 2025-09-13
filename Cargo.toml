@@ -10,14 +10,6 @@ path = "src/main.rs"
 [profile.release]
 debug = true
 
-# [[bin]]
-# name = "app_get_test"
-# path = "src/app_perf.rs"
-# bench = true
-
-[profile.dev.package.rust-ini]
-opt-level = 3
-
 [dependencies]
 anyhow = "1.0.99"
 arboard = "3.6.1"
@@ -27,7 +19,6 @@ log = "0.4.28"
 # pest = "2.8.1"
 # pest_derive = "2.8.1"
 pretty_env_logger = "0.5.0"
-rust-ini = "0.21.3"
 thiserror = "2.0.16"
 walkdir = "2.5.0"
 

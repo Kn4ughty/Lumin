@@ -1,8 +1,7 @@
 // https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
 // 6hr
 
-use ini::Ini;
-use std::vec::Vec;
+use std::{collections::HashMap, vec::Vec};
 use walkdir::WalkDir;
 
 use log;
@@ -83,6 +82,71 @@ pub enum ParseError {
     FailedToReadDataDirs,
 }
 
+fn parse_entry_from_string(
+    input: &str,
+) -> Result<HashMap<String, HashMap<String, String>>, ParseError> {
+    let mut main_map: HashMap<String, HashMap<String, String>> = HashMap::new();
+
+    let mut current_heading = String::new();
+    let mut current_map: HashMap<String, String> = HashMap::new();
+
+    for line in input.lines() {
+        log::trace!("current_line: {line}");
+        if line.starts_with("[") {
+            if !current_map.is_empty() {
+                log::trace!("current map was not empty");
+                main_map.insert(current_heading.clone(), current_map.clone());
+                current_map.clear();
+                current_heading.clear();
+            }
+
+            current_heading = line
+                .get(1..line.len() - 1)
+                .ok_or(ParseError::BadGroupHeader)?
+                .to_string();
+            log::trace!("current heading being set. Is set to {current_heading}");
+            continue;
+        }
+        if let Some(l) = line.split_once("=") {
+            current_map.insert(l.0.trim().to_string(), l.1.trim().to_string());
+            continue;
+        }
+        if line.starts_with("#") {
+            // nothing
+            continue;
+        }
+    }
+    if !current_map.is_empty() {
+        main_map.insert(current_heading.clone(), current_map.clone());
+        current_map.clear();
+        current_heading.clear();
+    }
+
+    Ok(main_map)
+}
+
+#[test]
+fn can_parse_entry_from_str() {
+    let mut hash = HashMap::new();
+    let mut main_map = HashMap::new();
+    main_map.insert("Type".to_string(), "Application".to_string());
+    main_map.insert(
+        "Categories".to_string(),
+        "System;TerminalEmulator;".to_string(),
+    );
+    hash.insert("Desktop Entry".to_string(), main_map);
+
+    assert_eq!(
+        parse_entry_from_string(
+            r#"[Desktop Entry]
+Type=Application
+Categories=System;TerminalEmulator;"#
+        )
+        .unwrap(),
+        hash
+    )
+}
+
 pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
     let mut entries = Vec::new();
     let Ok(raw_data_dirs) = std::env::var("XDG_DATA_DIRS") else {
@@ -116,28 +180,31 @@ fn can_load_system_desktop_entries() {
 }
 
 fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseError> {
-    let Ok(entry) = Ini::load_from_file(file_path) else {
-        return Err(ParseError::CouldNotLoadFile);
-    };
-    return parse_from_ini(entry);
+    let contents = std::fs::read_to_string(file_path).map_err(|_| ParseError::CouldNotLoadFile)?;
+
+    return parse_from_hashmap(parse_entry_from_string(&contents)?);
 }
 
-fn parse_from_ini(input: Ini) -> Result<DesktopEntry, ParseError> {
+fn parse_from_hashmap(
+    input: HashMap<String, HashMap<String, String>>,
+) -> Result<DesktopEntry, ParseError> {
     // let mut entry = DesktopEntry::default();
 
-    let Some(entry_keys) = input.section(Some("Desktop Entry")) else {
+    let Some(entry_keys) = input.get("Desktop Entry") else {
         return Err(ParseError::DesktopEntryHeaderNotFound);
     };
 
-    if matches!(entry_keys.get("NoDisplay"), Some("true"))
-        || matches!(entry_keys.get("Hidden"), Some("true"))
+    if matches!(
+        entry_keys.get("NoDisplay").map(|s| s.as_str()),
+        Some("true")
+    ) || matches!(entry_keys.get("Hidden").map(|s| s.as_str()), Some("true"))
     {
         return Err(ParseError::NoDisplayTrue);
     }
 
-    let entry_keys: &ini::Properties = entry_keys;
+    // let entry_keys: &i = entry_keys;
 
-    let entry_type = match entry_keys.get("Type") {
+    let entry_type = match entry_keys.get("Type").map(|s| s.as_str()) {
         Some("Application") => EntryType::Application,
         Some("Link") => EntryType::Link,
         Some("Directory") => EntryType::Directory,
@@ -156,29 +223,30 @@ fn parse_from_ini(input: Ini) -> Result<DesktopEntry, ParseError> {
         exec: parse_exec_key(
             entry_keys
                 .get("Exec")
-                .ok_or(ParseError::MissingRequiredField)?,
-            entry_keys.get("Icon"),
-            entry_keys.get("Name"),
+                .ok_or(ParseError::MissingRequiredField)?
+                .as_str(),
+            entry_keys.get("Icon").map(|s| s.as_str()),
+            entry_keys.get("Name").map(|s| s.as_str()),
         ),
         generic_name: entry_keys.get("GenericName").map(|s| s.to_string()),
         comment: entry_keys.get("Comment").map(|s| s.to_string()),
         icon_path: entry_keys.get("Icon").map(|s| s.to_string()),
-        only_show_in: parse_string_list(entry_keys.get("OnlyShowIn")),
-        not_show_in: parse_string_list(entry_keys.get("NotShowIn")),
+        only_show_in: parse_string_list(entry_keys.get("OnlyShowIn").map(|s| s.as_str())),
+        not_show_in: parse_string_list(entry_keys.get("NotShowIn").map(|s| s.as_str())),
         working_dir: entry_keys.get("Path").map(|s| s.to_string()),
         terminal: entry_keys.get("Terminal").map_or(false, |b| b == "true"),
-        categories: parse_string_list(entry_keys.get("Categories")),
-        keywords: parse_string_list(entry_keys.get("Keywords")),
+        categories: parse_string_list(entry_keys.get("Categories").map(|s| s.as_str())),
+        keywords: parse_string_list(entry_keys.get("Keywords").map(|s| s.as_str())),
         url: match entry_keys.get("URL") {
             Some(s) => Some(s.to_string()),
             _ if entry_type == EntryType::Link => return Err(ParseError::MissingRequiredField),
             _ => None,
         },
-        action_list: parse_string_list(entry_keys.get("Actions")) // i dont like this whole thing
+        action_list: parse_string_list(entry_keys.get("Actions").map(|s| s.as_str())) // i dont like this whole thing
             .into_iter()
             .map(|name: String| {
-                let section: &ini::Properties = input
-                    .section(Some(format!("Desktop Action {}", name)))
+                let section = input
+                    .get(&format!("Desktop Action {}", name))
                     .ok_or(ParseError::BadGroupHeader)?;
                 return Ok::<Action, ParseError>(Action {
                     name: section
@@ -271,7 +339,7 @@ fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String
                     '%' => escaped_result.push(n),
                     'i' => {
                         if let Some(icon) = icon {
-                            log::trace!(
+                            log::debug!(
                                 "Hit funny %i (sub in icon) escape sequence for app with icon {icon}"
                             );
                             escaped_result += format!("--icon {icon}").as_str();
@@ -279,7 +347,7 @@ fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String
                     }
                     'c' => {
                         if let Some(name) = name {
-                            log::trace!(
+                            log::debug!(
                                 "Hit funny %c (sub in name) escape sequence for app with name {name}"
                             );
                             escaped_result += name;
@@ -355,7 +423,7 @@ Exec=testaction
     "#;
     // a
 
-    let entry = parse_from_ini(Ini::load_from_str(test).unwrap()).unwrap();
+    let entry = parse_from_hashmap(parse_entry_from_string(test).unwrap()).unwrap();
 
     // println!("{entry:#?}");
 
@@ -373,17 +441,4 @@ Exec=testaction
             icon_path: None
         }
     );
-}
-
-#[test]
-fn ignores_no_display_entries() {
-    let test = r#"
-        [Desktop Entry]
-        Type=Application
-        TryExec=alacritty
-        Exec=alacritty
-        Icon=Alacritty
-        Terminal=false
-        Categories=System;TerminalEmulator;
-    "#;
 }
