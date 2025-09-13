@@ -92,12 +92,24 @@ fn parse_entry_from_string(
 
     for line in input.lines() {
         log::trace!("current_line: {line}");
+
+        if let Some(l) = line.split_once('=') {
+            current_map.insert(l.0.trim().to_string(), l.1.trim().to_string());
+            continue;
+        }
+
+        if line.starts_with("#") {
+            // nothing
+            continue;
+        }
+
         if line.starts_with("[") {
             if !current_map.is_empty() {
                 log::trace!("current map was not empty");
-                main_map.insert(current_heading.clone(), current_map.clone());
-                current_map.clear();
-                current_heading.clear();
+                main_map.insert(
+                    std::mem::take(&mut current_heading),
+                    std::mem::take(&mut current_map),
+                );
             }
 
             current_heading = line
@@ -107,19 +119,12 @@ fn parse_entry_from_string(
             log::trace!("current heading being set. Is set to {current_heading}");
             continue;
         }
-        if let Some(l) = line.split_once("=") {
-            current_map.insert(l.0.trim().to_string(), l.1.trim().to_string());
-            continue;
-        }
-        if line.starts_with("#") {
-            // nothing
-            continue;
-        }
     }
     if !current_map.is_empty() {
-        main_map.insert(current_heading.clone(), current_map.clone());
-        current_map.clear();
-        current_heading.clear();
+        main_map.insert(
+            std::mem::take(&mut current_heading),
+            std::mem::take(&mut current_map),
+        );
     }
 
     Ok(main_map)

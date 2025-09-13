@@ -189,3 +189,4 @@ fn can_parse_app_from_desktop_entry() {
 
     assert_eq!(app, App::from(entry));
 }
+

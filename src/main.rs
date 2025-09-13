@@ -120,6 +120,14 @@ impl State {
 }
 
 pub fn main() -> iced::Result {
+    #[cfg(feature = "perf")] {
+        let start = std::time::Instant::now();
+
+        apps::get_apps();
+        println!("Time to get apps: {:#?}", start.elapsed());
+        return Ok(());
+    }
+
     pretty_env_logger::init();
     iced::application("Lumin", State::update, State::view)
         .subscription(subscription)
