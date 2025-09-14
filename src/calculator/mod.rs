@@ -1,7 +1,8 @@
+
 use anyhow;
 use anyhow::bail;
 use arboard::Clipboard;
-use iced::{Element, futures::future::OkInto, widget};
+use iced::{Element, widget};
 use thiserror::Error;
 
 // This is my fav so far
@@ -13,38 +14,46 @@ use crate::module::Module;
 
 const BASE: u32 = 10;
 
+// pub enum CalcMsg {}
+
 pub struct Calc {
-    // parsed_expr: Vec<Expr>,
-    answer: String,
+    answer: anyhow::Result<f64>,
 }
 
 impl Calc {
     pub fn new() -> Self {
-        Calc {
-            answer: "0".to_string(),
-        }
+        Calc { answer: Ok(0.0) }
     }
 }
 
 impl Module for Calc {
     fn view(&self) -> Element<'_, String> {
-        widget::container(widget::text(self.answer.clone())).into()
+        let mut font = iced::Font::MONOSPACE;
+        font.weight = iced::font::Weight::Bold;
+
+        let widgy = match &self.answer {
+            Ok(num) => widget::container(widget::text(format!("{:#?}", num.clone())).font(font))
+                .center(iced::Fill),
+            Err(err) => widget::container(widget::text(err.to_string()).font(font).style(
+                |theme: &iced::Theme| widget::text::Style {
+                    color: Some(theme.palette().danger),
+                },
+            )),
+        };
+
+        widgy.into()
     }
 
     fn update(&mut self, input: &str) {
         let start = std::time::Instant::now();
-        let res = Calc::calculate_str(input);
+        self.answer = Calc::calculate_str(input);
         log::debug!("Time to calculate calculator was: {:#?}", start.elapsed());
-        self.answer = match res {
-            Ok(num) => num.to_string(),
-            Err(err) => err.to_string(),
-        }
     }
 
     fn run(&self) {
         // ToDo. Make own clipboard library
-        let mut clipboard = Clipboard::new().unwrap();
-        clipboard.set_text(self.answer.clone()).unwrap();
+        // let mut clipboard = Clipboard::new().unwrap();
+        // clipboard.set_text(self.answer.clone()).unwrap();
     }
 }
 
@@ -108,26 +117,34 @@ impl Calc {
         // TODO. this function sucks. So ugly and buggy and repeated code
         log::trace!("raw tokenize input: {source}");
         let mut out = Vec::new();
-        let mut chars = source.chars().peekable();
+        let chars = source.chars();
 
         let mut number_buf: String = "".to_string();
 
         // TODO. Convert to use enumerate
-        while let Some(c) = chars.next() {
+        let mut iter = chars.enumerate().peekable();
+        while let Some((idx, c)) = iter.next() {
             log::trace!("Character in tokenisation is: {c}");
             if c.is_digit(BASE) || c == '.' {
                 log::trace!("Character was num: {c}");
                 number_buf.push(c);
-                match chars.peek() {
-                    Some('.') | Some('0'..='9') => {
-                        let next = chars.next().unwrap();
-                        log::trace!("Next character ({next}) was a num or .");
-                        number_buf.push(next)
+
+                match iter.peek() {
+                    Some((_, '.')) | Some((_, '0'..='9')) => {
+                        let next = iter.next().unwrap();
+                        log::trace!("Next character ({}) was a num or .", next.1);
+                        number_buf.push(next.1)
                     }
                     // No number next
                     _ => {
                         log::trace!("Got to num next with: {c}");
-                        out.push(Expr::Number(number_buf.parse().unwrap())); //UNSAFE
+                        out.push(Expr::Number(number_buf.parse().map_err(|_| {
+                            CalcError::from_expr_list(
+                                String::from("Could not parse to number"),
+                                out.clone(),
+                                idx,
+                            )
+                        })?));
                         number_buf.clear();
                     }
                 }
@@ -155,7 +172,7 @@ impl Calc {
                     bail!(CalcError::new(
                         format!("Unknown token {a}").to_string(),
                         source.to_string(),
-                        1
+                        idx
                     ))
                 }
             });
@@ -259,20 +276,30 @@ impl Calc {
                 Expr::CloseParen => unreachable!(),
                 Expr::Number(_) => (),
                 _ => {
-                    // Must be operator
+                    log::trace!("Character must be operator");
+
+                    if iter_idx == 0 {
+                        bail!(CalcError::from_expr_list(
+                            "Operator as first character isnt allowed.\n\
+                                You need a left hand side and right hand side"
+                                .to_string(),
+                            input,
+                            iter_idx
+                        ))
+                    }
                     let lhs =
                         match input
                             .clone()
                             .get(iter_idx - 1)
                             .ok_or(CalcError::from_expr_list(
-                                "Expression not found".to_string(),
+                                "LHS of operator not found".to_string(),
                                 input.clone(),
                                 iter_idx,
                             ))? {
                             Expr::Bracket(inner) => Self::calc(inner.to_vec())?,
                             Expr::Number(inner) => inner.clone(),
                             _ => bail!(CalcError::from_expr_list(
-                                String::from("Expression could not be turned into number"),
+                                String::from("Expression missing Expression could not be turned into number"),
                                 input,
                                 iter_idx
                             )),
@@ -283,7 +310,7 @@ impl Calc {
                             .clone()
                             .get(iter_idx + 1)
                             .ok_or(CalcError::from_expr_list(
-                                "Expression not found".to_string(),
+                                "RHS of operator not found".to_string(),
                                 input.clone(),
                                 iter_idx,
                             ))? {
@@ -331,26 +358,12 @@ impl Calc {
             let expr = input[iter_idx].clone();
 
             match expr {
-                Expr::Bracket(ref inner) => {
-                    // unreachable!("Bracket should already be calced?")
-                    // handle inner. (recurse)
-                    input.remove(iter_idx);
-                    input.insert(iter_idx, Expr::Number(Self::calc(inner.to_vec())?));
-
-                    if matches!(last_expr, Some(Expr::Bracket(_)))
-                        || matches!(last_expr, Some(Expr::Number(_)))
-                    {
-                        input.insert(iter_idx, Expr::Multiply);
-                        last_expr = None;
-                    }
-                    continue;
-                }
+                Expr::Bracket(_) => unreachable!(),
                 Expr::OpenParen => unreachable!(),
                 Expr::CloseParen => unreachable!(),
                 Expr::Number(_) => (),
                 _ => {
                     // Must be operator
-                    // Maybe turn this into a function. Is exact duplicate i think.
                     let lhs =
                         match input
                             .clone()
@@ -418,6 +431,7 @@ impl Calc {
         Ok(input[0].get_number()?)
     }
 
+
     fn calculate_str(input: &str) -> anyhow::Result<f64> {
         // Calc::calc(Calc::evaluate_brackets(Calc::tokenize(input.to_string()))
         log::trace!("Calculating new input: {input}");
@@ -448,13 +462,8 @@ fn can_convert_source_to_tokenvec() {
     );
     assert_eq!(
         Calc::tokenize("1+22").unwrap(),
-        vec![
-            Expr::Number(1.0),
-            Expr::Plus,
-            Expr::Number(22.0),
-        ]
+        vec![Expr::Number(1.0), Expr::Plus, Expr::Number(22.0),]
     );
-
 }
 
 #[test]
@@ -502,7 +511,6 @@ fn can_do_math() {
         -643.0
     );
 }
-
 
 #[derive(Debug, Error)]
 struct CalcError {
