@@ -135,7 +135,16 @@ pub fn main() -> iced::Result {
         .resizable(false)
         .decorations(false)
         .window_size((800.0, 200.0))
-        .theme(|_s| iced::Theme::CatppuccinMocha)
+        .theme(|_s| {
+            let theme = iced::Theme::custom(
+                "name".to_string(),
+                iced::theme::Palette {
+                    background: iced::color!(0x313244),
+                    ..iced::Theme::CatppuccinMocha.palette()
+                },
+            );
+            theme
+        })
         .run()
 }
 
