@@ -1,5 +1,3 @@
-use std::process::id;
-
 use anyhow;
 use anyhow::bail;
 use arboard::Clipboard;
@@ -53,7 +51,6 @@ impl Module for Calc {
     }
 
     fn run(&self) {
-        // ToDo. Make own clipboard library
         // let mut clipboard = Clipboard::new().unwrap();
         // clipboard.set_text(self.answer.clone()).unwrap();
     }
@@ -64,6 +61,7 @@ enum Expr {
     Number(f64),
     Plus,
     Minus,
+    UnaryMinus,
     Multiply,
     Divide,
     Power,
@@ -80,6 +78,7 @@ impl ToString for Expr {
             Self::Number(a) => format!("{a}"),
             Self::Plus => String::from("+"),
             Self::Minus => String::from("-"),
+            Self::UnaryMinus => String::from("--"),
             Self::Multiply => String::from("*"),
             Self::Divide => String::from("÷"),
             Self::Power => String::from("^"),
@@ -108,6 +107,7 @@ impl Expr {
 
     fn precedence(&self) -> Option<u8> {
         match self {
+            Self::UnaryMinus => Some(4),
             Self::Power => Some(3),
             Self::Divide | Self::Multiply => Some(2),
             Self::Plus | Self::Minus => Some(1),
@@ -126,6 +126,16 @@ impl Expr {
 // }
 
 impl Calc {
+    pub fn calculate_str(input: &str) -> anyhow::Result<f64> {
+        // Calc::calc(Calc::evaluate_brackets(Calc::tokenize(input.to_string()))
+        log::trace!("Calculating new input: {input}");
+        let tokens = Calc::tokenize(input)?;
+        let normalised = Calc::parse_unary_minus(tokens);
+        let bracketed = Calc::evaluate_brackets(normalised)?;
+        log::trace!("Bracketing finished");
+        Calc::calc(bracketed)
+    }
+
     fn tokenize(source: &str) -> anyhow::Result<Vec<Expr>> {
         // TODO. this function sucks. So ugly and buggy and repeated code
         log::trace!("raw tokenize input: {source}");
@@ -202,6 +212,31 @@ impl Calc {
         Ok(out)
     }
 
+    fn parse_unary_minus(mut exprs: Vec<Expr>) -> Vec<Expr> {
+        let mut out = Vec::new();
+        let mut last_was_op = true;
+
+        for e in exprs {
+            match e {
+                // If current is minus, and previous was operator
+                Expr::Minus if last_was_op => out.push(Expr::UnaryMinus),
+                _ => out.push(e),
+            }
+            last_was_op = matches!(
+                out.last(),
+                Some(
+                    Expr::Minus
+                        | Expr::Multiply
+                        | Expr::Plus
+                        | Expr::Power
+                        | Expr::Divide
+                        | Expr::OpenParen
+                )
+            );
+        }
+        out
+    }
+
     fn evaluate_brackets(mut input: Vec<Expr>) -> anyhow::Result<Vec<Expr>> {
         log::trace!("Running evaluate_brackets with input vec: {input:?}");
         // Returns
@@ -265,53 +300,76 @@ impl Calc {
     fn apply_op(input: &mut Vec<Expr>, idx: usize) -> anyhow::Result<()> {
         let op = input[idx].clone();
 
-        if idx == 0 {
-            bail!(CalcError::from_expr_list(
-                "Operator as first arg isnt allowed".to_string(),
-                input.clone(),
-                idx
-            ))
+        match input[idx] {
+            Expr::UnaryMinus => {
+                // Get rhs
+                let rhs = match input.clone().get(idx + 1).ok_or(CalcError::from_expr_list(
+                    "RHS of UnaryMinus not found".to_string(),
+                    input.clone(),
+                    idx,
+                ))? {
+                    Expr::Bracket(_) => unreachable!("Should not have brackets at this stage"),
+                    Expr::Number(inner) => *inner,
+                    _ => bail!(CalcError::from_expr_list(
+                        String::from("Could not turn RHS of UnaryMinus into number"),
+                        input.clone(),
+                        idx
+                    )),
+                };
+                input.drain(idx..=idx + 1); // Safe since passed above .get()
+                // input.remove(idx+1);
+                input.insert(idx, Expr::Number(-rhs));
+            }
+            _ => {
+                if idx == 0 {
+                    bail!(CalcError::from_expr_list(
+                        "Operator as first arg isnt allowed".to_string(),
+                        input.clone(),
+                        idx
+                    ))
+                }
+
+                let lhs = match input.clone().get(idx - 1).ok_or(CalcError::from_expr_list(
+                    "LHS of operator not found".to_string(),
+                    input.clone(),
+                    idx,
+                ))? {
+                    Expr::Bracket(inner) => Self::calc(inner.clone())?,
+                    Expr::Number(inner) => *inner, // is this okay? probs
+                    _ => bail!(CalcError::from_expr_list(
+                        String::from("LHS Expression could not be turned into number"),
+                        input.clone(),
+                        idx
+                    )),
+                };
+
+                let rhs = match input.clone().get(idx + 1).ok_or(CalcError::from_expr_list(
+                    "RHS of operator not found".to_string(),
+                    input.clone(),
+                    idx,
+                ))? {
+                    Expr::Bracket(inner) => Self::calc(inner.clone())?,
+                    Expr::Number(inner) => *inner,
+                    _ => bail!(CalcError::from_expr_list(
+                        String::from("RHS Expression could not be turned into number"),
+                        input.clone(),
+                        idx
+                    )),
+                };
+
+                let val = match op {
+                    Expr::Divide => lhs / rhs,
+                    Expr::Plus => lhs + rhs,
+                    Expr::Minus => lhs - rhs,
+                    Expr::Power => lhs.powf(rhs),
+                    Expr::Multiply => lhs * rhs,
+                    _ => unreachable!("Should have been an operator"),
+                };
+
+                input.drain(idx - 1..=idx + 1);
+                input.insert(idx - 1, Expr::Number(val));
+            }
         }
-
-        let lhs = match input.clone().get(idx - 1).ok_or(CalcError::from_expr_list(
-            "LHS of operator not found".to_string(),
-            input.clone(),
-            idx,
-        ))? {
-            Expr::Bracket(inner) => Self::calc(inner.clone())?,
-            Expr::Number(inner) => *inner, // is this okay? probs
-            _ => bail!(CalcError::from_expr_list(
-                String::from("Expression could not be turned into number"),
-                input.clone(),
-                idx
-            )),
-        };
-
-        let rhs = match input.clone().get(idx + 1).ok_or(CalcError::from_expr_list(
-            "RHS of operator not found".to_string(),
-            input.clone(),
-            idx,
-        ))? {
-            Expr::Bracket(inner) => Self::calc(inner.clone())?,
-            Expr::Number(inner) => *inner,
-            _ => bail!(CalcError::from_expr_list(
-                String::from("Expression could not be turned into number"),
-                input.clone(),
-                idx
-            )),
-        };
-
-        let val = match op {
-            Expr::Divide => lhs / rhs,
-            Expr::Plus => lhs + rhs,
-            Expr::Minus => lhs - rhs,
-            Expr::Power => lhs.powf(rhs),
-            Expr::Multiply => lhs * rhs,
-            _ => unreachable!("Should have been an operator"),
-        };
-
-        input.drain(idx - 1..=idx + 1);
-        input.insert(idx - 1, Expr::Number(val));
 
         Ok(())
     }
@@ -337,7 +395,7 @@ impl Calc {
         // Begin second pass.
         log::trace!("Second pass of calc. Input is now: {:?}", input);
 
-        for prec in (1..=3).rev() {
+        for prec in (1..=4).rev() {
             log::trace!("for loop entered with prec: {prec}");
             let mut idx = 0;
 
@@ -373,15 +431,6 @@ impl Calc {
 
         input[0].get_number()
     }
-
-    fn calculate_str(input: &str) -> anyhow::Result<f64> {
-        // Calc::calc(Calc::evaluate_brackets(Calc::tokenize(input.to_string()))
-        log::trace!("Calculating new input: {input}");
-        let tokens = Calc::tokenize(input)?;
-        let bracketed = Calc::evaluate_brackets(tokens)?;
-        log::trace!("Bracketing finished");
-        Calc::calc(bracketed)
-    }
 }
 
 #[test]
@@ -409,6 +458,19 @@ fn can_convert_source_to_tokenvec() {
 }
 
 #[test]
+fn can_parse_unary_minus() {
+    assert_eq!(
+        Calc::parse_unary_minus(vec![Expr::Minus, Expr::Number(1.0)]),
+        vec![Expr::UnaryMinus, Expr::Number(1.0)]
+    );
+
+    assert_eq!(
+        Calc::parse_unary_minus(vec![Expr::Power, Expr::Minus, Expr::Number(1.0)]),
+        vec![Expr::Power, Expr::UnaryMinus, Expr::Number(1.0)]
+    );
+}
+
+#[test]
 fn can_parse_brackets() {
     assert_eq!(
         Calc::evaluate_brackets(Calc::tokenize("((1+4)*2)").unwrap()).unwrap(),
@@ -419,8 +481,7 @@ fn can_parse_brackets() {
         ])]
     );
 
-    // TODO.
-    // Add test for trailing openParen
+    // TODO. Add test for trailing openParen
 }
 
 #[test]
@@ -452,6 +513,8 @@ fn can_do_math() {
         .unwrap(),
         -643.0
     );
+    // Unary minus
+    assert_eq!(Calc::calculate_str("2^-3").unwrap(), 0.125);
 }
 
 #[derive(Debug, Error)]
