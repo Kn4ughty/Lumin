@@ -1,8 +1,10 @@
+use std::process::id;
 
 use anyhow;
 use anyhow::bail;
 use arboard::Clipboard;
 use iced::{Element, widget};
+use log::trace;
 use thiserror::Error;
 
 // This is my fav so far
@@ -98,7 +100,18 @@ impl Expr {
         if let Self::Number(num) = self {
             return Ok(*num);
         } else {
-            bail!("Expression was not number")
+            bail!(
+                "Expression was not number! this is strange. Notify the developer with your input message pls"
+            )
+        }
+    }
+
+    fn precedence(&self) -> Option<u8> {
+        match self {
+            Self::Power => Some(3),
+            Self::Divide | Self::Multiply => Some(2),
+            Self::Plus | Self::Minus => Some(1),
+            _ => None,
         }
     }
 }
@@ -249,188 +262,117 @@ impl Calc {
         return Ok(eval_buf);
     }
 
+    fn apply_op(input: &mut Vec<Expr>, idx: usize) -> anyhow::Result<()> {
+        let op = input[idx].clone();
+
+        if idx == 0 {
+            bail!(CalcError::from_expr_list(
+                "Operator as first arg isnt allowed".to_string(),
+                input.clone(),
+                idx
+            ))
+        }
+
+        let lhs = match input.clone().get(idx - 1).ok_or(CalcError::from_expr_list(
+            "LHS of operator not found".to_string(),
+            input.clone(),
+            idx,
+        ))? {
+            Expr::Bracket(inner) => Self::calc(inner.clone())?,
+            Expr::Number(inner) => *inner, // is this okay? probs
+            _ => bail!(CalcError::from_expr_list(
+                String::from("Expression could not be turned into number"),
+                input.clone(),
+                idx
+            )),
+        };
+
+        let rhs = match input.clone().get(idx + 1).ok_or(CalcError::from_expr_list(
+            "RHS of operator not found".to_string(),
+            input.clone(),
+            idx,
+        ))? {
+            Expr::Bracket(inner) => Self::calc(inner.clone())?,
+            Expr::Number(inner) => *inner,
+            _ => bail!(CalcError::from_expr_list(
+                String::from("Expression could not be turned into number"),
+                input.clone(),
+                idx
+            )),
+        };
+
+        let val = match op {
+            Expr::Divide => lhs / rhs,
+            Expr::Plus => lhs + rhs,
+            Expr::Minus => lhs - rhs,
+            Expr::Power => lhs.powf(rhs),
+            Expr::Multiply => lhs * rhs,
+            _ => unreachable!("Should have been an operator"),
+        };
+
+        input.drain(idx - 1..=idx + 1);
+        input.insert(idx - 1, Expr::Number(val));
+
+        Ok(())
+    }
+
     fn calc(mut input: Vec<Expr>) -> anyhow::Result<f64> {
-        let mut iter_idx = 0;
+        // Evaluate brackets
         let mut last_expr: Option<Expr> = None;
+        let mut i = 0;
+        while input.len() > i {
+            if let Expr::Bracket(inner) = &input[i] {
+                let val = Self::calc(inner.clone())?;
+                input[i] = Expr::Number(val);
 
-        while input.len() > iter_idx {
-            let expr = input[iter_idx].clone();
-
-            log::trace!("1st pass state. i: {iter_idx}, input: {input:?}");
-
-            match expr {
-                Expr::Bracket(ref inner) => {
-                    // handle inner. (recurse)
-                    input.remove(iter_idx);
-                    input.insert(iter_idx, Expr::Number(Self::calc(inner.to_vec())?));
-
-                    if matches!(last_expr, Some(Expr::Bracket(_)))
-                        || matches!(last_expr, Some(Expr::Number(_)))
-                    {
-                        input.insert(iter_idx, Expr::Multiply);
-                        last_expr = None;
-                    }
-                    continue;
-                }
-                Expr::OpenParen => unreachable!(),
-                Expr::CloseParen => unreachable!(),
-                Expr::Number(_) => (),
-                _ => {
-                    log::trace!("Character must be operator");
-
-                    if iter_idx == 0 {
-                        bail!(CalcError::from_expr_list(
-                            "Operator as first character isnt allowed.\n\
-                                You need a left hand side and right hand side"
-                                .to_string(),
-                            input,
-                            iter_idx
-                        ))
-                    }
-                    let lhs =
-                        match input
-                            .clone()
-                            .get(iter_idx - 1)
-                            .ok_or(CalcError::from_expr_list(
-                                "LHS of operator not found".to_string(),
-                                input.clone(),
-                                iter_idx,
-                            ))? {
-                            Expr::Bracket(inner) => Self::calc(inner.to_vec())?,
-                            Expr::Number(inner) => inner.clone(),
-                            _ => bail!(CalcError::from_expr_list(
-                                String::from("Expression missing Expression could not be turned into number"),
-                                input,
-                                iter_idx
-                            )),
-                        };
-
-                    let rhs =
-                        match input
-                            .clone()
-                            .get(iter_idx + 1)
-                            .ok_or(CalcError::from_expr_list(
-                                "RHS of operator not found".to_string(),
-                                input.clone(),
-                                iter_idx,
-                            ))? {
-                            Expr::Bracket(inner) => Self::calc(inner.to_vec())?,
-                            Expr::Number(inner) => inner.clone(),
-                            _ => bail!(CalcError::from_expr_list(
-                                String::from("Expression could not be turned into number"),
-                                input,
-                                iter_idx
-                            )),
-                        };
-                    log::trace!("1st pass. lhs: {lhs:?}. rhs: {rhs:?}");
-
-                    match expr {
-                        Expr::Multiply => {
-                            input.drain(iter_idx - 1..=iter_idx + 1);
-                            input.insert(iter_idx - 1, Expr::Number(lhs * rhs));
-                            iter_idx -= 1;
-                        }
-                        Expr::Power => {
-                            input.drain(iter_idx - 1..=iter_idx + 1);
-                            input.insert(iter_idx - 1, Expr::Number(lhs.powf(rhs)));
-                            // input.insert(iter_idx - 1, Expr::Number(rhs.powf(lhs)));
-                            iter_idx -= 1;
-                        }
-                        Expr::Divide => {
-                            input.drain(iter_idx - 1..=iter_idx + 1);
-                            input.insert(iter_idx - 1, Expr::Number(lhs / rhs));
-                            iter_idx -= 1;
-                        }
-                        _ => (),
-                    }
+                if let Some(Expr::Number(_)) = last_expr {
+                    input.insert(i, Expr::Multiply);
+                    i += 1
                 }
             }
-            last_expr = Some(expr);
-            iter_idx += 1
+            last_expr = Some(input[i].clone());
+            i += 1
         }
 
         // Begin second pass.
         log::trace!("Second pass of calc. Input is now: {:?}", input);
 
-        iter_idx = 0;
-        while input.len() > iter_idx {
-            log::trace!("2nd pass state. i: {iter_idx}, input: {input:?}");
-            let expr = input[iter_idx].clone();
+        for prec in (1..=3).rev() {
+            log::trace!("for loop entered with prec: {prec}");
+            let mut idx = 0;
 
-            match expr {
-                Expr::Bracket(_) => unreachable!(),
-                Expr::OpenParen => unreachable!(),
-                Expr::CloseParen => unreachable!(),
-                Expr::Number(_) => (),
-                _ => {
-                    // Must be operator
-                    let lhs =
-                        match input
-                            .clone()
-                            .get(iter_idx - 1)
-                            .ok_or(CalcError::from_expr_list(
-                                "Expression not found".to_string(),
-                                input.clone(),
-                                iter_idx,
-                            ))? {
-                            Expr::Bracket(inner) => Self::calc(inner.to_vec())?, // unreachable??
-                            Expr::Number(inner) => inner.clone(),
-                            _ => bail!(CalcError::from_expr_list(
-                                String::from("Expression could not be turned into number"),
-                                input,
-                                iter_idx
-                            )),
-                        };
+            while idx < input.len() {
+                log::trace!("entered while loop. Prec {prec}. idx: {idx}");
 
-                    let rhs =
-                        match input
-                            .clone()
-                            .get(iter_idx + 1)
-                            .ok_or(CalcError::from_expr_list(
-                                "Expression not found".to_string(),
-                                input.clone(),
-                                iter_idx,
-                            ))? {
-                            Expr::Bracket(inner) => Self::calc(inner.to_vec())?,
-                            Expr::Number(inner) => inner.clone(),
-                            _ => bail!(CalcError::from_expr_list(
-                                String::from("Expression could not be turned into number"),
-                                input,
-                                iter_idx
-                            )),
-                        };
-
-                    match expr {
-                        Expr::Plus => {
-                            input.drain(iter_idx - 1..=iter_idx + 1);
-                            input.insert(iter_idx - 1, Expr::Number(lhs + rhs));
-                            iter_idx -= 1;
-                        }
-                        Expr::Minus => {
-                            input.drain(iter_idx - 1..=iter_idx + 1);
-                            input.insert(iter_idx - 1, Expr::Number(lhs - rhs));
-                            iter_idx -= 1;
-                        }
-                        a => unreachable!("Got to end with unknown thing {a:?}"),
+                if input[idx].precedence() == Some(prec) {
+                    log::trace!("input before idx: {idx} apply op: {input:?}");
+                    Self::apply_op(&mut input, idx)?;
+                    log::trace!("input AFTER  idx: {idx}apply op: {input:?}");
+                    // Stay on left
+                    if idx > 0 {
+                        idx -= 1
                     }
+                    continue;
                 }
+                log::trace!(
+                    "Precedence did not match. {:?}, prec: {}",
+                    input[idx].precedence(),
+                    prec
+                );
+                idx += 1;
             }
-
-            // last_expr = Some(expr);
-            iter_idx += 1;
         }
 
-        if input.is_empty() || input.len() != 1 {
+        if input.len() != 1 {
             bail!(CalcError::from_expr_list(
-                String::from("Empty equation or invalid"),
-                input.clone(),
-                1,
+                "Invalid expression".to_string(),
+                input,
+                0,
             ))
         }
 
-        Ok(input[0].get_number()?)
+        input[0].get_number()
     }
-
 
     fn calculate_str(input: &str) -> anyhow::Result<f64> {
         // Calc::calc(Calc::evaluate_brackets(Calc::tokenize(input.to_string()))
