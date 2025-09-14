@@ -12,6 +12,7 @@ mod calculator;
 use calculator::Calc;
 
 mod module;
+mod widglets;
 mod util;
 use module::Module;
 

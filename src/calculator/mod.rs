@@ -1,8 +1,6 @@
 use anyhow;
 use anyhow::bail;
-use arboard::Clipboard;
 use iced::{Element, widget};
-use log::trace;
 use thiserror::Error;
 
 // This is my fav so far
@@ -10,7 +8,9 @@ use thiserror::Error;
 // stealing >:)
 
 use crate::module::Module;
-//
+// mod widglets;
+
+use crate::widglets;
 
 const BASE: u32 = 10;
 
@@ -32,8 +32,8 @@ impl Module for Calc {
         font.weight = iced::font::Weight::Bold;
 
         let widgy = match &self.answer {
-            Ok(num) => widget::container(widget::text(format!("{:#?}", num.clone())).font(font))
-                .center(iced::Fill),
+            Ok(num) => widget::container(widglets::heading(widglets::HeadingLevel::H1, format!("{:#?}", num.clone())).font(font))
+                .center_x(iced::Fill),
             Err(err) => widget::container(widget::text(err.to_string()).font(font).style(
                 |theme: &iced::Theme| widget::text::Style {
                     color: Some(theme.palette().danger),
@@ -212,7 +212,7 @@ impl Calc {
         Ok(out)
     }
 
-    fn parse_unary_minus(mut exprs: Vec<Expr>) -> Vec<Expr> {
+    fn parse_unary_minus(exprs: Vec<Expr>) -> Vec<Expr> {
         let mut out = Vec::new();
         let mut last_was_op = true;
 
