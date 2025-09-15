@@ -1,7 +1,6 @@
 // https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
-// 6hr
 
-use std::{collections::HashMap, vec::Vec};
+use std::{collections::HashMap, io::Read, vec::Vec};
 use walkdir::WalkDir;
 
 use log;
@@ -20,6 +19,7 @@ pub enum EntryType {
     Directory,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct DesktopEntry {
     pub entry_type: EntryType,
@@ -79,7 +79,6 @@ pub enum ParseError {
     NoDisplayTrue,
     ActionMissingName,
     MissingDataDirsEnvVar,
-    FailedToReadDataDirs,
 }
 
 fn parse_entry_from_string(
@@ -99,7 +98,6 @@ fn parse_entry_from_string(
         }
 
         if line.starts_with("#") {
-            // nothing
             continue;
         }
 
@@ -392,20 +390,72 @@ fn parse_bool(s: &str) -> Option<bool> {
     }
 }
 
-// fn find_icon(name: &str, size: i32, scale: i32) -> std::path::PathBuf {
-// gsettings get org.gnome.desktop.interface gtk-theme
-// let user_theme = std::process::Command::new("gsettings")
-//     .args(["get", "org.gnome.desktop.interface", "gtk-theme"])
-//     .spawn()
-//     .or_else(|e| {
-//         log::warn!("failed ");
-//     });
+// https://specifications.freedesktop.org/icon-theme-spec/latest/
+fn find_icon(name: &str, size: i32, scale: i32) -> Option<std::path::PathBuf> {
+    // gsettings get org.gnome.desktop.interface gtk-theme
+    let mut user_theme_string: Option<String> = None;
 
-// filename = find_icon_helper(name, size, scale, user_theme);
-// if filename.
-// }
+    if let Ok(get_theme_cmd) = std::process::Command::new("gsettings")
+        .args(["get", "org.gnome.desktop.interface", "gtk-theme"])
+        .output()
+    {
+        user_theme_string = Some(
+            String::from_utf8_lossy(&get_theme_cmd.stdout)
+                .trim()
+                .trim_matches('\'')
+                .to_string(),
+        );
+    }
 
-// fn find_icon_helper(name: &str, size: i32, scale: i32, user_theme: &str) -> std::path::PathBuf {}
+    println!("user theme streing is : {user_theme_string:?}");
+
+    if user_theme_string.is_some() {
+        if let Some(filename) = find_icon_helper(name, size, scale, &user_theme_string.unwrap()) {
+            return Some(filename)
+        };
+    }
+
+    if let Some(filename) = find_icon_helper(name, size, scale, "hicolor") {
+        return Some(filename)
+    };
+
+
+    return lookup_fallback_icon(name)
+}
+
+#[test]
+fn can_find_icon() {
+    find_icon("", 1, 1);
+    assert!(1 == 1);
+}
+
+fn find_icon_helper(
+    name: &str,
+    size: i32,
+    scale: i32,
+    theme: &str,
+) -> Option<std::path::PathBuf> {
+    if let Some(filename) = lookup_icon(name, size, scale, theme) {
+        return Some(filename)
+    };
+    // Theme has parents??
+
+    Some("find icon helper".into())
+}
+
+fn lookup_icon(
+    name: &str,
+    size: i32,
+    scale: i32,
+    theme: &str,) -> Option<std::path::PathBuf> { 
+
+    Some("lookup icon".into())
+}
+
+fn lookup_fallback_icon(name: &str) -> Option<std::path::PathBuf> {
+    Some("Fallback icon".into())
+}
+
 
 #[test]
 fn can_parse_full_app() {

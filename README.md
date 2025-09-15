@@ -1,6 +1,7 @@
 
 # ToDo
 - [x] Calculator module
+- [ ] Icon support
 - [ ] Investigate https://github.com/pop-os/cosmic-time
 - [ ] Investiage https://austinmreppert.github.io/iced-reference/chapter_3.html
 - [ ] Allow for user theming
