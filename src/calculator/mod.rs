@@ -32,8 +32,11 @@ impl Module for Calc {
         font.weight = iced::font::Weight::Bold;
 
         let widgy = match &self.answer {
-            Ok(num) => widget::container(widglets::heading(widglets::HeadingLevel::H1, format!("{:#?}", num.clone())).font(font))
-                .center_x(iced::Fill),
+            Ok(num) => widget::container(
+                widglets::heading(widglets::HeadingLevel::H1, format!("{:#?}", num.clone()))
+                    .font(font),
+            )
+            .center_x(iced::Fill),
             Err(err) => widget::container(widget::text(err.to_string()).font(font).style(
                 |theme: &iced::Theme| widget::text::Style {
                     color: Some(theme.palette().danger),
@@ -306,14 +309,14 @@ impl Calc {
                 let rhs = match input.clone().get(idx + 1).ok_or(CalcError::from_expr_list(
                     "RHS of UnaryMinus not found".to_string(),
                     input.clone(),
-                    idx,
+                    idx + 1,
                 ))? {
                     Expr::Bracket(_) => unreachable!("Should not have brackets at this stage"),
                     Expr::Number(inner) => *inner,
                     _ => bail!(CalcError::from_expr_list(
                         String::from("Could not turn RHS of UnaryMinus into number"),
                         input.clone(),
-                        idx
+                        idx + 1,
                     )),
                 };
                 input.drain(idx..=idx + 1); // Safe since passed above .get()
@@ -330,30 +333,30 @@ impl Calc {
                 }
 
                 let lhs = match input.clone().get(idx - 1).ok_or(CalcError::from_expr_list(
-                    "LHS of operator not found".to_string(),
+                    "LHS of operator not found. This is a strange state. Pls notify developer".to_string(),
                     input.clone(),
                     idx,
                 ))? {
                     Expr::Bracket(inner) => Self::calc(inner.clone())?,
                     Expr::Number(inner) => *inner, // is this okay? probs
                     _ => bail!(CalcError::from_expr_list(
-                        String::from("LHS Expression could not be turned into number"),
+                        String::from("LHS Expression could not be turned into number. This is a strange state. Pls notify developer"),
                         input.clone(),
-                        idx
+                        idx - 1
                     )),
                 };
 
                 let rhs = match input.clone().get(idx + 1).ok_or(CalcError::from_expr_list(
                     "RHS of operator not found".to_string(),
                     input.clone(),
-                    idx,
+                    idx + 1,
                 ))? {
                     Expr::Bracket(inner) => Self::calc(inner.clone())?,
                     Expr::Number(inner) => *inner,
                     _ => bail!(CalcError::from_expr_list(
                         String::from("RHS Expression could not be turned into number"),
                         input.clone(),
-                        idx
+                        idx + 1
                     )),
                 };
 
