@@ -11,18 +11,21 @@ use apps::AppModule;
 mod calculator;
 use calculator::Calc;
 
+// mod websearch;
+// use websearch::Web;
+
 mod module;
 mod widglets;
 mod util;
-use module::Module;
+use module::{Module};
 
 #[derive(Clone, Debug)]
 enum Message {
     TextInputChanged(String),
     FocusTextInput,
     TextInputSubmitted(String),
-    Close,
     PluginMessage(String),
+    Close,
 }
 
 struct State {
@@ -35,6 +38,9 @@ impl std::default::Default for State {
     fn default() -> State {
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
         modules.insert(";c".to_string(), Box::new(Calc::new()));
+
+        // modules.insert(";w".to_string(), Box::new(Web::new()));
+
         modules.insert("".to_string(), Box::new(AppModule::new()));
 
         State {
@@ -54,7 +60,8 @@ impl State {
                 // Lookup module and pass in text
                 let input = self.text_value.clone();
                 if let Some((module, prefix_size)) = self.find_module_mut() {
-                    module.update(&input[prefix_size..]);
+                    module.update(
+                        &input[prefix_size..]);
                 }
 
                 Task::none()
@@ -72,7 +79,8 @@ impl State {
                 iced::exit()
             }
             Message::PluginMessage(a) => {
-                log::info!("Ignoring plugin message {a}");
+                log::info!("Ignoring module message {a:?}");
+                // TODO. match by exact prefix and pass message
                 Task::none()
             }
         }
@@ -106,7 +114,7 @@ impl State {
             .filter(|(k, _)| self.text_value.starts_with(k.as_str()))
             .max_by_key(|(prefix, _)| prefix.len())
             .map(|(prefix, m)| (m, prefix.len()))
-            // .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
+        // .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
     }
 
     fn find_module_mut(&mut self) -> Option<(&mut Box<dyn Module>, usize)> {
@@ -115,13 +123,14 @@ impl State {
             .filter(|(k, _)| self.text_value.starts_with(k.as_str()))
             .max_by_key(|(prefix, _)| prefix.len())
             .map(|(prefix, m)| (m, prefix.len()))
-            // .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
-            // .map(|(_s, m)| m)
+        // .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
+        // .map(|(_s, m)| m)
     }
 }
 
 pub fn main() -> iced::Result {
-    #[cfg(feature = "perf")] {
+    #[cfg(feature = "perf")]
+    {
         let start = std::time::Instant::now();
 
         apps::get_apps();
