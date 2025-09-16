@@ -1,6 +1,6 @@
 // https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
 
-use std::{collections::HashMap, io::Read, vec::Vec};
+use std::{collections::HashMap, vec::Vec};
 use walkdir::WalkDir;
 
 use log;
@@ -382,13 +382,6 @@ fn can_parse_exec_key() {
     );
 }
 
-fn parse_bool(s: &str) -> Option<bool> {
-    match s {
-        "true" => Some(true),
-        "false" => Some(false),
-        _ => None,
-    }
-}
 
 // https://specifications.freedesktop.org/icon-theme-spec/latest/
 fn find_icon(name: &str, size: i32, scale: i32) -> Option<std::path::PathBuf> {

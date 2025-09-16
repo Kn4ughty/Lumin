@@ -1,8 +1,21 @@
-use iced::Element;
+use iced::{Element, Task};
+
+// use crate::calculator;
+// use crate::apps;
+use crate::websearch;
+
+
+
+#[derive(Debug, Clone)]
+pub enum ModuleMessage {
+    TextChanged(String),
+    WebMessage(websearch::WebMsg),
+    Close,
+}
 
 pub trait Module {
-    fn update(&mut self, input: &str);
-    fn view(&self) -> Element<'_, String>; // why is string here?
+    fn update(&mut self, msg: ModuleMessage) -> Task<()>;
+    fn view(&self) -> Element<'_, ModuleMessage>; // why is string here?
     fn run(&self); // Allow to return result
 }
 
@@ -12,12 +25,6 @@ pub trait Module {
 // use iced::{Element, Task};
 //
 // pub type ModulePayload = Rc<dyn Any>;
-// #[derive(Debug, Clone)]
-// pub enum AppMessage {
-//     TextChanged(String),            // always emitted on input change
-//     ModuleMessage { prefix: String, payload: ModulePayload },
-//     Close,
-// }
 //
 // pub trait Module {
 //     fn on_input(&mut self, text: &str) -> Task<()>;

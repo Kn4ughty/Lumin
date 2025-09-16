@@ -1,11 +1,12 @@
 use iced::widget;
+use iced::Task;
 use libc;
 use log;
 use std::io;
 use std::process;
 
 mod desktop_entry;
-use crate::module::Module;
+use crate::module::{Module, ModuleMessage};
 use crate::util;
 use desktop_entry::DesktopEntry;
 
@@ -22,7 +23,7 @@ impl AppModule {
 }
 
 impl Module for AppModule {
-    fn view(&self) -> iced::Element<'_, String> {
+    fn view(&self) -> iced::Element<'_, ModuleMessage> {
         widget::scrollable(
             widget::column(
                 self.app_list
@@ -35,7 +36,9 @@ impl Module for AppModule {
         .into()
     }
 
-    fn update(&mut self, input: &str) {
+    fn update(&mut self, msg: ModuleMessage) -> Task<()> {
+        let ModuleMessage::TextChanged(input) = msg else {return Task::none()};
+
         if self.app_list.len() == 0 {
             log::trace!("Regenerating app_list");
             let start = std::time::Instant::now();
@@ -65,6 +68,8 @@ impl Module for AppModule {
             self.app_list.len(),
             start.elapsed()
         );
+
+        Task::none()
     }
 
     fn run(&self) {

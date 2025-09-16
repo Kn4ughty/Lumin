@@ -1,13 +1,13 @@
 use anyhow;
 use anyhow::bail;
-use iced::{Element, widget};
+use iced::{widget, Element, Task};
 use thiserror::Error;
 
 // This is my fav so far
 // https://docs.rs/crate/calculator-lib/0.1.1/source/src/lib.rs
 // stealing >:)
 
-use crate::module::Module;
+use crate::module::{Module, ModuleMessage};
 // mod widglets;
 
 use crate::widglets;
@@ -27,7 +27,7 @@ impl Calc {
 }
 
 impl Module for Calc {
-    fn view(&self) -> Element<'_, String> {
+    fn view(&self) -> Element<'_, ModuleMessage> {
         let mut font = iced::Font::MONOSPACE;
         font.weight = iced::font::Weight::Bold;
 
@@ -47,10 +47,13 @@ impl Module for Calc {
         widgy.into()
     }
 
-    fn update(&mut self, input: &str) {
+    fn update(&mut self, msg: ModuleMessage) -> Task<()> {
+        let ModuleMessage::TextChanged(input) = msg else {return Task::none()};
+
         let start = std::time::Instant::now();
-        self.answer = Calc::calculate_str(input);
+        self.answer = Calc::calculate_str(&input);
         log::debug!("Time to calculate calculator was: {:#?}", start.elapsed());
+        Task::none()
     }
 
     fn run(&self) {

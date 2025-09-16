@@ -2,8 +2,9 @@ use std::{any::Any, rc::Rc};
 
 use iced::{Task, widget};
 
-use crate::module::{AppMessage, Module};
+use crate::module::{Module, ModuleMessage};
 
+#[derive(Debug, Clone)]
 pub enum WebMsg {
     GotResult(String),
 }
@@ -23,31 +24,38 @@ impl Web {
 }
 
 impl Module for Web {
-    fn view(&self) -> iced::Element<'_, AppMessage> {
+    fn view(&self) -> iced::Element<'_, ModuleMessage> {
         let root = widget::container(widget::text(self.cached_results.concat()));
         root.into()
     }
 
-    fn update(&mut self, _msg: Rc<dyn Any>) -> Task<()> {
+    fn update(&mut self, msg: ModuleMessage) -> Task<()> {
         // do nothing (for now)
         // TODO, attempt to downcast.
         //    if let Some(m) = msg.downcast_ref::<CalcMsg>() {
-        Task::none()
-    }
+        //
+        match msg {
+            ModuleMessage::TextChanged(input) => {
+                if self.input_for_results != input {
+                    // Must be new text
+                    self.cached_results.clear();
+                    self.input_for_results = input.to_string();
 
-    fn on_input(&mut self, text: &str) -> iced::Task<()> {
-        if self.input_for_results != text {
-            // Must be new text
-            self.cached_results.clear();
-            self.input_for_results = text.to_string();
+                    for i in 0..=9 {
+                        self.cached_results
+                            .push(format!("result: {i}. input: {input}\n"))
+                    }
 
-            for i in 0..=9 {
-                self.cached_results
-                    .push(format!("result: {i}. input: {text}\n"))
-            }
+                    // Task::perform(future, f)
+                }
+                Task::none()
+            },
+        ModuleMessage::WebMessage(_inner) => {
+            Task::none()
+        },
+        _ => Task::none()
         }
-
-        Task::none()
+    
     }
 
     fn run(&self) {

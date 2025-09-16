@@ -11,20 +11,20 @@ use apps::AppModule;
 mod calculator;
 use calculator::Calc;
 
-// mod websearch;
-// use websearch::Web;
+mod websearch;
+use websearch::Web;
 
 mod module;
 mod widglets;
 mod util;
-use module::{Module};
+use module::{Module, ModuleMessage};
 
 #[derive(Clone, Debug)]
 enum Message {
     TextInputChanged(String),
     FocusTextInput,
     TextInputSubmitted(String),
-    PluginMessage(String),
+    PluginMessage(ModuleMessage),
     Close,
 }
 
@@ -37,7 +37,7 @@ struct State {
 impl std::default::Default for State {
     fn default() -> State {
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
-        modules.insert(";c".to_string(), Box::new(Calc::new()));
+        modules.insert("=".to_string(), Box::new(Calc::new()));
 
         // modules.insert(";w".to_string(), Box::new(Web::new()));
 
@@ -61,7 +61,7 @@ impl State {
                 let input = self.text_value.clone();
                 if let Some((module, prefix_size)) = self.find_module_mut() {
                     module.update(
-                        &input[prefix_size..]);
+                        ModuleMessage::TextChanged(input[prefix_size..].to_string()));
                 }
 
                 Task::none()
@@ -99,7 +99,7 @@ impl State {
             .unwrap()
             .0
             .view()
-            .map(|s: String| Message::PluginMessage(s));
+            .map(|s: ModuleMessage| Message::PluginMessage(s));
 
         let root_continer = widget::container(widget::column![text_input, result])
             .padding(10)
