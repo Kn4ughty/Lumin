@@ -1,6 +1,6 @@
 use anyhow;
 use anyhow::bail;
-use iced::{widget, Element, Task};
+use iced::{Element, Task, widget};
 use thiserror::Error;
 
 // This is my fav so far
@@ -47,8 +47,10 @@ impl Module for Calc {
         widgy.into()
     }
 
-    fn update(&mut self, msg: ModuleMessage) -> Task<()> {
-        let ModuleMessage::TextChanged(input) = msg else {return Task::none()};
+    fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
+        let ModuleMessage::TextChanged(input) = msg else {
+            return Task::none();
+        };
 
         let start = std::time::Instant::now();
         self.answer = Calc::calculate_str(&input);
@@ -167,9 +169,9 @@ impl Calc {
                     // No number next
                     _ => {
                         log::trace!("Got to num next with: {c}");
-                        out.push(Expr::Number(number_buf.parse().map_err(|_| {
+                        out.push(Expr::Number(number_buf.parse().map_err(|e| {
                             CalcError::from_expr_list(
-                                String::from("Could not parse to number"),
+                                format!("Tokeniser could not parse to number. Error: {e}"),
                                 out.clone(),
                                 idx,
                             )
@@ -211,7 +213,13 @@ impl Calc {
 
         if number_buf.len() != 0 {
             log::trace!("Number buf len was not 0 at end of function");
-            out.push(Expr::Number(number_buf.parse().unwrap()));
+            out.push(Expr::Number(number_buf.parse().map_err(|e| {
+                CalcError::new(
+                    format!("Tokeniser could not parse to number. Error: {e}"),
+                    number_buf.to_string(),
+                    0,
+                )
+            })?));
             number_buf.clear();
         }
 
@@ -336,14 +344,17 @@ impl Calc {
                 }
 
                 let lhs = match input.clone().get(idx - 1).ok_or(CalcError::from_expr_list(
-                    "LHS of operator not found. This is a strange state. Pls notify developer".to_string(),
+                    "LHS of operator not found. This is a strange state. Pls notify developer"
+                        .to_string(),
                     input.clone(),
                     idx,
                 ))? {
                     Expr::Bracket(inner) => Self::calc(inner.clone())?,
                     Expr::Number(inner) => *inner, // is this okay? probs
                     _ => bail!(CalcError::from_expr_list(
-                        String::from("LHS Expression could not be turned into number. This is a strange state. Pls notify developer"),
+                        String::from(
+                            "LHS Expression could not be turned into number. This is a strange state. Pls notify developer"
+                        ),
                         input.clone(),
                         idx - 1
                     )),
