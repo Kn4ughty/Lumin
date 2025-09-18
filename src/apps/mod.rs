@@ -36,7 +36,7 @@ impl Module for AppModule {
         .into()
     }
 
-    fn update(&mut self, msg: ModuleMessage) -> Task<()> {
+    fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
         let ModuleMessage::TextChanged(input) = msg else {return Task::none()};
 
         if self.app_list.len() == 0 {

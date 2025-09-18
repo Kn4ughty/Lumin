@@ -14,7 +14,7 @@ pub enum ModuleMessage {
 }
 
 pub trait Module {
-    fn update(&mut self, msg: ModuleMessage) -> Task<()>;
+    fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage>;
     fn view(&self) -> Element<'_, ModuleMessage>; // why is string here?
     fn run(&self); // Allow to return result
 }

@@ -39,7 +39,7 @@ impl std::default::Default for State {
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
         modules.insert("=".to_string(), Box::new(Calc::new()));
 
-        // modules.insert(";w".to_string(), Box::new(Web::new()));
+        modules.insert(";w".to_string(), Box::new(Web::new()));
 
         modules.insert("".to_string(), Box::new(AppModule::new()));
 
@@ -60,8 +60,8 @@ impl State {
                 // Lookup module and pass in text
                 let input = self.text_value.clone();
                 if let Some((module, prefix_size)) = self.find_module_mut() {
-                    module.update(
-                        ModuleMessage::TextChanged(input[prefix_size..].to_string()));
+                    return module.update(
+                        ModuleMessage::TextChanged(input[prefix_size..].to_string())).map(|mm| Message::PluginMessage(mm))
                 }
 
                 Task::none()

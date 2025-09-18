@@ -1,11 +1,11 @@
-use std::{any::Any, rc::Rc};
-
+use reqwest;
 use iced::{Task, widget};
 
 use crate::module::{Module, ModuleMessage};
 
 #[derive(Debug, Clone)]
 pub enum WebMsg {
+    // GotResult(reqwest::Response),
     GotResult(String),
 }
 
@@ -29,11 +29,7 @@ impl Module for Web {
         root.into()
     }
 
-    fn update(&mut self, msg: ModuleMessage) -> Task<()> {
-        // do nothing (for now)
-        // TODO, attempt to downcast.
-        //    if let Some(m) = msg.downcast_ref::<CalcMsg>() {
-        //
+    fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
         match msg {
             ModuleMessage::TextChanged(input) => {
                 if self.input_for_results != input {
@@ -46,11 +42,19 @@ impl Module for Web {
                             .push(format!("result: {i}. input: {input}\n"))
                     }
 
-                    // Task::perform(future, f)
+                    // Need to tokio
+                    return Task::perform(async {let f = reqwest::get("https://example.com");
+                        let Ok(j) = f.await else { return "ERROR".to_string()};
+
+                        let Ok(i) = j.text().await else { return "ERORR 2".to_string()};
+                        return i.to_string()
+                    },
+                        |r| ModuleMessage::WebMessage(WebMsg::GotResult(r)))
                 }
                 Task::none()
             },
-        ModuleMessage::WebMessage(_inner) => {
+        ModuleMessage::WebMessage(inner) => {
+            log::warn!("received a webMessage yay!!! inner {inner:?}");
             Task::none()
         },
         _ => Task::none()
