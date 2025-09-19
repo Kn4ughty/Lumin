@@ -308,7 +308,7 @@ impl Calc {
             iter_idx += 1;
         }
 
-        return Ok(eval_buf);
+        Ok(eval_buf)
     }
 
     fn apply_op(input: &mut Vec<Expr>, idx: usize) -> anyhow::Result<()> {

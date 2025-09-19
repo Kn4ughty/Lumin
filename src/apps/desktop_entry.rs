@@ -185,7 +185,7 @@ fn can_load_system_desktop_entries() {
 fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseError> {
     let contents = std::fs::read_to_string(file_path).map_err(|_| ParseError::CouldNotLoadFile)?;
 
-    return parse_from_hashmap(parse_entry_from_string(&contents)?);
+    parse_from_hashmap(parse_entry_from_string(&contents)?)
 }
 
 fn parse_from_hashmap(
@@ -413,7 +413,7 @@ fn find_icon(name: &str, size: i32, scale: i32) -> Option<std::path::PathBuf> {
     };
 
 
-    return lookup_fallback_icon(name)
+    lookup_fallback_icon(name)
 }
 
 #[test]
