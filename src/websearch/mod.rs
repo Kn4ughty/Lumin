@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use iced::{Task, widget};
 
 use crate::module::{Module, ModuleMessage};
@@ -7,12 +5,6 @@ use crate::module::{Module, ModuleMessage};
 mod bits;
 use bits::{SearchError, SearchResult};
 mod wikipedia;
-
-// Planned architechture.
-// From the starting prefix, ie "!", you can have sub prefixes for different engines.
-// i.e, !w for wikipedia, !g for google etc.
-// This does seem kinda complicated. Maybe just keep it simpple for now?
-
 
 #[derive(Debug, Clone)]
 pub enum WebMsg {
@@ -26,9 +18,6 @@ pub struct Web {
 
 impl Web {
     pub fn new() -> Self {
-        // let mut searchers = HashMap::new();
-        // searchers.insert("w", Box::new(Wikipedia::new()));
-
         Self {
             input_for_results: String::new(),
             cached_results: vec![],
@@ -52,7 +41,7 @@ impl Module for Web {
                     let input_chars = self.input_for_results.chars();
                     let first = input_chars.clone().next();
                     let search_text = input.trim().to_string();
-
+ 
                     return match (first, search_text) {
                         // get first char
                         (Some('w'), search_text) => {
@@ -71,22 +60,17 @@ impl Module for Web {
                             Task::none()
                         }
                     };
-
-                    // return Task::perform(async {let f = reqwest::get("https://example.com");
-                    //     let Ok(j) = f.await else { return "ERROR".to_string()};
-                    //
-                    //     let Ok(i) = j.json().await else { return "Couldnt turn to json".to_string()};
-                    //     return i.to_string()
-                    // },
-                    //     |r| ModuleMessage::WebMessage(WebMsg::GotResult(r)))
                 }
                 Task::none()
             }
             ModuleMessage::WebMessage(inner) => {
-                log::warn!("received a webMessage yay!!! inner {inner:?}");
+                log::info!("received a webMessage yay!!! inner {inner:?}");
+                match inner {
+                    WebMsg::GotResult(r) => log::info!("message was result: {r:?}")
+                }
                 Task::none()
             }
-            _ => Task::none(),
+            // _ => Task::none(),
         }
     }
 

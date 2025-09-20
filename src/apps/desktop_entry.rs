@@ -384,70 +384,70 @@ fn can_parse_exec_key() {
 
 
 // https://specifications.freedesktop.org/icon-theme-spec/latest/
-fn find_icon(name: &str, size: i32, scale: i32) -> Option<std::path::PathBuf> {
-    // gsettings get org.gnome.desktop.interface gtk-theme
-    let mut user_theme_string: Option<String> = None;
-
-    if let Ok(get_theme_cmd) = std::process::Command::new("gsettings")
-        .args(["get", "org.gnome.desktop.interface", "gtk-theme"])
-        .output()
-    {
-        user_theme_string = Some(
-            String::from_utf8_lossy(&get_theme_cmd.stdout)
-                .trim()
-                .trim_matches('\'')
-                .to_string(),
-        );
-    }
-
-    println!("user theme streing is : {user_theme_string:?}");
-
-    if user_theme_string.is_some() {
-        if let Some(filename) = find_icon_helper(name, size, scale, &user_theme_string.unwrap()) {
-            return Some(filename)
-        };
-    }
-
-    if let Some(filename) = find_icon_helper(name, size, scale, "hicolor") {
-        return Some(filename)
-    };
-
-
-    lookup_fallback_icon(name)
-}
-
-#[test]
-fn can_find_icon() {
-    find_icon("", 1, 1);
-    assert!(1 == 1);
-}
-
-fn find_icon_helper(
-    name: &str,
-    size: i32,
-    scale: i32,
-    theme: &str,
-) -> Option<std::path::PathBuf> {
-    if let Some(filename) = lookup_icon(name, size, scale, theme) {
-        return Some(filename)
-    };
-    // Theme has parents??
-
-    Some("find icon helper".into())
-}
-
-fn lookup_icon(
-    name: &str,
-    size: i32,
-    scale: i32,
-    theme: &str,) -> Option<std::path::PathBuf> { 
-
-    Some("lookup icon".into())
-}
-
-fn lookup_fallback_icon(name: &str) -> Option<std::path::PathBuf> {
-    Some("Fallback icon".into())
-}
+// fn find_icon(name: &str, size: i32, scale: i32) -> Option<std::path::PathBuf> {
+//     // gsettings get org.gnome.desktop.interface gtk-theme
+//     let mut user_theme_string: Option<String> = None;
+//
+//     if let Ok(get_theme_cmd) = std::process::Command::new("gsettings")
+//         .args(["get", "org.gnome.desktop.interface", "gtk-theme"])
+//         .output()
+//     {
+//         user_theme_string = Some(
+//             String::from_utf8_lossy(&get_theme_cmd.stdout)
+//                 .trim()
+//                 .trim_matches('\'')
+//                 .to_string(),
+//         );
+//     }
+//
+//     println!("user theme streing is : {user_theme_string:?}");
+//
+//     if user_theme_string.is_some() {
+//         if let Some(filename) = find_icon_helper(name, size, scale, &user_theme_string.unwrap()) {
+//             return Some(filename)
+//         };
+//     }
+//
+//     if let Some(filename) = find_icon_helper(name, size, scale, "hicolor") {
+//         return Some(filename)
+//     };
+//
+//
+//     lookup_fallback_icon(name)
+// }
+//
+// #[test]
+// fn can_find_icon() {
+//     find_icon("", 1, 1);
+//     assert!(1 == 1);
+// }
+//
+// fn find_icon_helper(
+//     name: &str,
+//     size: i32,
+//     scale: i32,
+//     theme: &str,
+// ) -> Option<std::path::PathBuf> {
+//     if let Some(filename) = lookup_icon(name, size, scale, theme) {
+//         return Some(filename)
+//     };
+//     // Theme has parents??
+//
+//     Some("find icon helper".into())
+// }
+//
+// fn lookup_icon(
+//     name: &str,
+//     size: i32,
+//     scale: i32,
+//     theme: &str,) -> Option<std::path::PathBuf> { 
+//
+//     Some("lookup icon".into())
+// }
+//
+// fn lookup_fallback_icon(name: &str) -> Option<std::path::PathBuf> {
+//     Some("Fallback icon".into())
+// }
 
 
 #[test]

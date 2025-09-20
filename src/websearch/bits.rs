@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone)]
 pub struct SearchResult {
     pub url: String,
@@ -8,11 +7,13 @@ pub struct SearchResult {
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum SearchError {
-    BadResponse(String)
+    BadResponse(String),
 }
 
 impl std::fmt::Display for SearchError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("blah blah blah")
+        match self {
+            Self::BadResponse(inner) => f.write_str(&format!("Bad Response: {inner}")),
+        }
     }
 }

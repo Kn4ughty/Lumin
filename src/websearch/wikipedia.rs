@@ -1,4 +1,3 @@
-use anyhow;
 use reqwest;
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -29,14 +28,13 @@ impl From<WikiResultSingle> for SearchResult {
 
 pub async fn search(search_text: &str) -> Result<Vec<SearchResult>, SearchError> {
     let url =
-        format!("https://en.wikipedia.org/w/rest.php/v1/search/title?q={search_text}&limit=10");
+        format!("https://en.wikipedia.org/w/rest.php/v1/search/title?q={search_text}&limit=5");
 
     let client = reqwest::ClientBuilder::new()
         .user_agent("LuminAppLauncher/0.0 (User:Knaughty1234)")
         .build()
         .unwrap();
 
-    // let request = reqwest::RequestBuilder
 
     let response = client.get(url).send().await.map_err(|e| {
         SearchError::BadResponse(format!("failed to get response: {}", e.to_string()))

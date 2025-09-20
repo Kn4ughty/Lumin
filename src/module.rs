@@ -10,7 +10,6 @@ use crate::websearch;
 pub enum ModuleMessage {
     TextChanged(String),
     WebMessage(websearch::WebMsg),
-    Close,
 }
 
 pub trait Module {
