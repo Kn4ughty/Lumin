@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use iced::{Task, keyboard, widget};
 use pretty_env_logger;
 
@@ -39,7 +38,7 @@ impl std::default::Default for State {
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
         modules.insert("=".to_string(), Box::new(Calc::new()));
 
-        modules.insert(";w".to_string(), Box::new(Web::new()));
+        modules.insert("!".to_string(), Box::new(Web::new()));
 
         modules.insert("".to_string(), Box::new(AppModule::new()));
 
@@ -128,7 +127,24 @@ impl State {
     }
 }
 
-pub fn main() -> iced::Result {
+
+fn subscription(_state: &State) -> iced::Subscription<Message> {
+    iced::Subscription::batch(vec![
+        iced::window::open_events().map(|_id| Message::FocusTextInput),
+        iced::keyboard::on_key_release(handle_hotkeys),
+    ])
+}
+
+// Thank you https://kressle.in/keystrokes
+fn handle_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) -> Option<Message> {
+    match key.as_ref() {
+        // This is a bit silly
+        keyboard::Key::Named(keyboard::key::Named::Escape) => Some(Message::Close),
+        _ => None,
+    }
+}
+
+fn main() -> iced::Result {
     #[cfg(feature = "perf")]
     {
         let start = std::time::Instant::now();
@@ -156,20 +172,4 @@ pub fn main() -> iced::Result {
             theme
         })
         .run()
-}
-
-fn subscription(_state: &State) -> iced::Subscription<Message> {
-    iced::Subscription::batch(vec![
-        iced::window::open_events().map(|_id| Message::FocusTextInput),
-        iced::keyboard::on_key_release(handle_hotkeys),
-    ])
-}
-
-// Thank you https://kressle.in/keystrokes
-fn handle_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) -> Option<Message> {
-    match key.as_ref() {
-        // This is a bit silly
-        keyboard::Key::Named(keyboard::key::Named::Escape) => Some(Message::Close),
-        _ => None,
-    }
 }

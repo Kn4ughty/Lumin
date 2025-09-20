@@ -1,12 +1,22 @@
-use reqwest;
+use std::collections::HashMap;
+
 use iced::{Task, widget};
 
 use crate::module::{Module, ModuleMessage};
 
+mod bits;
+use bits::{SearchError, SearchResult};
+mod wikipedia;
+
+// Planned architechture.
+// From the starting prefix, ie "!", you can have sub prefixes for different engines.
+// i.e, !w for wikipedia, !g for google etc.
+// This does seem kinda complicated. Maybe just keep it simpple for now?
+
+
 #[derive(Debug, Clone)]
 pub enum WebMsg {
-    // GotResult(reqwest::Response),
-    GotResult(String),
+    GotResult(Result<Vec<SearchResult>, SearchError>),
 }
 
 pub struct Web {
@@ -16,6 +26,9 @@ pub struct Web {
 
 impl Web {
     pub fn new() -> Self {
+        // let mut searchers = HashMap::new();
+        // searchers.insert("w", Box::new(Wikipedia::new()));
+
         Self {
             input_for_results: String::new(),
             cached_results: vec![],
@@ -33,33 +46,48 @@ impl Module for Web {
         match msg {
             ModuleMessage::TextChanged(input) => {
                 if self.input_for_results != input {
-                    // Must be new text
                     self.cached_results.clear();
                     self.input_for_results = input.to_string();
 
-                    for i in 0..=9 {
-                        self.cached_results
-                            .push(format!("result: {i}. input: {input}\n"))
-                    }
+                    let input_chars = self.input_for_results.chars();
+                    let first = input_chars.clone().next();
+                    let search_text = input.trim().to_string();
 
-                    // Need to tokio
-                    return Task::perform(async {let f = reqwest::get("https://example.com");
-                        let Ok(j) = f.await else { return "ERROR".to_string()};
+                    return match (first, search_text) {
+                        // get first char
+                        (Some('w'), search_text) => {
+                            log::info!("wikipedia time!");
+                            Task::perform(
+                                async move { wikipedia::search(&search_text).await },
+                                |r| ModuleMessage::WebMessage(WebMsg::GotResult(r)),
+                            )
+                        }
+                        (None, _) => {
+                            log::info!("Did not match in web searcher");
+                            Task::none()
+                        }
+                        _ => {
+                            log::info!("unknown search prefix");
+                            Task::none()
+                        }
+                    };
 
-                        let Ok(i) = j.text().await else { return "ERORR 2".to_string()};
-                        return i.to_string()
-                    },
-                        |r| ModuleMessage::WebMessage(WebMsg::GotResult(r)))
+                    // return Task::perform(async {let f = reqwest::get("https://example.com");
+                    //     let Ok(j) = f.await else { return "ERROR".to_string()};
+                    //
+                    //     let Ok(i) = j.json().await else { return "Couldnt turn to json".to_string()};
+                    //     return i.to_string()
+                    // },
+                    //     |r| ModuleMessage::WebMessage(WebMsg::GotResult(r)))
                 }
                 Task::none()
-            },
-        ModuleMessage::WebMessage(inner) => {
-            log::warn!("received a webMessage yay!!! inner {inner:?}");
-            Task::none()
-        },
-        _ => Task::none()
+            }
+            ModuleMessage::WebMessage(inner) => {
+                log::warn!("received a webMessage yay!!! inner {inner:?}");
+                Task::none()
+            }
+            _ => Task::none(),
         }
-    
     }
 
     fn run(&self) {
