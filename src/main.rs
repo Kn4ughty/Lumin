@@ -154,6 +154,7 @@ fn handle_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) -> Option<
 }
 
 fn main() -> iced::Result {
+    pretty_env_logger::init();
     #[cfg(feature = "perf")]
     {
         let start = std::time::Instant::now();
@@ -163,16 +164,15 @@ fn main() -> iced::Result {
         return Ok(());
     }
 
-    pretty_env_logger::init();
     iced::application("Lumin", State::update, State::view)
         .subscription(subscription)
         .level(iced::window::Level::AlwaysOnTop)
         .resizable(false)
         .decorations(false)
-        .window_size((800.0, 200.0))
+        .window_size((800.0, 300.0))
         .theme(|_s| {
             let theme = iced::Theme::custom(
-                "name".to_string(),
+                "name".into(),
                 iced::theme::Palette {
                     background: iced::color!(0x313244),
                     ..iced::Theme::CatppuccinMocha.palette()
@@ -180,5 +180,37 @@ fn main() -> iced::Result {
             );
             theme
         })
+        // .theme(|_s| {
+        //     let text_col = iced::color!(0xcdd6f4);
+        //     iced::Theme::Custom(
+        //         Box::new(iced::theme::Custom::with_fn(
+        //             "name".to_string(),
+        //             iced::theme::Palette {
+        //                 text: text_col,
+        //                 ..iced::Theme::CatppuccinMocha.palette()
+        //             },
+        //             |_p| {
+        //                 return iced::theme::palette::Extended {
+        //                     background: iced::theme::palette::Background {
+        //                         base: iced::theme::palette::Pair {
+        //                             color: iced::color!(0x313244),
+        //                             text: text_col,
+        //                         },
+        //                         weak: iced::theme::palette::Pair {
+        //                             color: iced::color!(0x45475a),
+        //                             text: text_col,
+        //                         },
+        //                         strong: iced::theme::palette::Pair {
+        //                             color: iced::color!(0x1e1e2e),
+        //                             text: text_col,
+        //                         },
+        //                     },
+        //                     ..*iced::Theme::CatppuccinMocha.extended_palette()
+        //                 };
+        //             },
+        //         ))
+        //         .into(),
+        //     )
+        // })
         .run()
 }

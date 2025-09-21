@@ -1,4 +1,4 @@
-use iced::{Task, widget};
+use iced::Task;
 
 use crate::{
     module::{Module, ModuleMessage},
@@ -16,7 +16,7 @@ pub enum WebMsg {
 
 pub struct Web {
     input_for_results: String,
-    cached_results: Vec<SearchResult>,
+    cached_results: Vec<SearchResult>, // TODO. Convert to hashmap with input for actual caching
 }
 
 impl Web {
@@ -29,35 +29,41 @@ impl Web {
 
     /// Split up just bc the indentation was getting to be too much
     fn handle_text_change(&mut self, input: String) -> Task<ModuleMessage> {
-        if self.input_for_results != input {
-            self.cached_results.clear();
-            self.input_for_results = input.to_string();
-
-            let input_chars = self.input_for_results.chars();
-            let first = input_chars.clone().next();
-            let search_text = input.trim().to_string();
-
-            return match (first, search_text) {
-                // get first char
-                (Some('w'), search_text) => {
-                    log::info!("wikipedia time!");
-                    // trim first character. TODO. Dont hardcode
-                    Task::perform(
-                        async move { wikipedia::search(&search_text[1..]).await },
-                        |r| ModuleMessage::WebMessage(WebMsg::GotResult(r)),
-                    )
-                }
-                (None, _) => {
-                    log::info!("Did not match in web searcher");
-                    Task::none()
-                }
-                _ => {
-                    log::info!("unknown search prefix");
-                    Task::none()
-                }
-            };
+        if self.input_for_results == input {
+            // Text hasnt changed. Do nothing. Shouldn't happen, but no need to spam API's
+            // redundantly
+            log::warn!(
+                "The web search text_change func was run, even though the input text hasnt changed since the last time. This is odd. Contact Dev with replication instructions"
+            );
+            return Task::none()
         }
-        Task::none()
+
+        self.cached_results.clear();
+        self.input_for_results = input.to_string();
+
+        let input_chars = self.input_for_results.chars();
+        let first = input_chars.clone().next();
+        let search_text = input.trim().to_string();
+
+        return match (first, search_text) {
+            // get first char
+            (Some('w'), search_text) => {
+                log::info!("wikipedia time!");
+                // trim first character. TODO. Dont hardcode
+                Task::perform(
+                    async move { wikipedia::search(&search_text[1..]).await },
+                    |r| ModuleMessage::WebMessage(WebMsg::GotResult(r)),
+                )
+            }
+            (None, _) => {
+                log::info!("Did not match in web searcher");
+                Task::none()
+            }
+            _ => {
+                log::info!("unknown search prefix");
+                Task::none()
+            }
+        };
     }
 }
 

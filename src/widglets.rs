@@ -1,6 +1,8 @@
 use crate::module::ModuleMessage;
 use iced::widget;
 
+const PADDING: f32 = 10.0;
+
 #[allow(dead_code)]
 pub enum HeadingLevel {
     H1,
@@ -23,12 +25,28 @@ pub fn heading<'a>(
         HeadingLevel::Subheading => 1.0,
     };
 
+    // let font_color = match level {
+    //     HeadingLevel::Subheading => iced
+    //     _ => None
+    // }
+
     font.weight = match level {
         HeadingLevel::H1 | HeadingLevel::H2 => iced::font::Weight::Bold,
         _ => iced::font::Weight::Normal,
     };
 
+
     widget::text(text).size(iced::Settings::default().default_text_size * font_mult)
+        .style(move |theme: &iced::Theme| {
+            let c = match level {
+                HeadingLevel::Subheading =>Some( theme.extended_palette().primary.weak.text),
+                _ => None
+            };
+            widget::text::Style {
+                color: c
+            }
+        }
+            )
 }
 
 pub fn listrow<'a>(
@@ -36,13 +54,16 @@ pub fn listrow<'a>(
     subtext: Option<String>,
     _icon: Option<String>,
 ) -> widget::Container<'a, ModuleMessage> {
-    let text_widget = heading(HeadingLevel::H2, text, None);
+    let text_widget = heading(HeadingLevel::H3, text, None);
     let subtext_widget = heading(HeadingLevel::Subheading, subtext.unwrap_or("".into()), None);
 
     // widget::container::Container
-    widget::container(widget::row![text_widget, subtext_widget])
-        .style(widget::container::rounded_box)
-        .width(iced::Fill)
+    widget::container(
+        widget::container(widget::column![text_widget, subtext_widget])
+            .style(widget::container::rounded_box)
+            .width(iced::Fill),
+    )
+    .padding(PADDING)
 }
 
 pub fn listbox<'a, I>(t: I) -> iced::Element<'a, ModuleMessage>
