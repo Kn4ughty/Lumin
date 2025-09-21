@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use iced::{Task, keyboard, widget};
 use pretty_env_logger;
+use std::collections::HashMap;
 
 use log;
 
@@ -14,8 +14,8 @@ mod websearch;
 use websearch::Web;
 
 mod module;
-mod widglets;
 mod util;
+mod widglets;
 use module::{Module, ModuleMessage};
 
 #[derive(Clone, Debug)]
@@ -43,7 +43,10 @@ impl std::default::Default for State {
 
         modules.insert("".to_string(), Box::new(AppModule::new()));
 
-        log::trace!("Time to load modules creating new State: {:#?}", start.elapsed());
+        log::trace!(
+            "Time to load modules creating new State: {:#?}",
+            start.elapsed()
+        );
         State {
             text_value: "".to_string(),
             text_id: widget::text_input::Id::new("text_entry"),
@@ -61,8 +64,9 @@ impl State {
                 // Lookup module and pass in text
                 let input = self.text_value.clone();
                 if let Some((module, prefix_size)) = self.find_module_mut() {
-                    return module.update(
-                        ModuleMessage::TextChanged(input[prefix_size..].to_string())).map(|mm| Message::PluginMessage(mm))
+                    return module
+                        .update(ModuleMessage::TextChanged(input[prefix_size..].to_string()))
+                        .map(|mm| Message::PluginMessage(mm));
                 }
 
                 Task::none()
@@ -80,8 +84,12 @@ impl State {
                 iced::exit()
             }
             Message::PluginMessage(a) => {
-                log::info!("Ignoring module message {a:?}");
+                log::info!("Handling module message {a:?}");
                 // TODO. match by exact prefix and pass message
+                if let Some((module, prefix)) = self.find_module_mut() {
+                    log::trace!("Module handled had prefix {prefix}");
+                    return module.update(a).map(|mm| Message::PluginMessage(mm));
+                }
                 Task::none()
             }
         }
@@ -128,7 +136,6 @@ impl State {
         // .map(|(_s, m)| m)
     }
 }
-
 
 fn subscription(_state: &State) -> iced::Subscription<Message> {
     iced::Subscription::batch(vec![

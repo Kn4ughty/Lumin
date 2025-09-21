@@ -28,13 +28,16 @@ impl Calc {
 
 impl Module for Calc {
     fn view(&self) -> Element<'_, ModuleMessage> {
-        let mut font = iced::Font::MONOSPACE;
-        font.weight = iced::font::Weight::Bold;
+        let font = iced::Font::MONOSPACE;
 
         let widgy = match &self.answer {
             Ok(num) => widget::container(
-                widglets::heading(widglets::HeadingLevel::H1, format!("{:#?}", num.clone()))
-                    .font(font),
+                widglets::heading(
+                    widglets::HeadingLevel::H1,
+                    format!("{:#?}", num.clone()),
+                    None,
+                )
+                .font(font),
             )
             .center_x(iced::Fill),
             Err(err) => widget::container(widget::text(err.to_string()).font(font).style(

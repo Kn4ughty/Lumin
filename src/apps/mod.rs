@@ -1,5 +1,5 @@
-use iced::widget;
 use iced::Task;
+use iced::widget;
 use libc;
 use log;
 use std::io;
@@ -37,7 +37,9 @@ impl Module for AppModule {
     }
 
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
-        let ModuleMessage::TextChanged(input) = msg else {return Task::none()};
+        let ModuleMessage::TextChanged(input) = msg else {
+            return Task::none();
+        };
 
         if self.app_list.len() == 0 {
             log::trace!("Regenerating app_list");
@@ -194,4 +196,3 @@ fn can_parse_app_from_desktop_entry() {
 
     assert_eq!(app, App::from(entry));
 }
-

@@ -7,7 +7,7 @@
 - [ ] Create a nice default theme
 - [ ] Templates for UI elements 
     - [ ] Investiage https://austinmreppert.github.io/iced-reference/chapter_3.html
-    - [ ] ListBox and List elements
+    - [x] ListBox and List elements
     - [ ] Investigate https://github.com/pop-os/cosmic-time
 - [x] Work out how to have async tasks in modules
     - [ ] Try not to duplicate clients

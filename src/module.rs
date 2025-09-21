@@ -4,8 +4,6 @@ use iced::{Element, Task};
 // use crate::apps;
 use crate::websearch;
 
-
-
 #[derive(Debug, Clone)]
 pub enum ModuleMessage {
     TextChanged(String),

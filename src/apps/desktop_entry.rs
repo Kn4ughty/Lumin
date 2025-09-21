@@ -382,7 +382,6 @@ fn can_parse_exec_key() {
     );
 }
 
-
 // https://specifications.freedesktop.org/icon-theme-spec/latest/
 // fn find_icon(name: &str, size: i32, scale: i32) -> Option<std::path::PathBuf> {
 //     // gsettings get org.gnome.desktop.interface gtk-theme
@@ -440,7 +439,7 @@ fn can_parse_exec_key() {
 //     name: &str,
 //     size: i32,
 //     scale: i32,
-//     theme: &str,) -> Option<std::path::PathBuf> { 
+//     theme: &str,) -> Option<std::path::PathBuf> {
 //
 //     Some("lookup icon".into())
 // }
@@ -448,7 +447,6 @@ fn can_parse_exec_key() {
 // fn lookup_fallback_icon(name: &str) -> Option<std::path::PathBuf> {
 //     Some("Fallback icon".into())
 // }
-
 
 #[test]
 fn can_parse_full_app() {

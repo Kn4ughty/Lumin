@@ -1,8 +1,17 @@
+use crate::module::ModuleMessage;
+use crate::widglets;
+
 #[derive(Debug, Clone)]
 pub struct SearchResult {
     pub url: String,
     pub title: String,
     pub description: String,
+}
+
+impl From<SearchResult> for iced::Element<'_, ModuleMessage> {
+    fn from(value: SearchResult) -> Self {
+        widglets::listrow(value.title, Some(value.description), Some("".into())).into()
+    }
 }
 
 #[derive(Debug, Clone, thiserror::Error)]

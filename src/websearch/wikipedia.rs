@@ -35,7 +35,6 @@ pub async fn search(search_text: &str) -> Result<Vec<SearchResult>, SearchError>
         .build()
         .unwrap();
 
-
     let response = client.get(url).send().await.map_err(|e| {
         SearchError::BadResponse(format!("failed to get response: {}", e.to_string()))
     })?;
