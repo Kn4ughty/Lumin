@@ -35,6 +35,7 @@ struct State {
 
 impl std::default::Default for State {
     fn default() -> State {
+        let start = std::time::Instant::now();
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
         modules.insert("=".to_string(), Box::new(Calc::new()));
 
@@ -42,6 +43,7 @@ impl std::default::Default for State {
 
         modules.insert("".to_string(), Box::new(AppModule::new()));
 
+        log::trace!("Time to load modules creating new State: {:#?}", start.elapsed());
         State {
             text_value: "".to_string(),
             text_id: widget::text_input::Id::new("text_entry"),
