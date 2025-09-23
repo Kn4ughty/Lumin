@@ -2,17 +2,13 @@ use iced::Task;
 
 use crate::{
     module::{Module, ModuleMessage},
-    widglets,
+    util, widglets,
 };
 
 mod bits;
-use bits::{SearchError, SearchResult};
+use bits::SearchResult;
+pub use bits::WebMsg;
 mod wikipedia;
-
-#[derive(Debug, Clone)]
-pub enum WebMsg {
-    GotResult(Result<Vec<SearchResult>, SearchError>),
-}
 
 pub struct Web {
     input_for_results: String,
@@ -35,7 +31,7 @@ impl Web {
             log::warn!(
                 "The web search text_change func was run, even though the input text hasnt changed since the last time. This is odd. Contact Dev with replication instructions"
             );
-            return Task::none()
+            return Task::none();
         }
 
         self.cached_results.clear();
@@ -65,6 +61,13 @@ impl Web {
             }
         };
     }
+
+    #[cfg(target_os = "linux")]
+    fn launch_url(url: &str) {
+        // TODO. Make your own launcher thing because it will be faster.
+        util::execute_command_detached::<&str, Vec<&str>>("xdg-open", vec![url], None)
+            .expect("Can launch url")
+    }
 }
 
 impl Module for Web {
@@ -79,6 +82,7 @@ impl Module for Web {
             ModuleMessage::TextChanged(input) => self.handle_text_change(input),
             ModuleMessage::WebMessage(inner) => {
                 log::trace!("received a webMessage yay!!! inner {inner:?}");
+
                 match inner {
                     WebMsg::GotResult(r) => {
                         log::trace!("message was result: {r:?}");
@@ -88,14 +92,24 @@ impl Module for Web {
                                 log::warn!("WebResult was error! {e:?}")
                             }
                         }
+                        Task::none()
+                    }
+                    WebMsg::ResultSelected(url) => {
+                        log::info!("Launching webresult with URL: {url}");
+                        Self::launch_url(&url);
+                        iced::exit()
                     }
                 }
-                Task::none()
             }
         }
     }
 
     fn run(&self) {
-        println!("first result is: {:?}", self.cached_results.first())
+        let first = self
+            .cached_results
+            .first()
+            .expect("There are some web results");
+        log::info!("first WebResult is: {:?}", first);
+        Self::launch_url(&first.url);
     }
 }

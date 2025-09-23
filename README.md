@@ -1,3 +1,6 @@
+# Requirements.
+`xdg-open`
+
 # Current features
 - Linux app launching
 - Calculator module

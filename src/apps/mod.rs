@@ -1,9 +1,6 @@
 use iced::Task;
 use iced::widget;
-use libc;
 use log;
-use std::io;
-use std::process;
 
 mod desktop_entry;
 use crate::module::{Module, ModuleMessage};
@@ -75,7 +72,16 @@ impl Module for AppModule {
     }
 
     fn run(&self) {
-        self.app_list.first().unwrap().execute().unwrap()
+        let first = self
+            .app_list
+            .first()
+            .expect("There should be at least 1 result");
+        util::execute_command_detached(
+            first.cmd.clone(),
+            first.args.clone(),
+            first.working_dir.clone(),
+        )
+        .unwrap();
     }
 }
 
@@ -83,7 +89,7 @@ impl Module for AppModule {
 pub struct App {
     cmd: String,
     args: Vec<String>,
-    working_dir: String,
+    working_dir: Option<String>,
     pub name: String,
 }
 
@@ -105,37 +111,6 @@ pub fn get_apps() -> Vec<App> {
 //     println!("time: {:?}", now.elapsed());
 //     assert!(1==2);
 // }
-
-impl App {
-    #[cfg(unix)]
-    pub fn execute(&self) -> io::Result<()> {
-        use std::os::unix::process::CommandExt;
-
-        log::trace!("Execute function being run on app: {self:#?}");
-
-        let mut command = process::Command::new(self.cmd.clone());
-        unsafe {
-            command
-                .args(self.args.clone())
-                .current_dir(self.working_dir.clone())
-                .stdin(process::Stdio::null())
-                .stdout(process::Stdio::null())
-                .stderr(process::Stdio::null())
-                .pre_exec(|| {
-                    if libc::setsid() == -1 {
-                        return Err(io::Error::last_os_error());
-                    }
-                    if libc::signal(libc::SIGHUP, libc::SIG_IGN) == libc::SIG_ERR {
-                        return Err(io::Error::last_os_error());
-                    }
-                    Ok(())
-                });
-            log::info!("Executing app {:#?}", command);
-            command.spawn()?;
-        }
-        Ok(())
-    }
-}
 
 impl From<DesktopEntry> for App {
     fn from(value: DesktopEntry) -> Self {
@@ -163,9 +138,7 @@ impl From<DesktopEntry> for App {
             None => (value.exec, vec!["".to_string()]),
         };
 
-        let working_dir = value
-            .working_dir
-            .unwrap_or(std::env::var("HOME").unwrap_or("/".to_string()));
+        let working_dir = value.working_dir;
 
         App {
             name: value.name,
@@ -191,7 +164,7 @@ fn can_parse_app_from_desktop_entry() {
             .iter()
             .map(|k| k.to_string())
             .collect(),
-        working_dir: "/".to_string(),
+        working_dir: Some("/".to_string()),
     };
 
     assert_eq!(app, App::from(entry));

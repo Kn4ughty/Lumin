@@ -181,7 +181,7 @@ fn main() -> iced::Result {
             theme
         })
         // .theme(|_s| {
-        //     let text_col = iced::color!(0xcdd6f4);
+        //     let text_col = iced::color!(0xFF0000);
         //     iced::Theme::Custom(
         //         Box::new(iced::theme::Custom::with_fn(
         //             "name".to_string(),
