@@ -2,6 +2,12 @@ use crate::module::ModuleMessage;
 use crate::widglets;
 
 #[derive(Debug, Clone)]
+pub enum WebMsg {
+    GotResult(Result<Vec<SearchResult>, SearchError>),
+    ResultSelected(String), // URL
+}
+
+#[derive(Debug, Clone)]
 pub struct SearchResult {
     pub url: String,
     pub title: String,
@@ -10,7 +16,13 @@ pub struct SearchResult {
 
 impl From<SearchResult> for iced::Element<'_, ModuleMessage> {
     fn from(value: SearchResult) -> Self {
-        widglets::listrow(value.title, Some(value.description), Some("".into())).into()
+        widglets::listrow(
+            value.title,
+            Some(value.description),
+            Some(ModuleMessage::WebMessage(WebMsg::ResultSelected(value.url))), // eww
+            None,
+        )
+        .into()
     }
 }
 

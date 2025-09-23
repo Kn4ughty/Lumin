@@ -35,23 +35,21 @@ pub fn heading<'a>(
         _ => iced::font::Weight::Normal,
     };
 
-
-    widget::text(text).size(iced::Settings::default().default_text_size * font_mult)
+    widget::text(text)
+        .size(iced::Settings::default().default_text_size * font_mult)
         .style(move |theme: &iced::Theme| {
             let c = match level {
-                HeadingLevel::Subheading =>Some( theme.extended_palette().primary.weak.text),
-                _ => None
+                HeadingLevel::Subheading => Some(theme.extended_palette().primary.weak.text),
+                _ => None,
             };
-            widget::text::Style {
-                color: c
-            }
-        }
-            )
+            widget::text::Style { color: c }
+        })
 }
 
 pub fn listrow<'a>(
     text: String,
     subtext: Option<String>,
+    on_press: Option<ModuleMessage>,
     _icon: Option<String>,
 ) -> widget::Container<'a, ModuleMessage> {
     let text_widget = heading(HeadingLevel::H3, text, None);
@@ -59,9 +57,9 @@ pub fn listrow<'a>(
 
     // widget::container::Container
     widget::container(
-        widget::container(widget::column![text_widget, subtext_widget])
-            .style(widget::container::rounded_box)
-            .width(iced::Fill),
+        widget::button(widget::column![text_widget, subtext_widget])
+            .width(iced::Fill)
+            .on_press_maybe(on_press),
     )
     .padding(PADDING)
 }
