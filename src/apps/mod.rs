@@ -93,13 +93,18 @@ pub struct App {
     pub name: String,
 }
 
-#[cfg(unix)]
+#[cfg(target_os = "linux")]
 pub fn get_apps() -> Vec<App> {
     return desktop_entry::load_desktop_entries()
         .expect("Can load apps")
         .into_iter()
         .map(|a| App::from(a))
         .collect();
+}
+
+#[cfg(target_os = "macos")]
+pub fn get_apps() -> Vec<App> {
+    Vec::new()
 }
 
 // #[test]

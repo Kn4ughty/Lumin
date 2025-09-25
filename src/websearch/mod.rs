@@ -64,8 +64,13 @@ impl Web {
 
     #[cfg(target_os = "linux")]
     fn launch_url(url: &str) {
-        // TODO. Make your own launcher thing because it will be faster.
         util::execute_command_detached::<&str, Vec<&str>>("xdg-open", vec![url], None)
+            .expect("Can launch url")
+    }
+
+    #[cfg(target_os = "macos")]
+    fn launch_url(url: &str) {
+        util::execute_command_detached::<&str, Vec<&str>>("open", vec![url], None)
             .expect("Can launch url")
     }
 }

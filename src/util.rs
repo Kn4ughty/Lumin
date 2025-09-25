@@ -44,7 +44,7 @@ fn longest_common_substr_correct() {
     assert_eq!(longest_common_substr("", ""), 0);
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 pub fn execute_command_detached<S, I>(
     cmd: S,
     args: I,
