@@ -58,13 +58,19 @@ fn is_app(entry: &DirEntry) -> bool {
 }
 
 pub fn load_all_apps() -> Vec<MacApp> {
-    let apps: Vec<MacApp> = WalkDir::new("/Applications/")
-        .max_depth(3)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_dir())
-        .filter(|e| is_app(e))
-        .map(|e| MacApp::new_from_path(e.path().to_str().unwrap().to_string()))
-        .collect();
-    apps
+    let mut full_apps = Vec::new();
+    // There is probably a better way to do it that isnt hardcoding.
+    for dir in vec!["/Applications/", "/System/Applications/"] {
+        for thingy in WalkDir::new(dir)
+            .max_depth(4)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_type().is_dir())
+            .filter(|e| is_app(e))
+            .map(|e| MacApp::new_from_path(e.path().to_str().unwrap().to_string()))
+        {
+            full_apps.push(thingy)
+        }
+    }
+    full_apps
 }
