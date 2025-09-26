@@ -18,7 +18,7 @@ rustflags = ["-Clink-arg=-fuse-ld=lld", "-Clink-arg=-Wl,--no-rosegment"]
 debug = true
 
 [dependencies]
-iced = { version = "0.13.1", features = ["advanced", "tokio"] }
+iced = { version = "0.13.1", features = ["advanced", "tokio", "image"] }
 anyhow = "1.0.99"
 arboard = "3.6.1"
 libc = "0.2.175"
@@ -30,6 +30,7 @@ tokio = {version = "1.47.1", features = ["full"]}
 walkdir = "2.5.0"
 serde = {version = "1.0.225", features = ["derive"]}
 serde_json = "1.0.145"
+icns = "0.3.1"
 
 
 

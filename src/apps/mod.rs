@@ -2,10 +2,15 @@ use iced::Task;
 use iced::widget;
 use log;
 
+#[cfg(target_os = "linux")]
 mod desktop_entry;
+#[cfg(target_os = "linux")]
+use desktop_entry::DesktopEntry;
+
+#[cfg(target_os = "macos")]
+mod mac_apps;
 use crate::module::{Module, ModuleMessage};
 use crate::util;
-use desktop_entry::DesktopEntry;
 
 pub struct AppModule {
     app_list: Vec<App>,
@@ -90,7 +95,7 @@ pub struct App {
     cmd: String,
     args: Vec<String>,
     working_dir: Option<String>,
-    pub name: String,
+    name: String,
 }
 
 #[cfg(target_os = "linux")]
@@ -104,7 +109,16 @@ pub fn get_apps() -> Vec<App> {
 
 #[cfg(target_os = "macos")]
 pub fn get_apps() -> Vec<App> {
-    Vec::new()
+    let m_apps = mac_apps::load_all_apps();
+    m_apps
+        .iter()
+        .map(|a| App {
+            name: a.name.clone(),
+            cmd: "open".into(),
+            args: vec![a.path.clone()],
+            working_dir: None,
+        })
+        .collect()
 }
 
 // #[test]
@@ -117,6 +131,7 @@ pub fn get_apps() -> Vec<App> {
 //     assert!(1==2);
 // }
 
+#[cfg(target_os = "linux")]
 impl From<DesktopEntry> for App {
     fn from(value: DesktopEntry) -> Self {
         // https://docs.iced.rs/iced/advanced/image/index.html
@@ -156,6 +171,9 @@ impl From<DesktopEntry> for App {
 
 #[test]
 fn can_parse_app_from_desktop_entry() {
+    mod desktop_entry;
+    use desktop_entry::DesktopEntry;
+
     let entry = DesktopEntry {
         name: "anki".to_string(),
         exec: "/usr/bin/flatpak run --branch=stable net.ankiweb.Anki @@ @@".to_string(),
