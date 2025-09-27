@@ -55,7 +55,6 @@ pub fn listrow<'a>(
     let text_widget = heading(HeadingLevel::H3, text, None);
     let subtext_widget = heading(HeadingLevel::Subheading, subtext.unwrap_or("".into()), None);
 
-    // widget::container::Container
     widget::container(
         widget::button(widget::column![text_widget, subtext_widget])
             .width(iced::Fill)

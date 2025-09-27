@@ -146,8 +146,6 @@ impl From<DesktopEntry> for App {
 
                 log::trace!("arg is: {:#?}", arg);
 
-                // There has got to be something wrong here
-                // Surely there is a better way
                 if arg == vec!["".to_string()] {
                     log::trace!("ARGS LEN 0");
                     arg.clear();
@@ -171,9 +169,6 @@ impl From<DesktopEntry> for App {
 
 #[test]
 fn can_parse_app_from_desktop_entry() {
-    mod desktop_entry;
-    use desktop_entry::DesktopEntry;
-
     let entry = DesktopEntry {
         name: "anki".to_string(),
         exec: "/usr/bin/flatpak run --branch=stable net.ankiweb.Anki @@ @@".to_string(),

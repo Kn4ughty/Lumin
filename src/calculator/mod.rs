@@ -3,18 +3,14 @@ use anyhow::bail;
 use iced::{Element, Task, widget};
 use thiserror::Error;
 
-// This is my fav so far
+// Some inspiration from here:
 // https://docs.rs/crate/calculator-lib/0.1.1/source/src/lib.rs
-// stealing >:)
 
 use crate::module::{Module, ModuleMessage};
-// mod widglets;
 
 use crate::widglets;
 
 const BASE: u32 = 10;
-
-// pub enum CalcMsg {}
 
 pub struct Calc {
     answer: anyhow::Result<f64>,
@@ -62,6 +58,13 @@ impl Module for Calc {
     }
 
     fn run(&self) {
+        // Ideally it would save the result to the system clipboard.
+        // However, wayland clipbards are stupid so the clipboard data lives only as long as the
+        // source window for the data. And then since lumin closes right after, it is lost.
+        // Should work if the user has an external clipboard manager however.
+        // Maybe i could build a clipboard manager into lumin, like how macos does it.
+        // Anyway for now, just do nothing.
+
         // let mut clipboard = Clipboard::new().unwrap();
         // clipboard.set_text(self.answer.clone()).unwrap();
     }
@@ -83,8 +86,6 @@ enum Expr {
 
 impl ToString for Expr {
     fn to_string(&self) -> String {
-        // f.write_str("hello")
-        // let mut f = String::new();
         let f: String = match self {
             Self::Number(a) => format!("{a}"),
             Self::Plus => String::from("+"),
@@ -127,18 +128,8 @@ impl Expr {
     }
 }
 
-//
-// impl Module for Calc {
-//     fn update(&mut self, input: &str) {}
-//     fn view(&self) -> Element<'_, String> {}
-//     fn run(&self) {
-//         // Copy to clipboard?
-//     }
-// }
-
 impl Calc {
     pub fn calculate_str(input: &str) -> anyhow::Result<f64> {
-        // Calc::calc(Calc::evaluate_brackets(Calc::tokenize(input.to_string()))
         log::trace!("Calculating new input: {input}");
         let tokens = Calc::tokenize(input)?;
         let normalised = Calc::parse_unary_minus(tokens);
@@ -155,7 +146,6 @@ impl Calc {
 
         let mut number_buf: String = "".to_string();
 
-        // TODO. Convert to use enumerate
         let mut iter = chars.enumerate().peekable();
         while let Some((idx, c)) = iter.next() {
             log::trace!("Character in tokenisation is: {c}");
@@ -256,7 +246,6 @@ impl Calc {
 
     fn evaluate_brackets(mut input: Vec<Expr>) -> anyhow::Result<Vec<Expr>> {
         log::trace!("Running evaluate_brackets with input vec: {input:?}");
-        // Returns
         let mut equation_buf: Vec<Expr> = vec![]; // Expr inside a set of bracekts
         let mut eval_buf: Vec<Expr> = vec![]; // Expr outside brackets
 
@@ -319,7 +308,6 @@ impl Calc {
 
         match input[idx] {
             Expr::UnaryMinus => {
-                // Get rhs
                 let rhs = match input.clone().get(idx + 1).ok_or(CalcError::from_expr_list(
                     "RHS of UnaryMinus not found".to_string(),
                     input.clone(),
@@ -334,7 +322,6 @@ impl Calc {
                     )),
                 };
                 input.drain(idx..=idx + 1); // Safe since passed above .get()
-                // input.remove(idx+1);
                 input.insert(idx, Expr::Number(-rhs));
             }
             _ => {
@@ -353,7 +340,7 @@ impl Calc {
                     idx,
                 ))? {
                     Expr::Bracket(inner) => Self::calc(inner.clone())?,
-                    Expr::Number(inner) => *inner, // is this okay? probs
+                    Expr::Number(inner) => *inner,
                     _ => bail!(CalcError::from_expr_list(
                         String::from(
                             "LHS Expression could not be turned into number. This is a strange state. Pls notify developer"
@@ -412,7 +399,6 @@ impl Calc {
             i += 1
         }
 
-        // Begin second pass.
         log::trace!("Second pass of calc. Input is now: {:?}", input);
 
         for prec in (1..=4).rev() {
@@ -506,9 +492,6 @@ fn can_parse_brackets() {
 
 #[test]
 fn can_do_math() {
-    // let input = "((5^3 + 4^2) * (12^2 - 6^3)) / (3^2 + 7) + (144/12 + 8^2) - (2^4 * 7) + 3^3 + 0.5";
-    // let input = "2(2)";
-    // let answer = Calc::calculate_str(input).unwrap();
     assert_eq!(Calc::calculate_str("2(2)").unwrap(), 4.0);
     assert_eq!(Calc::calculate_str("2^(1+2)").unwrap(), 8.0);
     assert_eq!(Calc::calculate_str("12 / 2 * 3 ").unwrap(), 18.0);
@@ -517,14 +500,12 @@ fn can_do_math() {
         127.0
     );
 
-    // Sub tests for big equation
     assert_eq!(
         Calc::calculate_str("(144/12 + 8^2) - (2^4 * 7) + 3^3 + 0.5").unwrap(),
         -8.5
     );
 
     assert_eq!(Calc::calculate_str("12^2").unwrap(), 144.0);
-    // assert_eq!(Calc::calculate_str("1+22").unwrap(), 23.0);
 
     assert_eq!(
         Calc::calculate_str(
@@ -585,10 +566,3 @@ impl std::fmt::Display for CalcError {
         ))
     }
 }
-
-// TEST THESE
-// 4 + 3 - 2 * 9
-// -3 * x ^ 2
-// (1 + y) * 4.1
-// sin PI
-// fn(3, x + 1, sin PI / 2)

@@ -168,18 +168,7 @@ pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
         }
     }
 
-    // panic!();
     Ok(entries.into_iter().filter_map(|a| a.ok()).collect())
-}
-
-#[cfg(unix)]
-#[test]
-fn can_load_system_desktop_entries() {
-    let r = load_desktop_entries();
-    assert!(r.is_ok());
-    let r = r.unwrap();
-    println!("{r:#?}");
-    assert_ne!(r.len(), 0); // this might break if i use github CI
 }
 
 fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseError> {
@@ -191,8 +180,6 @@ fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseErr
 fn parse_from_hashmap(
     input: HashMap<String, HashMap<String, String>>,
 ) -> Result<DesktopEntry, ParseError> {
-    // let mut entry = DesktopEntry::default();
-
     let Some(entry_keys) = input.get("Desktop Entry") else {
         return Err(ParseError::DesktopEntryHeaderNotFound);
     };
@@ -204,8 +191,6 @@ fn parse_from_hashmap(
     {
         return Err(ParseError::NoDisplayTrue);
     }
-
-    // let entry_keys: &i = entry_keys;
 
     let entry_type = match entry_keys.get("Type").map(|s| s.as_str()) {
         Some("Application") => EntryType::Application,
@@ -467,11 +452,8 @@ Actions=New;
 Name=New Terminal
 Exec=testaction
     "#;
-    // a
 
     let entry = parse_from_hashmap(parse_entry_from_string(test).unwrap()).unwrap();
-
-    // println!("{entry:#?}");
 
     assert_eq!(entry.name, "Test Name");
     assert_eq!(entry.entry_type, EntryType::Application);

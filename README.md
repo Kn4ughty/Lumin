@@ -14,10 +14,11 @@
     - [ ] Investigate https://github.com/pop-os/cosmic-time
 - [x] Work out how to have async tasks in modules
     - [ ] Try not to duplicate clients
-    - [ ] Wikipedia module
+    - [x] Wikipedia module
+        - [ ] Image previews
     - [ ] Leads into web based modules i.e dictionary api
 - [ ] Icon support
 - [ ] Refactor calculator lexer
 - [ ] Reduce dependencies
-- [ ] Lazy load modules (currently takes 810ns so not important at all)
+<!-- - [ ] Lazy load modules (currently takes 810ns so not important at all) -->
 

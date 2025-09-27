@@ -11,7 +11,7 @@ pub fn longest_common_substr(s1: &str, s2: &str) -> i32 {
     let s1: Vec<char> = s1.chars().collect();
     let s2: Vec<char> = s2.chars().collect();
 
-    let m = s1.len(); // This will have problems because of difference of chars and bytes
+    let m = s1.len();
     let n = s2.len();
 
     let mut prev = vec![0; n + 1];
@@ -55,8 +55,6 @@ where
     I: IntoIterator<Item = S>,
 {
     use std::os::unix::process::CommandExt;
-
-    // log::trace!("Execute function being run on app: {self:#?}");
 
     let working_dir: String =
         working_dir_arg.unwrap_or(std::env::var("HOME").unwrap_or("/".into()));

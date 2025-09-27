@@ -96,7 +96,6 @@ impl State {
     }
 
     fn view(&self) -> iced::Element<'_, Message> {
-        // the heck is a '_
         log::trace!("view fn run");
         let text_input = widget::text_input("Type to search", &self.text_value)
             .id(self.text_id.clone())
@@ -123,7 +122,6 @@ impl State {
             .filter(|(k, _)| self.text_value.starts_with(k.as_str()))
             .max_by_key(|(prefix, _)| prefix.len())
             .map(|(prefix, m)| (m, prefix.len()))
-        // .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
     }
 
     fn find_module_mut(&mut self) -> Option<(&mut Box<dyn Module>, usize)> {
@@ -132,8 +130,6 @@ impl State {
             .filter(|(k, _)| self.text_value.starts_with(k.as_str()))
             .max_by_key(|(prefix, _)| prefix.len())
             .map(|(prefix, m)| (m, prefix.len()))
-        // .find(|(prefix, _mod)| self.text_value.starts_with(prefix.as_str()))
-        // .map(|(_s, m)| m)
     }
 }
 

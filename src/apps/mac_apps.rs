@@ -7,8 +7,6 @@ use walkdir::{DirEntry, WalkDir};
 
 use iced::advanced::image::Handle;
 
-// const icon_size: Vec< = icns::IconType::
-
 pub struct MacApp {
     pub name: String,
     pub path: String,
@@ -52,7 +50,6 @@ fn is_app(entry: &DirEntry) -> bool {
     entry
         .file_name()
         .to_str()
-        // .unwrap_or(false)
         .map(|s| s.ends_with(".app"))
         .unwrap_or(false)
 }
