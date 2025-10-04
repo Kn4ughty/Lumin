@@ -79,6 +79,7 @@ enum Expr {
     Multiply,
     Divide,
     Power,
+    Modulo,
     Bracket(Vec<Expr>),
     OpenParen,
     CloseParen,
@@ -94,6 +95,7 @@ impl ToString for Expr {
             Self::Multiply => String::from("*"),
             Self::Divide => String::from("÷"),
             Self::Power => String::from("^"),
+            Self::Modulo => String::from("%"),
             Self::Bracket(inner) => inner
                 .iter()
                 .map(|expr| format!("{} ", expr.to_string()))
@@ -121,7 +123,7 @@ impl Expr {
         match self {
             Self::UnaryMinus => Some(4),
             Self::Power => Some(3),
-            Self::Divide | Self::Multiply => Some(2),
+            Self::Divide | Self::Multiply | Self::Modulo => Some(2),
             Self::Plus | Self::Minus => Some(1),
             _ => None,
         }
@@ -190,6 +192,7 @@ impl Calc {
                 '*' => Expr::Multiply,
                 '/' => Expr::Divide,
                 '^' => Expr::Power,
+                '%' => Expr::Modulo,
                 '(' => Expr::OpenParen,
                 ')' => Expr::CloseParen,
                 a => {
@@ -236,6 +239,7 @@ impl Calc {
                         | Expr::Multiply
                         | Expr::Plus
                         | Expr::Power
+                        | Expr::Modulo
                         | Expr::Divide
                         | Expr::OpenParen
                 )
@@ -369,6 +373,7 @@ impl Calc {
                     Expr::Plus => lhs + rhs,
                     Expr::Minus => lhs - rhs,
                     Expr::Power => lhs.powf(rhs),
+                    Expr::Modulo => lhs % rhs,
                     Expr::Multiply => lhs * rhs,
                     _ => unreachable!("Should have been an operator"),
                 };
