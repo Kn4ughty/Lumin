@@ -25,7 +25,6 @@ impl Web {
 
     /// Split up just bc the indentation was getting to be too much
     fn handle_text_change(&mut self, input: String) -> Task<ModuleMessage> {
-
         self.cached_results.clear();
         self.input_for_results = input.to_string();
 
@@ -70,17 +69,21 @@ impl Web {
 impl Module for Web {
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
         log::trace!("Web view function run");
-        let elements: Vec<iced::Element<'_, ModuleMessage>> = self.cached_results.clone()
+        let elements: Vec<iced::Element<'_, ModuleMessage>> = self
+            .cached_results
+            .clone()
             .into_iter()
-            .map( |result|
+            .map(|result| {
                 widglets::listrow(
                     result.title,
                     Some(result.description),
-                    Some(ModuleMessage::WebMessage(WebMsg::ResultSelected(result.url))), // eww
+                    Some(ModuleMessage::WebMessage(WebMsg::ResultSelected(
+                        result.url,
+                    ))), // eww
                     None,
                 )
                 .into()
-            )
+            })
             .collect();
 
         widget::scrollable(widget::column(elements))
@@ -111,6 +114,10 @@ impl Module for Web {
                         iced::exit()
                     }
                 }
+            }
+            x => {
+                log::trace!("App module received irrelevant msg: {x:?}");
+                Task::none()
             }
         }
     }

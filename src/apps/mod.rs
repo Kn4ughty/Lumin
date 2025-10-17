@@ -11,6 +11,7 @@ use desktop_entry::DesktopEntry;
 mod mac_apps;
 use crate::module::{Module, ModuleMessage};
 use crate::util;
+use crate::widglets;
 
 pub struct AppModule {
     app_list: Vec<App>,
@@ -31,7 +32,16 @@ impl Module for AppModule {
                 self.app_list
                     .clone()
                     .into_iter()
-                    .map(|app| widget::text(app.name).into()),
+                    .enumerate()
+                    .map(|(i, app)| {
+                        widglets::listrow(
+                            app.name,
+                            app.subname,
+                            Some(ModuleMessage::ActivatedIndex(i)),
+                            None,
+                        )
+                        .into()
+                    }),
             )
             .width(iced::Fill),
         )
@@ -39,41 +49,58 @@ impl Module for AppModule {
     }
 
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
-        let ModuleMessage::TextChanged(input) = msg else {
-            return Task::none();
-        };
+        // let ModuleMessage::TextChanged(input) = msg else {
+        //     return Task::none();
+        // };
+        match msg {
+            ModuleMessage::TextChanged(input) => {
+                if self.app_list.len() == 0 {
+                    log::trace!("Generating app_list");
+                    let start = std::time::Instant::now();
+                    self.app_list = get_apps();
+                    log::info!(
+                        "Time to get #{} apps: {:#?}",
+                        self.app_list.len(),
+                        start.elapsed()
+                    )
+                }
 
-        if self.app_list.len() == 0 {
-            log::trace!("Regenerating app_list");
-            let start = std::time::Instant::now();
-            self.app_list = get_apps();
-            log::info!(
-                "Time to get #{} apps: {:#?}",
-                self.app_list.len(),
-                start.elapsed()
-            )
-        }
+                let start = std::time::Instant::now();
+                // Cached_key seems to be much faster which is interesting since text_value is
+                // always changing
+                let input = &input.to_lowercase();
+                self.app_list.sort_by_cached_key(|app| {
+                    let mut score = util::longest_common_substr(&app.name.to_lowercase(), input);
+                    if app.name.to_lowercase().starts_with(input) {
+                        score += 2;
+                    }
+                    // TODO. Add aditional weighting for first character matching
+                    return score * -1;
+                });
 
-        let start = std::time::Instant::now();
-        // Cached_key seems to be much faster which is interesting since text_value is
-        // always changing
-        let input = &input.to_lowercase();
-        self.app_list.sort_by_cached_key(|app| {
-            let mut score = util::longest_common_substr(&app.name.to_lowercase(), input);
-            if app.name.to_lowercase().starts_with(input) {
-                score += 2;
+                log::debug!(
+                    "Time to sort #{} apps: {:#?}",
+                    self.app_list.len(),
+                    start.elapsed()
+                );
+
+                Task::none()
             }
-            // TODO. Add aditional weighting for first character matching
-            return score * -1;
-        });
-
-        log::debug!(
-            "Time to sort #{} apps: {:#?}",
-            self.app_list.len(),
-            start.elapsed()
-        );
-
-        Task::none()
+            ModuleMessage::ActivatedIndex(i) => {
+                let first = self.app_list.get(i).expect("i was valid index");
+                util::execute_command_detached(
+                    first.cmd.clone(),
+                    first.args.clone(),
+                    first.working_dir.clone(),
+                )
+                .unwrap();
+                iced::exit()
+            }
+            x => {
+                log::trace!("App module received irrelevant msg: {x:?}");
+                Task::none()
+            }
+        }
     }
 
     fn run(&self) {
@@ -96,8 +123,10 @@ pub struct App {
     args: Vec<String>,
     working_dir: Option<String>,
     name: String,
+    subname: Option<String>,
 }
 
+// This is cheeky and might fail lol
 #[cfg(target_os = "linux")]
 pub fn get_apps() -> Vec<App> {
     return desktop_entry::load_desktop_entries()
@@ -133,10 +162,10 @@ pub fn get_apps() -> Vec<App> {
 
 #[cfg(target_os = "linux")]
 impl From<DesktopEntry> for App {
-    fn from(value: DesktopEntry) -> Self {
+    fn from(desktop_entry: DesktopEntry) -> Self {
         // https://docs.iced.rs/iced/advanced/image/index.html
-        log::trace!("{}", value.exec.replace(' ', "*"));
-        let (cmd, args) = match value.exec.split_once(' ') {
+        log::trace!("{}", desktop_entry.exec.replace(' ', "*"));
+        let (cmd, args) = match desktop_entry.exec.split_once(' ') {
             Some((cmd, args)) => {
                 let mut arg: Vec<String> = args
                     .split(" ")
@@ -153,16 +182,17 @@ impl From<DesktopEntry> for App {
 
                 (cmd.to_string(), arg)
             }
-            None => (value.exec, vec!["".to_string()]),
+            None => (desktop_entry.exec, vec!["".to_string()]),
         };
 
-        let working_dir = value.working_dir;
+        let working_dir = desktop_entry.working_dir;
 
         App {
-            name: value.name,
+            name: desktop_entry.name,
             cmd,
             args,
             working_dir,
+            subname: desktop_entry.generic_name,
         }
     }
 }
@@ -183,6 +213,7 @@ fn can_parse_app_from_desktop_entry() {
             .map(|k| k.to_string())
             .collect(),
         working_dir: Some("/".to_string()),
+        subname: None,
     };
 
     assert_eq!(app, App::from(entry));

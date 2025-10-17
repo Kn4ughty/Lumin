@@ -5,6 +5,7 @@ use crate::websearch;
 #[derive(Debug, Clone)]
 pub enum ModuleMessage {
     TextChanged(String),
+    ActivatedIndex(usize),
     WebMessage(websearch::WebMsg),
 }
 
