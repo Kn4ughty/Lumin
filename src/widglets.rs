@@ -65,13 +65,3 @@ pub fn listrow<'a>(
     .padding(PADDING)
 }
 
-pub fn listbox<'a, I>(t: I) -> iced::Element<'a, ModuleMessage>
-where
-    I: IntoIterator,
-    I::Item: Into<iced::Element<'a, ModuleMessage>>,
-{
-    let elements: Vec<_> = t.into_iter().map(Into::into).collect();
-    widget::scrollable(widget::column(elements))
-        .width(iced::Fill)
-        .into()
-}

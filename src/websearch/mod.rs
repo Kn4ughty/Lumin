@@ -1,4 +1,4 @@
-use iced::Task;
+use iced::{Task, widget};
 
 use crate::{
     module::{Module, ModuleMessage},
@@ -25,14 +25,6 @@ impl Web {
 
     /// Split up just bc the indentation was getting to be too much
     fn handle_text_change(&mut self, input: String) -> Task<ModuleMessage> {
-        if self.input_for_results == input {
-            // Text hasnt changed. Do nothing. Shouldn't happen, but no need to spam API's
-            // redundantly
-            log::warn!(
-                "The web search text_change func was run, even though the input text hasnt changed since the last time. This is odd. Contact Dev with replication instructions"
-            );
-            return Task::none();
-        }
 
         self.cached_results.clear();
         self.input_for_results = input.to_string();
@@ -78,8 +70,22 @@ impl Web {
 impl Module for Web {
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
         log::trace!("Web view function run");
-        let root = widglets::listbox(self.cached_results.clone());
-        root.into()
+        let elements: Vec<iced::Element<'_, ModuleMessage>> = self.cached_results.clone()
+            .into_iter()
+            .map( |result|
+                widglets::listrow(
+                    result.title,
+                    Some(result.description),
+                    Some(ModuleMessage::WebMessage(WebMsg::ResultSelected(result.url))), // eww
+                    None,
+                )
+                .into()
+            )
+            .collect();
+
+        widget::scrollable(widget::column(elements))
+            .width(iced::Fill)
+            .into()
     }
 
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
