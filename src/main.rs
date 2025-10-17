@@ -1,5 +1,4 @@
 use iced::{Task, keyboard, widget};
-use iced_style;
 
 use pretty_env_logger;
 use std::collections::HashMap;
