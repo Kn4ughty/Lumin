@@ -52,7 +52,9 @@ pub fn listrow<'a>(
     on_press: Option<ModuleMessage>,
     _icon: Option<String>,
 ) -> widget::Container<'a, ModuleMessage> {
-    let text_widget = heading(HeadingLevel::H3, text, None).align_x(iced::Left).width(iced::Fill);
+    let text_widget = heading(HeadingLevel::H3, text, None)
+        .align_x(iced::Left)
+        .width(iced::Fill);
     let subtext_widget =
         heading(HeadingLevel::Subheading, subtext.unwrap_or("".into()), None).align_x(iced::Right);
 

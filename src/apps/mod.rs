@@ -150,16 +150,6 @@ pub fn get_apps() -> Vec<App> {
         .collect()
 }
 
-// #[test]
-// fn becnhapps() {
-//     let now = std::time::Instant::now();
-//
-//     let _a = get_apps();
-//
-//     println!("time: {:?}", now.elapsed());
-//     assert!(1==2);
-// }
-
 #[cfg(target_os = "linux")]
 impl From<DesktopEntry> for App {
     fn from(desktop_entry: DesktopEntry) -> Self {

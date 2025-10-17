@@ -98,6 +98,8 @@ impl State {
 
     fn view(&self) -> iced::Element<'_, Message> {
         log::trace!("view fn run");
+        let start = std::time::Instant::now();
+
         let text_input = widget::text_input("Type to search", &self.text_value)
             .id(self.text_id.clone())
             .on_input(Message::TextInputChanged)
@@ -114,6 +116,7 @@ impl State {
             .padding(10)
             .align_top(iced::Fill);
 
+        log::trace!("Time to run view function: {:#?}", start.elapsed());
         root_continer.into()
     }
 

@@ -14,18 +14,6 @@ pub struct SearchResult {
     pub description: String,
 }
 
-impl From<SearchResult> for iced::Element<'_, ModuleMessage> {
-    fn from(value: SearchResult) -> Self {
-        widglets::listrow(
-            value.title,
-            Some(value.description),
-            Some(ModuleMessage::WebMessage(WebMsg::ResultSelected(value.url))), // eww
-            None,
-        )
-        .into()
-    }
-}
-
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum SearchError {
     BadResponse(String),
