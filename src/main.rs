@@ -1,4 +1,6 @@
 use iced::{Task, keyboard, widget};
+use iced_style;
+
 use pretty_env_logger;
 use std::collections::HashMap;
 
@@ -176,37 +178,5 @@ fn main() -> iced::Result {
             );
             theme
         })
-        // .theme(|_s| {
-        //     let text_col = iced::color!(0xFF0000);
-        //     iced::Theme::Custom(
-        //         Box::new(iced::theme::Custom::with_fn(
-        //             "name".to_string(),
-        //             iced::theme::Palette {
-        //                 text: text_col,
-        //                 ..iced::Theme::CatppuccinMocha.palette()
-        //             },
-        //             |_p| {
-        //                 return iced::theme::palette::Extended {
-        //                     background: iced::theme::palette::Background {
-        //                         base: iced::theme::palette::Pair {
-        //                             color: iced::color!(0x313244),
-        //                             text: text_col,
-        //                         },
-        //                         weak: iced::theme::palette::Pair {
-        //                             color: iced::color!(0x45475a),
-        //                             text: text_col,
-        //                         },
-        //                         strong: iced::theme::palette::Pair {
-        //                             color: iced::color!(0x1e1e2e),
-        //                             text: text_col,
-        //                         },
-        //                     },
-        //                     ..*iced::Theme::CatppuccinMocha.extended_palette()
-        //                 };
-        //             },
-        //         ))
-        //         .into(),
-        //     )
-        // })
         .run()
 }

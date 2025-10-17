@@ -46,6 +46,7 @@ pub fn heading<'a>(
         })
 }
 
+
 pub fn listrow<'a>(
     text: String,
     subtext: Option<String>,
@@ -58,7 +59,8 @@ pub fn listrow<'a>(
     widget::container(
         widget::button(widget::column![text_widget, subtext_widget])
             .width(iced::Fill)
-            .on_press_maybe(on_press),
+            .on_press_maybe(on_press)
+            .style(|t, s| widget::button::secondary(t, s))
     )
     .padding(PADDING)
 }

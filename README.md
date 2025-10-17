@@ -17,7 +17,7 @@
     - [x] Wikipedia module
         - [ ] Image previews
     - [ ] Leads into web based modules i.e dictionary api
-- [ ] Icon support
+- [ ] App Icon support
 - [ ] Refactor calculator lexer
 - [ ] Reduce dependencies
 <!-- - [ ] Lazy load modules (currently takes 810ns so not important at all) -->
