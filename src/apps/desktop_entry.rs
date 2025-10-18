@@ -82,7 +82,7 @@ pub enum ParseError {
 }
 
 fn parse_entry_from_string(
-    input: &str,
+    input: String,
 ) -> Result<HashMap<String, HashMap<String, String>>, ParseError> {
     let mut main_map: HashMap<String, HashMap<String, String>> = HashMap::new();
 
@@ -93,7 +93,7 @@ fn parse_entry_from_string(
         log::trace!("current_line: {line}");
 
         if let Some(l) = line.split_once('=') {
-            current_map.insert(l.0.trim().to_string(), l.1.trim().to_string());
+            current_map.insert(l.0.to_string(), l.1.to_string());
             continue;
         }
 
@@ -144,6 +144,7 @@ fn can_parse_entry_from_str() {
             r#"[Desktop Entry]
 Type=Application
 Categories=System;TerminalEmulator;"#
+                .into()
         )
         .unwrap(),
         hash
@@ -174,7 +175,7 @@ pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
 fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseError> {
     let contents = std::fs::read_to_string(file_path).map_err(|_| ParseError::CouldNotLoadFile)?;
 
-    parse_from_hashmap(parse_entry_from_string(&contents)?)
+    parse_from_hashmap(parse_entry_from_string(contents)?)
 }
 
 fn parse_from_hashmap(
@@ -451,7 +452,8 @@ Actions=New;
 [Desktop Action New]
 Name=New Terminal
 Exec=testaction
-    "#;
+    "#
+    .into();
 
     let entry = parse_from_hashmap(parse_entry_from_string(test).unwrap()).unwrap();
 
