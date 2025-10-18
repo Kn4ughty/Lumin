@@ -1,5 +1,3 @@
-use crate::module::ModuleMessage;
-use crate::widglets;
 
 #[derive(Debug, Clone)]
 pub enum WebMsg {
