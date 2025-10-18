@@ -89,6 +89,8 @@ fn parse_entry_from_string(
     let mut current_heading = String::new();
     let mut current_map: HashMap<String, String> = HashMap::new();
 
+    let mut header_count = 0;
+
     for line in input.lines() {
         log::trace!("current_line: {line}");
 
@@ -102,6 +104,12 @@ fn parse_entry_from_string(
         }
 
         if line.starts_with("[") {
+            // Since we dont support desktop actions, quit if we find one
+            header_count += 1;
+            if header_count >= 2 {
+                break;
+            }
+
             if !current_map.is_empty() {
                 log::trace!("current map was not empty");
                 main_map.insert(
