@@ -15,6 +15,12 @@ pub struct Web {
     cached_results: Vec<SearchResult>, // TODO. Convert to hashmap with input for actual caching
 }
 
+impl Default for Web {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Web {
     pub fn new() -> Self {
         Self {
@@ -32,7 +38,7 @@ impl Web {
         let first = input_chars.clone().next();
         let search_text = input.trim().to_string();
 
-        return match (first, search_text) {
+        match (first, search_text) {
             // get first char
             (Some('w'), search_text) => {
                 log::info!("wikipedia time!");
@@ -50,7 +56,7 @@ impl Web {
                 log::info!("unknown search prefix");
                 Task::none()
             }
-        };
+        }
     }
 
     #[cfg(target_os = "linux")]

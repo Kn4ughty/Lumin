@@ -1,9 +1,6 @@
 use iced::{Task, keyboard, widget};
 
-use pretty_env_logger;
 use std::collections::HashMap;
-
-use log;
 
 mod apps;
 use apps::AppModule;
@@ -67,7 +64,7 @@ impl State {
                 if let Some((module, prefix_size)) = self.find_module_mut() {
                     return module
                         .update(ModuleMessage::TextChanged(input[prefix_size..].to_string()))
-                        .map(|mm| Message::PluginMessage(mm));
+                        .map(Message::PluginMessage);
                 }
 
                 Task::none()
@@ -89,7 +86,7 @@ impl State {
                 // TODO. match by exact prefix and pass message
                 if let Some((module, prefix)) = self.find_module_mut() {
                     log::trace!("Module handled had prefix {prefix}");
-                    return module.update(a).map(|mm| Message::PluginMessage(mm));
+                    return module.update(a).map(Message::PluginMessage);
                 }
                 Task::none()
             }
@@ -171,14 +168,13 @@ fn main() -> iced::Result {
         .decorations(false)
         .window_size((800.0, 300.0))
         .theme(|_s| {
-            let theme = iced::Theme::custom(
+            iced::Theme::custom(
                 "name".into(),
                 iced::theme::Palette {
                     background: iced::color!(0x313244),
                     ..iced::Theme::CatppuccinMocha.palette()
                 },
-            );
-            theme
+            )
         })
         .run()
 }

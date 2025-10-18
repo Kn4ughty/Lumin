@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone)]
 pub enum WebMsg {
     GotResult(Result<Vec<SearchResult>, SearchError>),

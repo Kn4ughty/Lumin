@@ -62,7 +62,7 @@ pub fn listrow<'a>(
         widget::button(widget::row![text_widget, subtext_widget])
             .width(iced::Fill)
             .on_press_maybe(on_press)
-            .style(|t, s| widget::button::secondary(t, s)),
+            .style(widget::button::secondary),
     )
     .padding(PADDING)
 }

@@ -3,8 +3,6 @@
 use std::{collections::HashMap, vec::Vec};
 use walkdir::WalkDir;
 
-use log;
-
 #[derive(Debug, PartialEq)]
 pub struct Action {
     pub name: String,
@@ -89,7 +87,6 @@ pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
     log::trace!("raw data dirs = {raw_data_dirs}");
 
     let mut dir_count = 0;
-
 
     for dir in raw_data_dirs.split(":") {
         dir_count += 1;
@@ -176,10 +173,7 @@ fn can_parse_entry_from_str() {
     let mut hash = HashMap::new();
     let mut main_map = HashMap::new();
     main_map.insert("Type", "Application");
-    main_map.insert(
-        "Categories",
-        "System;TerminalEmulator;",
-    );
+    main_map.insert("Categories", "System;TerminalEmulator;");
     hash.insert("Desktop Entry", main_map);
 
     assert_eq!(
@@ -201,15 +195,13 @@ fn parse_from_hashmap<'a>(
         return Err(ParseError::DesktopEntryHeaderNotFound);
     };
 
-    if matches!(
-        entry_keys.get("NoDisplay").map(|s| *s),
-        Some("true")
-    ) || matches!(entry_keys.get("Hidden").map(|s| *s), Some("true"))
+    if matches!(entry_keys.get("NoDisplay").copied(), Some("true"))
+        || matches!(entry_keys.get("Hidden").copied(), Some("true"))
     {
         return Err(ParseError::NoDisplayTrue);
     }
 
-    let entry_type = match entry_keys.get("Type").map(|s| *s) {
+    let entry_type = match entry_keys.get("Type").copied() {
         Some("Application") => EntryType::Application,
         Some("Link") => EntryType::Link,
         Some("Directory") => EntryType::Directory,
@@ -229,38 +221,38 @@ fn parse_from_hashmap<'a>(
             entry_keys
                 .get("Exec")
                 .ok_or(ParseError::MissingRequiredField)?,
-            entry_keys.get("Icon").map(|s| *s),
-            entry_keys.get("Name").map(|s| *s),
+            entry_keys.get("Icon").copied(),
+            entry_keys.get("Name").copied(),
         ),
         generic_name: entry_keys.get("GenericName").map(|s| s.to_string()),
         comment: entry_keys.get("Comment").map(|s| s.to_string()),
         icon_path: entry_keys.get("Icon").map(|s| s.to_string()),
-        only_show_in: parse_string_list(entry_keys.get("OnlyShowIn").map(|s| *s)),
-        not_show_in: parse_string_list(entry_keys.get("NotShowIn").map(|s| *s)),
+        only_show_in: parse_string_list(entry_keys.get("OnlyShowIn").copied()),
+        not_show_in: parse_string_list(entry_keys.get("NotShowIn").copied()),
         working_dir: entry_keys.get("Path").map(|s| s.to_string()),
-        terminal: entry_keys.get("Terminal").map_or(false, |b| *b == "true"),
-        categories: parse_string_list(entry_keys.get("Categories").map(|s| *s)),
-        keywords: parse_string_list(entry_keys.get("Keywords").map(|s| *s)),
+        terminal: entry_keys.get("Terminal").is_some_and(|b| *b == "true"),
+        categories: parse_string_list(entry_keys.get("Categories").copied()),
+        keywords: parse_string_list(entry_keys.get("Keywords").copied()),
         url: match entry_keys.get("URL") {
             Some(s) => Some(s.to_string()),
             _ if entry_type == EntryType::Link => return Err(ParseError::MissingRequiredField),
             _ => None,
         },
-        action_list: parse_string_list(entry_keys.get("Actions").map(|s| *s)) // i dont like this whole thing
+        action_list: parse_string_list(entry_keys.get("Actions").copied()) // i dont like this whole thing
             .into_iter()
             .map(|name: String| {
                 let formatted_name = &format!("Desktop Action {}", name);
                 let section = input
                     .get(formatted_name.as_str())
                     .ok_or(ParseError::BadGroupHeader)?;
-                return Ok::<Action, ParseError>(Action {
+                Ok::<Action, ParseError>(Action {
                     name: section
                         .get("Name")
                         .ok_or(ParseError::ActionMissingName)?
                         .to_string(),
                     exec: section.get("Exec").map(|s| s.to_string()),
                     icon_path: section.get("Icon").map(|s| s.to_string()),
-                });
+                })
             })
             .filter_map(|a| {
                 if a.is_ok() {
@@ -280,9 +272,9 @@ fn parse_string_list(input: Option<&str>) -> Vec<String> {
     // input is like blah;thing2;thing3
     let mut result = Vec::new();
     let mut current = String::new();
-    let mut chars = input.unwrap_or("").chars().peekable();
+    let chars = input.unwrap_or("").chars().peekable();
 
-    while let Some(c) = chars.next() {
+    for c in chars {
         match c {
             ';' => {
                 if current.ends_with("\\") {

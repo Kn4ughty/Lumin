@@ -1,6 +1,5 @@
 use iced::Task;
 use iced::widget;
-use log;
 
 #[cfg(target_os = "linux")]
 mod desktop_entry;
@@ -15,6 +14,12 @@ use crate::widglets;
 
 pub struct AppModule {
     app_list: Vec<App>,
+}
+
+impl Default for AppModule {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AppModule {
@@ -54,7 +59,7 @@ impl Module for AppModule {
         // };
         match msg {
             ModuleMessage::TextChanged(input) => {
-                if self.app_list.len() == 0 {
+                if self.app_list.is_empty() {
                     log::trace!("Generating app_list");
                     let start = std::time::Instant::now();
                     self.app_list = get_apps();
@@ -75,7 +80,7 @@ impl Module for AppModule {
                         score += 2;
                     }
                     // TODO. Add aditional weighting for first character matching
-                    return score * -1;
+                    -score
                 });
 
                 log::debug!(
@@ -129,11 +134,11 @@ pub struct App {
 // This is cheeky and might fail lol
 #[cfg(target_os = "linux")]
 pub fn get_apps() -> Vec<App> {
-    return desktop_entry::load_desktop_entries()
+    desktop_entry::load_desktop_entries()
         .expect("Can load apps")
         .into_iter()
-        .map(|a| App::from(a))
-        .collect();
+        .map(App::from)
+        .collect()
 }
 
 #[cfg(target_os = "macos")]
@@ -160,7 +165,7 @@ impl From<DesktopEntry> for App {
                 let mut arg: Vec<String> = args
                     .split(" ")
                     .map(|s| s.to_string())
-                    .filter(|x| x.len() > 0)
+                    .filter(|x| !x.is_empty())
                     .collect();
 
                 log::trace!("arg is: {:#?}", arg);

@@ -1,4 +1,5 @@
-use anyhow;
+use std::fmt::Display;
+
 use anyhow::bail;
 use iced::{Element, Task, widget};
 use thiserror::Error;
@@ -14,6 +15,12 @@ const BASE: u32 = 10;
 
 pub struct Calc {
     answer: anyhow::Result<f64>,
+}
+
+impl Default for Calc {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Calc {
@@ -85,9 +92,9 @@ enum Expr {
     CloseParen,
 }
 
-impl ToString for Expr {
-    fn to_string(&self) -> String {
-        let f: String = match self {
+impl Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&match self {
             Self::Number(a) => format!("{a}"),
             Self::Plus => String::from("+"),
             Self::Minus => String::from("-"),
@@ -98,20 +105,19 @@ impl ToString for Expr {
             Self::Modulo => String::from("%"),
             Self::Bracket(inner) => inner
                 .iter()
-                .map(|expr| format!("{} ", expr.to_string()))
+                .map(|expr| format!("{} ", expr))
                 .collect::<Vec<String>>()
                 .concat(),
             Self::OpenParen => String::from("("),
             Self::CloseParen => String::from(")"),
-        };
-        f
+        })
     }
 }
 
 impl Expr {
     fn get_number(&self) -> anyhow::Result<f64> {
         if let Self::Number(num) = self {
-            return Ok(*num);
+            Ok(*num)
         } else {
             bail!(
                 "Expression was not number! this is strange. Notify the developer with your input message pls"
@@ -177,7 +183,7 @@ impl Calc {
                 continue;
             }
 
-            if number_buf.len() != 0 {
+            if !number_buf.is_empty() {
                 log::trace!("Number buf len was not 0 with {c}");
                 out.push(Expr::Number(number_buf.parse().unwrap()));
                 number_buf.clear();
@@ -207,7 +213,7 @@ impl Calc {
             log::trace!("Output at end of tokn while loop: {out:?}");
         }
 
-        if number_buf.len() != 0 {
+        if !number_buf.is_empty() {
             log::trace!("Number buf len was not 0 at end of function");
             out.push(Expr::Number(number_buf.parse().map_err(|e| {
                 CalcError::new(
@@ -418,9 +424,7 @@ impl Calc {
                     Self::apply_op(&mut input, idx)?;
                     log::trace!("input AFTER  idx: {idx}apply op: {input:?}");
                     // Stay on left
-                    if idx > 0 {
-                        idx -= 1
-                    }
+                    idx = idx.saturating_sub(1);
                     continue;
                 }
                 log::trace!(
@@ -543,7 +547,7 @@ impl CalcError {
         let mut equation_string = String::new();
 
         for expr in equation {
-            equation_string.push_str(&format!("{} ", expr.to_string()).to_string());
+            equation_string.push_str(&format!("{} ", expr));
         }
         CalcError {
             message: (message),

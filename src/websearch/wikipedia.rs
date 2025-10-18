@@ -1,6 +1,4 @@
-use reqwest;
 use serde::{Deserialize, Serialize};
-use serde_json;
 
 use super::bits::{SearchError, SearchResult};
 
@@ -36,18 +34,19 @@ pub async fn search(search_text: &str) -> Result<Vec<SearchResult>, SearchError>
         .build()
         .unwrap();
 
-    let response = client.get(url).send().await.map_err(|e| {
-        SearchError::BadResponse(format!("failed to get response: {}", e.to_string()))
-    })?;
+    let response = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| SearchError::BadResponse(format!("failed to get response: {}", e)))?;
 
     let text = response
         .text()
         .await
-        .map_err(|e| SearchError::BadResponse(format!("failed to get text: {}", e.to_string())))?;
+        .map_err(|e| SearchError::BadResponse(format!("failed to get text: {}", e)))?;
     log::trace!("text found from wikipedia: {}", text);
-    let data: WikiResults = serde_json::from_str(&text).map_err(|e| {
-        SearchError::BadResponse(format!("failed to parse from json: {}", e.to_string()))
-    })?;
+    let data: WikiResults = serde_json::from_str(&text)
+        .map_err(|e| SearchError::BadResponse(format!("failed to parse from json: {}", e)))?;
 
     let parsed = data.pages.into_iter().map(|wr| wr.into()).collect();
     log::debug!("parsed text from wikipedia: {:#?}", parsed);

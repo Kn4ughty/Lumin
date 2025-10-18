@@ -1,4 +1,3 @@
-use libc;
 use std::convert::AsRef;
 use std::ffi::OsStr;
 use std::io;
