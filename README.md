@@ -4,8 +4,10 @@
 # Current features
 - Linux app launching
 - Calculator module
+- Wikipedia web searching (!w to quickly search articles)
 
 # ToDo (ordered)
+- [ ] App Icon support
 - [ ] Allow for user theming
 - [ ] Create a nice default theme
 - [ ] Templates for UI elements 
@@ -17,7 +19,7 @@
     - [x] Wikipedia module
         - [ ] Image previews
     - [ ] Leads into web based modules i.e dictionary api
-- [ ] App Icon support
+- [ ] Default screen gives small usage guide
 - [ ] Refactor calculator lexer
 - [ ] Reduce dependencies
 <!-- - [ ] Lazy load modules (currently takes 810ns so not important at all) -->

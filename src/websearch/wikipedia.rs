@@ -31,6 +31,7 @@ pub async fn search(search_text: &str) -> Result<Vec<SearchResult>, SearchError>
         format!("https://en.wikipedia.org/w/rest.php/v1/search/title?q={search_text}&limit=5");
 
     let client = reqwest::ClientBuilder::new()
+        // https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:User-Agent_policy
         .user_agent("LuminAppLauncher/0.0 (User:Knaughty1234)")
         .build()
         .unwrap();
