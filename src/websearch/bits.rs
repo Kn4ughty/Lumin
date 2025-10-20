@@ -1,7 +1,14 @@
 #[derive(Debug, Clone)]
 pub enum WebMsg {
     GotResult(Result<Vec<SearchResult>, SearchError>),
+    FetchedImage((String, iced::widget::image::Handle)),
     ResultSelected(String), // URL
+}
+
+#[derive(Debug, Clone)]
+pub enum WebImage {
+    URL(String),
+    ImageData(iced::widget::image::Handle),
 }
 
 #[derive(Debug, Clone)]
@@ -9,6 +16,7 @@ pub struct SearchResult {
     pub url: String,
     pub title: String,
     pub description: String,
+    pub image: Option<WebImage>,
 }
 
 #[derive(Debug, Clone, thiserror::Error)]

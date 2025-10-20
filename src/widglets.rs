@@ -50,7 +50,7 @@ pub fn listrow<'a>(
     text: String,
     subtext: Option<String>,
     on_press: Option<ModuleMessage>,
-    _icon: Option<String>,
+    icon: Option<iced::widget::image::Handle>,
 ) -> widget::Container<'a, ModuleMessage> {
     let text_widget = heading(HeadingLevel::H3, text, None)
         .align_x(iced::Left)
@@ -58,8 +58,14 @@ pub fn listrow<'a>(
     let subtext_widget =
         heading(HeadingLevel::Subheading, subtext.unwrap_or("".into()), None).align_x(iced::Right);
 
+    let iconbox = if icon.is_some() {
+        widget::container(widget::image::Image::new(icon.unwrap()))
+    } else {
+        widget::container(widget::text("noimg"))
+    };
+
     widget::container(
-        widget::button(widget::row![text_widget, subtext_widget])
+        widget::button(widget::row![iconbox, text_widget, subtext_widget])
             .width(iced::Fill)
             .on_press_maybe(on_press)
             .style(widget::button::secondary),

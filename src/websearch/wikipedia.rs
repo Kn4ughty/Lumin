@@ -1,38 +1,51 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-use super::bits::{SearchError, SearchResult};
+use super::bits::{SearchError, SearchResult, WebImage};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 struct WikiResults {
     pages: Vec<WikiResultSingle>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize, Debug)]
 struct WikiResultSingle {
     key: String,
     title: String,
     description: String,
+    #[serde(rename = "thumbnail")]
+    raw_thumb: Option<RawThumb>,
+}
+
+#[derive(Deserialize, Debug)]
+struct RawThumb {
+    url: String,
 }
 
 impl From<WikiResultSingle> for SearchResult {
     fn from(value: WikiResultSingle) -> Self {
+        log::trace!("raw WikiResultSingle is: {value:?}");
         SearchResult {
             url: format!("https://en.wikipedia.org/wiki/{}", value.key),
             title: value.title,
             description: value.description,
+            image: if value.raw_thumb.is_some() {
+                Some(WebImage::URL(format!(
+                    "https:{}",
+                    value.raw_thumb.unwrap().url
+                )))
+            } else {
+                None
+            },
         }
     }
 }
 
-pub async fn search(search_text: &str) -> Result<Vec<SearchResult>, SearchError> {
+pub async fn search(
+    client: &reqwest::Client,
+    search_text: &str,
+) -> Result<Vec<SearchResult>, SearchError> {
     let url =
         format!("https://en.wikipedia.org/w/rest.php/v1/search/title?q={search_text}&limit=5");
-
-    let client = reqwest::ClientBuilder::new()
-        // https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:User-Agent_policy
-        .user_agent("LuminAppLauncher/0.0 (User:Knaughty1234)")
-        .build()
-        .unwrap();
 
     let response = client
         .get(url)
@@ -48,7 +61,7 @@ pub async fn search(search_text: &str) -> Result<Vec<SearchResult>, SearchError>
     let data: WikiResults = serde_json::from_str(&text)
         .map_err(|e| SearchError::BadResponse(format!("failed to parse from json: {}", e)))?;
 
-    let parsed = data.pages.into_iter().map(|wr| wr.into()).collect();
+    let parsed = data.pages.into_iter().map(|result| result.into()).collect();
     log::debug!("parsed text from wikipedia: {:#?}", parsed);
 
     Ok(parsed)
