@@ -27,7 +27,7 @@ enum Message {
 
 struct State {
     text_value: String,
-    text_id: widget::text_input::Id,
+    text_id: widget::Id,
     modules: HashMap<String, Box<dyn Module>>,
 }
 
@@ -47,7 +47,7 @@ impl std::default::Default for State {
         );
         State {
             text_value: "".to_string(),
-            text_id: widget::text_input::Id::new("text_entry"),
+            text_id: widget::Id::new("text_entry"),
             modules,
         }
     }
@@ -76,7 +76,7 @@ impl State {
                 self.find_module().unwrap().0.run();
                 iced::exit()
             }
-            Message::FocusTextInput => widget::text_input::focus(self.text_id.clone()),
+            Message::FocusTextInput => widget::operation::focus(self.text_id.clone()),
             Message::Close => {
                 log::info!("App is exiting");
                 iced::exit()
@@ -110,11 +110,16 @@ impl State {
             .map(|s: ModuleMessage| Message::PluginMessage(s));
 
         let root_continer = widget::container(widget::column![text_input, result])
+            .style(widget::container::bordered_box)
             .padding(10)
             .align_top(iced::Fill);
 
         log::trace!("Time to run view function: {:#?}", start.elapsed());
         root_continer.into()
+    }
+
+    fn theme(&self) -> Option<iced::Theme> {
+        Some(iced::theme::Theme::CatppuccinMocha)
     }
 
     fn find_module(&self) -> Option<(&Box<dyn Module>, usize)> {
@@ -161,20 +166,24 @@ fn main() -> iced::Result {
         return Ok(());
     }
 
-    iced::application("Lumin", State::update, State::view)
+    iced::application(State::default, State::update, State::view)
+        .title("Lumin")
         .subscription(subscription)
         .level(iced::window::Level::AlwaysOnTop)
         .resizable(false)
         .decorations(false)
         .window_size((800.0, 300.0))
-        .theme(|_s| {
-            iced::Theme::custom(
-                "name".into(),
-                iced::theme::Palette {
-                    background: iced::color!(0x313244),
-                    ..iced::Theme::CatppuccinMocha.palette()
-                },
-            )
-        })
+        .theme(State::theme)
+        // .theme(|s| iced::theme::Theme::CatppuccinMocha)
+        // .theme(|_s| {
+        //     // iced::Theme::custom(
+        //     //     // std::borrow::Cow::Borrowed("name"),
+        //     //     // iced::theme::Palette {
+        //     //     //     background: iced::color!(0x313244),
+        //     //     //     ..iced::Theme::CatppuccinMocha.palette()
+        //     //     // },
+        //     // )
+        //     iced::Theme::CatppuccinMocha
+        // })
         .run()
 }
