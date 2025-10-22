@@ -1,5 +1,7 @@
 use iced::{Task, keyboard, widget};
 
+// use iced_debug;
+
 use std::collections::HashMap;
 
 mod apps;
@@ -165,6 +167,7 @@ fn main() -> iced::Result {
         println!("Time to get apps: {:#?}", start.elapsed());
         return Ok(());
     }
+    // iced_debug::enable();
 
     iced::application(State::default, State::update, State::view)
         .title("Lumin")
