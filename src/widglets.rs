@@ -52,32 +52,48 @@ pub fn listrow<'a>(
     on_press: Option<ModuleMessage>,
     icon: Option<iced::widget::image::Handle>,
 ) -> widget::Container<'a, ModuleMessage> {
-    let mut row_widget = widget::Row::new();
+    let mut row_widget = widget::Row::new().padding(0);
 
-    if let Some(icon) = icon {
-        let real_image = widget::image::Image::new(icon).content_fit(iced::ContentFit::Cover);
-        row_widget = row_widget.push(
-            widget::container(real_image)
-                .style(widget::container::bordered_box)
-                .height(iced::Shrink)
-                .width(iced::Shrink)
-                .clip(true),
-        );
-    };
+    let full_icon = widget::Responsive::new(move |size| {
+        // wish i didnt have to clone
+        if let Some(icon) = icon.clone() {
+            let real_image = widget::image::Image::new(icon).content_fit(iced::ContentFit::Cover);
+
+            widget::container(real_image).style(widget::container::bordered_box)
+        } else {
+            widget::container(widget::space())
+        }
+        .clip(true)
+        .width(size.height)
+        .height(size.height)
+        .padding(0)
+        .align_y(iced::Alignment::Center)
+        .into()
+    })
+    .width(iced::Shrink)
+    .height(iced::Length::Fixed(32.0)); // i dont like this
+
+    row_widget = row_widget.push(full_icon);
+
+    // let colw = widget::Column::new();
 
     let text_widget = widget::container(
         heading(HeadingLevel::H3, text, None)
             .align_x(iced::Left)
+            .align_y(iced::Alignment::Center)
             .width(iced::Fill),
     );
     row_widget = row_widget.push(text_widget);
+    // let colw = colw.push(text_widget);
 
     let subtext_widget = widget::container(
-        heading(HeadingLevel::Subheading, subtext.unwrap_or("".into()), None).align_x(iced::Right),
+        heading(HeadingLevel::Subheading, subtext.unwrap_or("".into()), None)
+            .align_x(iced::Right)
+            .align_y(iced::Alignment::Center),
     );
     row_widget = row_widget.push(subtext_widget);
-
-    // log::debug!("row_widget was: {row_widget:?}");
+    // let colw = colw.push(subtext_widget);
+    // row_widget = row_widget.push(colw);
 
     widget::container(
         widget::button(row_widget)
