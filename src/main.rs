@@ -153,6 +153,10 @@ fn main() -> iced::Result {
 
     iced::application(State::default, State::update, State::view)
         .title("Lumin")
+        .settings(iced::Settings {
+            default_font: iced::Font::MONOSPACE,
+            ..Default::default()
+        })
         .subscription(subscription)
         .level(iced::window::Level::AlwaysOnTop)
         .resizable(false)
