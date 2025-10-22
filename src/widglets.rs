@@ -74,6 +74,7 @@ pub fn listrow<'a>(
     .height(iced::Length::Fixed(32.0)); // i dont like this
 
     row_widget = row_widget.push(full_icon);
+    row_widget = row_widget.push(widget::space().width(iced::Length::Fixed(PADDING)));
 
     // let colw = widget::Column::new();
 
