@@ -52,21 +52,37 @@ pub fn listrow<'a>(
     on_press: Option<ModuleMessage>,
     icon: Option<iced::widget::image::Handle>,
 ) -> widget::Container<'a, ModuleMessage> {
-    let text_widget = heading(HeadingLevel::H3, text, None)
-        .align_x(iced::Left)
-        .width(iced::Fill);
-    let subtext_widget =
-        heading(HeadingLevel::Subheading, subtext.unwrap_or("".into()), None).align_x(iced::Right);
+    let mut row_widget = widget::Row::new();
 
-    let iconbox = if icon.is_some() {
-        widget::container(widget::image::Image::new(icon.unwrap()))
-    } else {
-        widget::container(widget::text("noimg"))
+    if let Some(icon) = icon {
+        let real_image = widget::image::Image::new(icon).content_fit(iced::ContentFit::Cover);
+        row_widget = row_widget.push(
+            widget::container(real_image)
+                .style(widget::container::bordered_box)
+                .height(iced::Shrink)
+                .width(iced::Shrink)
+                .clip(true),
+        );
     };
 
+    let text_widget = widget::container(
+        heading(HeadingLevel::H3, text, None)
+            .align_x(iced::Left)
+            .width(iced::Fill),
+    );
+    row_widget = row_widget.push(text_widget);
+
+    let subtext_widget = widget::container(
+        heading(HeadingLevel::Subheading, subtext.unwrap_or("".into()), None).align_x(iced::Right),
+    );
+    row_widget = row_widget.push(subtext_widget);
+
+    // log::debug!("row_widget was: {row_widget:?}");
+
     widget::container(
-        widget::button(widget::row![iconbox, text_widget, subtext_widget])
+        widget::button(row_widget)
             .width(iced::Fill)
+            .height(iced::Shrink)
             .on_press_maybe(on_press)
             .style(widget::button::secondary),
     )

@@ -6,17 +6,11 @@ pub enum WebMsg {
 }
 
 #[derive(Debug, Clone)]
-pub enum WebImage {
-    URL(String),
-    ImageData(iced::widget::image::Handle),
-}
-
-#[derive(Debug, Clone)]
 pub struct SearchResult {
-    pub url: String,
+    pub destination_url: String,
     pub title: String,
     pub description: String,
-    pub image: Option<WebImage>,
+    pub image_url: Option<String>,
 }
 
 #[derive(Debug, Clone, thiserror::Error)]

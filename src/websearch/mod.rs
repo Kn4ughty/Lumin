@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use crate::{
     module::{Module, ModuleMessage},
     util,
-    websearch::bits::{SearchError, WebImage},
+    websearch::bits::SearchError,
     widglets,
 };
 
@@ -13,10 +13,13 @@ use bits::SearchResult;
 pub use bits::WebMsg;
 mod wikipedia;
 
+#[derive(Debug)]
 pub struct Web {
     input_for_results: String,
     cached_results: Vec<SearchResult>, // TODO. Convert to hashmap with input for actual caching
-    // Memory, who needs it anyway
+
+    // The memory cost of this isnt actually that bad. Each image is just a couple kB each since
+    // they are very small thumbnails. It only increased a few mB over like 10s of useage
     image_hashmap: HashMap<String, widget::image::Handle>,
     client: reqwest::Client,
 }
@@ -54,8 +57,8 @@ impl Web {
             // get first char
             (Some('w'), search_text) => {
                 log::info!("wikipedia time!");
-                // trim first character. TODO. Dont hardcode
                 let client = self.client.clone();
+                // trim first character. TODO. Dont hardcode
                 Task::perform(
                     async move { wikipedia::search(&client, &search_text[1..]).await },
                     |r| ModuleMessage::WebMessage(WebMsg::GotResult(r)),
@@ -75,20 +78,9 @@ impl Web {
     fn handle_getting_image(client: reqwest::Client, input: SearchResult) -> Task<ModuleMessage> {
         log::trace!("handle_getting_image ran. SR: {input:?}");
 
-        let Some(url) = input.image else {
+        let Some(url) = input.image_url else {
             return Task::none();
         };
-        let url: Option<String> = match url {
-            WebImage::URL(s) => Some(s),
-            WebImage::ImageData(_) => {
-                // TODO. make invalid states unrepresentable
-                log::warn!("Image data got into handle_getting_images.");
-                None
-            }
-        };
-        let Some(url) = url else { return Task::none() };
-
-        // => Result<ModuleMessage, SearchError>
 
         Task::perform(
             async move { (url.clone(), Self::get_image(client, &url).await) },
@@ -105,11 +97,12 @@ impl Web {
         client: reqwest::Client,
         url: &str,
     ) -> Result<iced::advanced::image::Bytes, SearchError> {
-        let response = client
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| SearchError::BadResponse(format!("failed to get response: {}", e)))?;
+        let response = client.get(url).send().await.map_err(|e| {
+            SearchError::BadResponse(format!(
+                "failed to get response for image: {}. url: {url}",
+                e
+            ))
+        })?;
         let bytes = response
             .bytes()
             .await
@@ -132,28 +125,27 @@ impl Web {
 
 impl Module for Web {
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
-        log::trace!("Web view function run");
+        log::debug!("Web view function run");
+        log::trace!("Self. {self:#?}");
         let elements: Vec<iced::Element<'_, ModuleMessage>> = self
             .cached_results
             .clone()
             .into_iter()
             .map(|result| {
-                let img = match result.image {
-                    Some(WebImage::URL(s)) => {
-                        log::trace!("web image was url: {s}");
-                        None
-                    }
-                    Some(WebImage::ImageData(d)) => Some(d),
+                log::trace!("Viewing webresult {:?}", result);
+
+                let image = match result.image_url {
                     None => None,
+                    Some(url) => self.image_hashmap.get(&url).map(|handle| handle.clone()),
                 };
 
                 widglets::listrow(
                     result.title,
                     Some(result.description),
                     Some(ModuleMessage::WebMessage(WebMsg::ResultSelected(
-                        result.url,
+                        result.destination_url,
                     ))), // eww
-                    img,
+                    image,
                 )
                 .into()
             })
@@ -198,27 +190,10 @@ impl Module for Web {
                         iced::exit()
                     }
                     WebMsg::FetchedImage((url, image)) => {
-                        // let image = iced::advanced::image::Image::new(
-                        //     iced::advanced::image::Handle::from_bytes(image),
-                        // );
-                        // self.image_hashmap.insert(url.clone(), image);
-
-                        for res in self.cached_results.iter_mut() {
-                            match &res.image {
-                                Some(WebImage::URL(u)) => {
-                                    if *u == url {
-                                        res.image = Some(WebImage::ImageData(image));
-                                        return Task::none();
-                                    }
-                                }
-                                _ => return Task::none(),
-                            }
-                            // if res.image == url {
-                            //     res.image = Some(WebImage::ImageData(image));
-                            //     return Task::none()
-                            // }
-                        }
-                        log::warn!("url did not match any result image: {url}");
+                        log::trace!(
+                            "We got a result for a fetched image! url: {url}, image_handle: {image:?}"
+                        );
+                        self.image_hashmap.insert(url.clone(), image);
                         return Task::none();
                     }
                 }
@@ -236,6 +211,6 @@ impl Module for Web {
             .first()
             .expect("There are some web results");
         log::info!("first WebResult is: {:?}", first);
-        Self::launch_url(&first.url);
+        Self::launch_url(&first.destination_url);
     }
 }

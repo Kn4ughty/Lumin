@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use super::bits::{SearchError, SearchResult, WebImage};
+use super::bits::{SearchError, SearchResult};
 
 #[derive(Deserialize)]
 struct WikiResults {
@@ -25,17 +25,10 @@ impl From<WikiResultSingle> for SearchResult {
     fn from(value: WikiResultSingle) -> Self {
         log::trace!("raw WikiResultSingle is: {value:?}");
         SearchResult {
-            url: format!("https://en.wikipedia.org/wiki/{}", value.key),
+            destination_url: format!("https://en.wikipedia.org/wiki/{}", value.key),
             title: value.title,
             description: value.description,
-            image: if value.raw_thumb.is_some() {
-                Some(WebImage::URL(format!(
-                    "https:{}",
-                    value.raw_thumb.unwrap().url
-                )))
-            } else {
-                None
-            },
+            image_url: value.raw_thumb.map(|rt| format!("https:{}", rt.url)),
         }
     }
 }
