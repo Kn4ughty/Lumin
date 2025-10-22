@@ -1,7 +1,5 @@
 use iced::{Task, keyboard, widget};
 
-// use iced_debug;
-
 use std::collections::HashMap;
 
 mod apps;
@@ -35,7 +33,6 @@ struct State {
 
 impl std::default::Default for State {
     fn default() -> State {
-        let start = std::time::Instant::now();
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
         modules.insert("=".to_string(), Box::new(Calc::new()));
 
@@ -43,10 +40,6 @@ impl std::default::Default for State {
 
         modules.insert("".to_string(), Box::new(AppModule::new()));
 
-        log::trace!(
-            "Time to load modules creating new State: {:#?}",
-            start.elapsed()
-        );
         State {
             text_value: "".to_string(),
             text_id: widget::Id::new("text_entry"),
@@ -97,7 +90,6 @@ impl State {
 
     fn view(&self) -> iced::Element<'_, Message> {
         log::trace!("view fn run");
-        let start = std::time::Instant::now();
 
         let text_input = widget::text_input("Type to search", &self.text_value)
             .id(self.text_id.clone())
@@ -116,7 +108,6 @@ impl State {
             .padding(10)
             .align_top(iced::Fill);
 
-        log::trace!("Time to run view function: {:#?}", start.elapsed());
         root_continer.into()
     }
 
@@ -159,15 +150,6 @@ fn handle_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) -> Option<
 
 fn main() -> iced::Result {
     pretty_env_logger::init();
-    #[cfg(feature = "perf")]
-    {
-        let start = std::time::Instant::now();
-
-        apps::get_apps();
-        println!("Time to get apps: {:#?}", start.elapsed());
-        return Ok(());
-    }
-    // iced_debug::enable();
 
     iced::application(State::default, State::update, State::view)
         .title("Lumin")

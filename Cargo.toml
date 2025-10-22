@@ -10,16 +10,16 @@ path = "src/main.rs"
 
 [features]
 perf = []
+time-travel = ["iced/time-travel"]
 
 [target.x86_64-unknown-linux-gnu]
 linker = "/usr/bin/clang"
 rustflags = ["-Clink-arg=-fuse-ld=lld", "-Clink-arg=-Wl,--no-rosegment"]
 
-[profile.release]
-debug = true
 
 [dependencies]
-iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "tokio", "image", "time-travel"] }
+iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "tokio", "image"] }
+# iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "tokio", "image", "time-travel"] }
 anyhow = "1.0.99"
 arboard = "3.6.1"
 libc = "0.2.175"
@@ -36,7 +36,7 @@ icns = "0.3.1"
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
 pprof = { version = "0.15", features = ["flamegraph", "criterion"] }
-# iced_debug = { git = "https://github.com/iced-rs/iced"}
+iced_debug = {git = "https://github.com/iced-rs/iced"}
 
 [[bench]]
 name = "get_desktop_app"
