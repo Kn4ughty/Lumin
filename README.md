@@ -15,9 +15,9 @@
     - [x] ListBox and List elements
     - [ ] Investigate https://github.com/pop-os/cosmic-time
 - [x] Work out how to have async tasks in modules
-    - [ ] Try not to duplicate clients
+    - [x] Try not to duplicate clients
     - [x] Wikipedia module
-        - [ ] Image previews
+        - [x] Image previews
     - [ ] Leads into web based modules i.e dictionary api
 - [ ] Default screen gives small usage guide
 - [ ] Refactor calculator lexer
