@@ -1,7 +1,77 @@
 // https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
 
+#![allow(dead_code, reason = "Compile time importing shennanigans")]
+
 use std::{collections::HashMap, vec::Vec};
 use walkdir::WalkDir;
+
+use super::App;
+
+pub fn get_apps() -> Vec<App> {
+    load_desktop_entries()
+        .expect("Can load apps")
+        .into_iter()
+        .map(App::from)
+        .collect()
+}
+
+impl From<DesktopEntry> for App {
+    fn from(desktop_entry: DesktopEntry) -> Self {
+        // https://docs.iced.rs/iced/advanced/image/index.html
+        log::trace!("{}", desktop_entry.exec.replace(' ', "*"));
+        let (cmd, args) = match desktop_entry.exec.split_once(' ') {
+            Some((cmd, args)) => {
+                let mut arg: Vec<String> = args
+                    .split(" ")
+                    .map(|s| s.to_string())
+                    .filter(|x| !x.is_empty())
+                    .collect();
+
+                log::trace!("arg is: {:#?}", arg);
+
+                if arg == vec!["".to_string()] {
+                    log::trace!("ARGS LEN 0");
+                    arg.clear();
+                }
+
+                (cmd.to_string(), arg)
+            }
+            None => (desktop_entry.exec, vec!["".to_string()]),
+        };
+
+        let working_dir = desktop_entry.working_dir;
+
+        App {
+            name: desktop_entry.name,
+            cmd,
+            args,
+            working_dir,
+            subname: desktop_entry.generic_name,
+        }
+    }
+}
+
+#[test]
+fn can_parse_app_from_desktop_entry() {
+    let entry = DesktopEntry {
+        name: "anki".to_string(),
+        exec: "/usr/bin/flatpak run --branch=stable net.ankiweb.Anki @@ @@".to_string(),
+        working_dir: Some("/".to_string()),
+        ..Default::default()
+    };
+    let app = App {
+        name: "anki".to_string(),
+        cmd: "/usr/bin/flatpak".to_string(),
+        args: vec!["run", "--branch=stable", "net.ankiweb.Anki", "@@", "@@"]
+            .iter()
+            .map(|k| k.to_string())
+            .collect(),
+        working_dir: Some("/".to_string()),
+        subname: None,
+    };
+
+    assert_eq!(app, App::from(entry));
+}
 
 #[derive(Debug, PartialEq)]
 pub struct Action {

@@ -3,13 +3,14 @@ use std::collections::HashMap;
 use iced::Task;
 use iced::widget;
 
-#[cfg(target_os = "linux")]
-mod desktop_entry;
-#[cfg(target_os = "linux")]
-use desktop_entry::DesktopEntry;
+pub mod desktop_entry;
+pub mod mac_apps;
 
+#[cfg(target_os = "linux")]
+use desktop_entry::get_apps;
 #[cfg(target_os = "macos")]
-mod mac_apps;
+use mac_apps::get_apps;
+
 use crate::constants;
 use crate::module::{Module, ModuleMessage};
 use crate::serworse;
@@ -177,88 +178,4 @@ pub struct App {
     working_dir: Option<String>,
     name: String,
     subname: Option<String>,
-}
-
-// This is cheeky and might fail lol
-#[cfg(target_os = "linux")]
-pub fn get_apps() -> Vec<App> {
-    desktop_entry::load_desktop_entries()
-        .expect("Can load apps")
-        .into_iter()
-        .map(App::from)
-        .collect()
-}
-
-#[cfg(target_os = "macos")]
-pub fn get_apps() -> Vec<App> {
-    let m_apps = mac_apps::load_all_apps();
-    m_apps
-        .iter()
-        .map(|a| App {
-            name: a.name.clone(),
-            cmd: "open".into(),
-            args: vec![a.path.clone()],
-            working_dir: None,
-            subname: None,
-        })
-        .collect()
-}
-
-#[cfg(target_os = "linux")]
-impl From<DesktopEntry> for App {
-    fn from(desktop_entry: DesktopEntry) -> Self {
-        // https://docs.iced.rs/iced/advanced/image/index.html
-        log::trace!("{}", desktop_entry.exec.replace(' ', "*"));
-        let (cmd, args) = match desktop_entry.exec.split_once(' ') {
-            Some((cmd, args)) => {
-                let mut arg: Vec<String> = args
-                    .split(" ")
-                    .map(|s| s.to_string())
-                    .filter(|x| !x.is_empty())
-                    .collect();
-
-                log::trace!("arg is: {:#?}", arg);
-
-                if arg == vec!["".to_string()] {
-                    log::trace!("ARGS LEN 0");
-                    arg.clear();
-                }
-
-                (cmd.to_string(), arg)
-            }
-            None => (desktop_entry.exec, vec!["".to_string()]),
-        };
-
-        let working_dir = desktop_entry.working_dir;
-
-        App {
-            name: desktop_entry.name,
-            cmd,
-            args,
-            working_dir,
-            subname: desktop_entry.generic_name,
-        }
-    }
-}
-
-#[test]
-fn can_parse_app_from_desktop_entry() {
-    let entry = DesktopEntry {
-        name: "anki".to_string(),
-        exec: "/usr/bin/flatpak run --branch=stable net.ankiweb.Anki @@ @@".to_string(),
-        working_dir: Some("/".to_string()),
-        ..Default::default()
-    };
-    let app = App {
-        name: "anki".to_string(),
-        cmd: "/usr/bin/flatpak".to_string(),
-        args: vec!["run", "--branch=stable", "net.ankiweb.Anki", "@@", "@@"]
-            .iter()
-            .map(|k| k.to_string())
-            .collect(),
-        working_dir: Some("/".to_string()),
-        subname: None,
-    };
-
-    assert_eq!(app, App::from(entry));
 }

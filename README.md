@@ -8,7 +8,9 @@
 
 # ToDo (ordered)
 - [ ] App Icon support
+- [ ] Change default macos font
 - [ ] Allow for user theming
+- [ ] fix moving the window to different workspaces. Make more ephemeral
 - [ ] Create a nice default theme
 - [ ] Templates for UI elements 
     - [ ] Investiage https://austinmreppert.github.io/iced-reference/chapter_3.html

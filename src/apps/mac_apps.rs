@@ -1,11 +1,29 @@
-use icns;
-use log;
-use std::fs::File;
-use std::io::BufReader;
-use std::path::Path;
+#![allow(dead_code, reason = "Compile time importing shennanigans")]
+
+// use icns;
+// use log;
+// use std::fs::File;
+// use std::io::BufReader;
+// use std::path::Path;
 use walkdir::{DirEntry, WalkDir};
 
-use iced::advanced::image::Handle;
+// use iced::advanced::image::Handle;
+
+use super::App;
+
+pub fn get_apps() -> Vec<App> {
+    let m_apps = load_all_apps();
+    m_apps
+        .iter()
+        .map(|a| App {
+            name: a.name.clone(),
+            cmd: "open".into(),
+            args: vec![a.path.clone()],
+            working_dir: None,
+            subname: None,
+        })
+        .collect()
+}
 
 pub struct MacApp {
     pub name: String,
