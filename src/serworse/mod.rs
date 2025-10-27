@@ -1,0 +1,36 @@
+/// Like serde, but worse!
+use std::collections::HashMap;
+
+#[derive(Debug)]
+pub enum ParseError {
+    MissingSeperator,
+    IntoFailure,
+}
+
+/// Input data is a csv
+pub fn parse_csv<'a, T: std::str::FromStr>(
+    data: &'a str,
+) -> Result<HashMap<String, T>, ParseError> {
+    let mut map = HashMap::new();
+    for line in data.lines() {
+        let (start, end) = line.split_once(',').ok_or(ParseError::MissingSeperator)?;
+        map.insert(
+            start.to_owned(),
+            end.parse::<T>().map_err(|_| ParseError::IntoFailure)?,
+        );
+    }
+
+    Ok(map)
+}
+
+#[test]
+fn can_parse_csv() {
+    let raw_string = r#"one,1
+two,2
+ten,10"#;
+    let mut map: HashMap<String, u32> = HashMap::new();
+    map.insert("one".into(), 1);
+    map.insert("two".into(), 2);
+    map.insert("ten".into(), 10);
+    assert_eq!(parse_csv::<u32>(raw_string).expect("Can parse_csv"), map);
+}

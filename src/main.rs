@@ -12,6 +12,7 @@ mod websearch;
 use websearch::Web;
 
 mod module;
+mod serworse;
 mod util;
 mod widglets;
 use module::{Module, ModuleMessage};
