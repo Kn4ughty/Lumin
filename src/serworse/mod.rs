@@ -23,6 +23,15 @@ pub fn parse_csv<'a, T: std::str::FromStr>(
     Ok(map)
 }
 
+/// Invere function of parse_csv
+pub fn hash_map_to_csv<T: std::string::ToString + Clone>(map: HashMap<String, T>) -> String {
+    let mut out = String::new();
+    for (key, val) in map.iter() {
+        out += &(key.clone() + "," + &val.to_string() + "\n");
+    }
+    out
+}
+
 #[test]
 fn can_parse_csv() {
     let raw_string = r#"one,1
@@ -33,4 +42,7 @@ ten,10"#;
     map.insert("two".into(), 2);
     map.insert("ten".into(), 10);
     assert_eq!(parse_csv::<u32>(raw_string).expect("Can parse_csv"), map);
+    // Check inverse
+    // Doesnt work since order is indeterminate
+    // assert_eq!(hash_map_to_csv::<u32>(map), raw_string);
 }
