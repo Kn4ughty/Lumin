@@ -11,6 +11,7 @@ use calculator::Calc;
 mod websearch;
 use websearch::Web;
 
+mod constants;
 mod module;
 mod serworse;
 mod util;
@@ -151,6 +152,15 @@ fn handle_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) -> Option<
 
 fn main() -> iced::Result {
     pretty_env_logger::init();
+
+    // Ensure that DATA_DIR exists to stop problems later
+    let home = std::env::var("HOME").unwrap();
+    let path_str = &(home + constants::DATA_DIR);
+    let path = std::path::Path::new(path_str);
+
+    if !std::fs::exists(path).expect("Can check if DATA_DIR exists") {
+        std::fs::create_dir_all(path).expect("Could create DATA_DIR");
+    }
 
     iced::application(State::default, State::update, State::view)
         .title("Lumin")

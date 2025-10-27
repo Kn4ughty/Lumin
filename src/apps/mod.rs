@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use iced::Task;
 use iced::widget;
 
@@ -8,12 +10,17 @@ use desktop_entry::DesktopEntry;
 
 #[cfg(target_os = "macos")]
 mod mac_apps;
+use crate::constants;
 use crate::module::{Module, ModuleMessage};
+use crate::serworse;
 use crate::util;
 use crate::widglets;
 
+const APP_FREQUENCY_LOOKUP_RELPATH: &str = "app_lookup";
+
 pub struct AppModule {
     app_list: Vec<App>,
+    app_frequencies: HashMap<String, u32>,
 }
 
 impl Default for AppModule {
@@ -24,9 +31,62 @@ impl Default for AppModule {
 
 impl AppModule {
     pub fn new() -> Self {
+        // attempt to load hashmap from disk
+        let home = std::env::var("HOME").unwrap();
+        let path_string = home + constants::DATA_DIR + APP_FREQUENCY_LOOKUP_RELPATH;
+        let path = std::path::Path::new(&path_string);
+
+        let mut map: HashMap<String, u32> = HashMap::new();
+        if let Ok(data) = std::fs::read_to_string(path) {
+            match serworse::parse_csv::<u32>(&data) {
+                Ok(map1) => map = map1,
+                Err(e) => log::error!("Could not read app_frequencies to hashmap. E: {e:#?}"),
+            }
+        } else {
+            // Only a warning since this could be the first time the file is created
+            log::warn!("Could not read app_frequencies to string");
+        };
+
         AppModule {
             app_list: Vec::new(),
+            app_frequencies: map,
         }
+    }
+
+    fn run_app_at_index(&self, index: usize) {
+        let first = self
+            .app_list
+            .get(index)
+            .expect("selected to run valid index");
+
+        // Increment app frequency hashmap
+        let mut map = self.app_frequencies.clone();
+        if let Some(old_val) = map.get(&first.name) {
+            map.insert(first.name.clone(), *old_val + 1);
+        } else {
+            map.insert(first.name.clone(), 1);
+        }
+
+        log::debug!("New app_frequencies hashmap is {map:#?}");
+
+        let home = std::env::var("HOME").unwrap();
+        let path_string = home + constants::DATA_DIR + APP_FREQUENCY_LOOKUP_RELPATH;
+        let path = std::path::Path::new(&path_string);
+
+        if let Err(e) = std::fs::write(path, serworse::hash_map_to_csv(map)) {
+            log::error!(
+                "Could not write new app frequency hashmap to file!! e: {e}\nHashmap is: {e:#?}"
+            );
+        } else {
+            log::trace!("Successfully wrote to path: {path:?}");
+        };
+
+        util::execute_command_detached(
+            first.cmd.clone(),
+            first.args.clone(),
+            first.working_dir.clone(),
+        )
+        .unwrap();
     }
 }
 
@@ -79,7 +139,10 @@ impl Module for AppModule {
                     if app.name.to_lowercase().starts_with(input) {
                         score += 2;
                     }
-                    // TODO. Add aditional weighting for first character matching
+                    if let Some(raw_freq) = self.app_frequencies.get(&app.name) {
+                        score += (*raw_freq as f32).ln().max(0.0).floor() as i32;
+                    }
+
                     -score
                 });
 
@@ -92,13 +155,7 @@ impl Module for AppModule {
                 Task::none()
             }
             ModuleMessage::ActivatedIndex(i) => {
-                let first = self.app_list.get(i).expect("i was valid index");
-                util::execute_command_detached(
-                    first.cmd.clone(),
-                    first.args.clone(),
-                    first.working_dir.clone(),
-                )
-                .unwrap();
+                Self::run_app_at_index(&self, i);
                 iced::exit()
             }
             x => {
@@ -109,16 +166,7 @@ impl Module for AppModule {
     }
 
     fn run(&self) {
-        let first = self
-            .app_list
-            .first()
-            .expect("There should be at least 1 result");
-        util::execute_command_detached(
-            first.cmd.clone(),
-            first.args.clone(),
-            first.working_dir.clone(),
-        )
-        .unwrap();
+        Self::run_app_at_index(&self, 0);
     }
 }
 
