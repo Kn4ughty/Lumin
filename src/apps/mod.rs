@@ -199,6 +199,7 @@ pub fn get_apps() -> Vec<App> {
             cmd: "open".into(),
             args: vec![a.path.clone()],
             working_dir: None,
+            subname: None,
         })
         .collect()
 }
