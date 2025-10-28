@@ -6,4 +6,5 @@ pub mod websearch;
 pub mod widglets;
 
 mod constants;
+mod message;
 mod util;

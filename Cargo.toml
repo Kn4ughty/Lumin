@@ -21,7 +21,6 @@ rustflags = ["-Clink-arg=-fuse-ld=lld", "-Clink-arg=-Wl,--no-rosegment"]
 iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "tokio", "image"] }
 # iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "tokio", "image", "time-travel"] }
 anyhow = "1.0.99"
-arboard = "3.6.1"
 libc = "0.2.175"
 log = "0.4.28"
 pretty_env_logger = "0.5.0"

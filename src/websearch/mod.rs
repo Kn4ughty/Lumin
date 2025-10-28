@@ -205,12 +205,13 @@ impl Module for Web {
         }
     }
 
-    fn run(&self) {
+    fn run(&self) -> Task<crate::message::Message> {
         let first = self
             .cached_results
             .first()
             .expect("There are some web results");
         log::info!("first WebResult is: {:?}", first);
         Self::launch_url(&first.destination_url);
+        iced::exit()
     }
 }

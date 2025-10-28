@@ -64,7 +64,7 @@ impl Module for Calc {
         Task::none()
     }
 
-    fn run(&self) {
+    fn run(&self) -> Task<crate::message::Message> {
         // Ideally it would save the result to the system clipboard.
         // However, wayland clipbards are stupid so the clipboard data lives only as long as the
         // source window for the data. And then since lumin closes right after, it is lost.
@@ -72,8 +72,18 @@ impl Module for Calc {
         // Maybe i could build a clipboard manager into lumin, like how macos does it.
         // Anyway for now, just do nothing.
 
-        // let mut clipboard = Clipboard::new().unwrap();
-        // clipboard.set_text(self.answer.clone()).unwrap();
+        if let Ok(number) = self.answer {
+            iced::clipboard::write(number.to_string()).chain(Task::perform(
+                std::future::ready(1),
+                |_| {
+                    // little stupid hack to make it wait for a moment so the clipboard manager can copy it
+                    std::thread::sleep(std::time::Duration::from_millis(1));
+                    crate::message::Message::Close
+                },
+            ))
+        } else {
+            Task::none()
+        }
     }
 }
 

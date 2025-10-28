@@ -1,5 +1,6 @@
 use iced::{Element, Task};
 
+use crate::message::Message;
 use crate::websearch;
 
 #[derive(Debug, Clone)]
@@ -12,5 +13,5 @@ pub enum ModuleMessage {
 pub trait Module {
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage>;
     fn view(&self) -> Element<'_, ModuleMessage>;
-    fn run(&self); // Allow to return result
+    fn run(&self) -> Task<Message>; // executed when enter key pressed
 }

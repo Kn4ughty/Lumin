@@ -166,8 +166,9 @@ impl Module for AppModule {
         }
     }
 
-    fn run(&self) {
+    fn run(&self) -> Task<crate::message::Message> {
         Self::run_app_at_index(&self, 0);
+        iced::exit()
     }
 }
 

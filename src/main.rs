@@ -6,6 +6,7 @@ mod apps;
 use apps::AppModule;
 
 mod calculator;
+mod message;
 use calculator::Calc;
 
 mod websearch;
@@ -18,14 +19,7 @@ mod util;
 mod widglets;
 use module::{Module, ModuleMessage};
 
-#[derive(Clone, Debug)]
-enum Message {
-    TextInputChanged(String),
-    FocusTextInput,
-    TextInputSubmitted(String),
-    PluginMessage(ModuleMessage),
-    Close,
-}
+use message::Message;
 
 struct State {
     text_value: String,
@@ -70,8 +64,7 @@ impl State {
                 log::info!("Text input submitted");
 
                 // TODO. Dont just unwrap
-                self.find_module().unwrap().0.run();
-                iced::exit()
+                self.find_module().unwrap().0.run()
             }
             Message::FocusTextInput => widget::operation::focus(self.text_id.clone()),
             Message::Close => {
