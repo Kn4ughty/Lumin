@@ -24,6 +24,7 @@ use message::Message;
 struct State {
     text_value: String,
     text_id: widget::Id,
+    window_id: Option<iced::window::Id>,
     modules: HashMap<String, Box<dyn Module>>,
 }
 
@@ -39,6 +40,7 @@ impl std::default::Default for State {
         State {
             text_value: "".to_string(),
             text_id: widget::Id::new("text_entry"),
+            window_id: None,
             modules,
         }
     }
@@ -66,7 +68,10 @@ impl State {
                 // TODO. Dont just unwrap
                 self.find_module().unwrap().0.run()
             }
-            Message::FocusTextInput => widget::operation::focus(self.text_id.clone()),
+            Message::WindowOpened(id) => {
+                self.window_id = Some(id);
+                widget::operation::focus(self.text_id.clone())
+            }
             Message::Close => {
                 log::info!("App is exiting");
                 iced::exit()
@@ -79,6 +84,14 @@ impl State {
                     return module.update(a).map(Message::PluginMessage);
                 }
                 Task::none()
+            }
+            Message::ShouldDrag => {
+                if let Some(id) = self.window_id {
+                    log::trace!("Dragging the window");
+                    iced::window::drag(id)
+                } else {
+                    Task::none()
+                }
             }
         }
     }
@@ -103,7 +116,9 @@ impl State {
             .padding(10)
             .align_top(iced::Fill);
 
-        root_continer.into()
+        let mouse = widget::mouse_area(root_continer).on_press(Message::ShouldDrag);
+
+        mouse.into()
     }
 
     fn theme(&self) -> Option<iced::Theme> {
@@ -129,7 +144,7 @@ impl State {
 
 fn subscription(_state: &State) -> iced::Subscription<Message> {
     iced::Subscription::batch(vec![
-        iced::window::open_events().map(|_id| Message::FocusTextInput),
+        iced::window::open_events().map(|id| Message::WindowOpened(id)),
         iced::keyboard::on_key_release(handle_hotkeys),
     ])
 }
@@ -165,6 +180,8 @@ fn main() -> iced::Result {
         .level(iced::window::Level::AlwaysOnTop)
         .resizable(false)
         .decorations(false)
+        .antialiasing(true)
+        .transparent(true)
         .window_size((800.0, 300.0))
         .theme(State::theme)
         // .theme(|s| iced::theme::Theme::CatppuccinMocha)
