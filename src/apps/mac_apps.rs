@@ -4,7 +4,6 @@ use icns;
 use log;
 use std::fs::File;
 use std::io::BufReader;
-use std::path::Path;
 use walkdir::{DirEntry, WalkDir};
 
 use iced::advanced::image::Handle;

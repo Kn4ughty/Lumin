@@ -38,5 +38,9 @@ pprof = { version = "0.15", features = ["flamegraph", "criterion"] }
 iced_debug = {git = "https://github.com/iced-rs/iced"}
 
 [[bench]]
-name = "get_desktop_app"
+name = "get_desktop_apps"
+harness = false
+
+[[bench]]
+name = "get_macos_apps"
 harness = false
