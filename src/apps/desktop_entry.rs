@@ -437,8 +437,8 @@ fn can_parse_exec_key() {
     assert_eq!(parse_exec_key(r#"\%"#, None, None), "%".to_string());
     // Test % escaping
     assert_eq!(
-        parse_exec_key(r#"%i"#, Some("Sylvan Franklin"), None),
-        "--icon Sylvan Franklin".to_string()
+        parse_exec_key(r#"%i"#, Some("icontext"), None),
+        "--icon icontext".to_string()
     );
     assert_eq!(
         parse_exec_key(r#"%c"#, None, Some("name")),
