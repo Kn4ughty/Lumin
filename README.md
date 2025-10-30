@@ -1,13 +1,14 @@
-# Requirements.
-`xdg-open`
+<img width="1766" height="766" alt="image" src="https://github.com/user-attachments/assets/83661a1d-7d13-4353-ab56-2f09b49f6ab4" />
+
+# Requirements
+`xdg-open` on linux
 
 # Current features
-- Linux and MacOS app launching
+- Linux and MacOS app launching 
 - Calculator module
 - Wikipedia web searching (!w to quickly search articles)
 
 # ToDo (ordered)
-- [ ] fix moving the window to different workspaces. Make more ephemeral
 - [ ] Change default macos font
 - [ ] App Icon support
 - [ ] dmenu support
