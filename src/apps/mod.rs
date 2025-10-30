@@ -19,6 +19,16 @@ use crate::widglets;
 
 const APP_FREQUENCY_LOOKUP_RELPATH: &str = "app_lookup";
 
+#[derive(Clone, PartialEq, Debug)]
+pub struct App {
+    cmd: String,
+    icon: Option<widget::image::Handle>,
+    args: Vec<String>,
+    working_dir: Option<String>,
+    name: String,
+    subname: Option<String>,
+}
+
 pub struct AppModule {
     app_list: Vec<App>,
     app_frequencies: HashMap<String, u32>,
@@ -104,7 +114,7 @@ impl Module for AppModule {
                             app.name,
                             app.subname,
                             Some(ModuleMessage::ActivatedIndex(i)),
-                            None,
+                            app.icon,
                         )
                         .into()
                     }),
@@ -172,11 +182,3 @@ impl Module for AppModule {
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
-pub struct App {
-    cmd: String,
-    args: Vec<String>,
-    working_dir: Option<String>,
-    name: String,
-    subname: Option<String>,
-}

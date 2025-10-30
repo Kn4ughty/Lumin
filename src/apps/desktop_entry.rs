@@ -47,6 +47,7 @@ impl From<DesktopEntry> for App {
             args,
             working_dir,
             subname: desktop_entry.generic_name,
+            icon: None
         }
     }
 }
@@ -68,6 +69,7 @@ fn can_parse_app_from_desktop_entry() {
             .collect(),
         working_dir: Some("/".to_string()),
         subname: None,
+        icon: None,
     };
 
     assert_eq!(app, App::from(entry));
