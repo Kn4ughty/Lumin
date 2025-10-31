@@ -68,10 +68,9 @@ impl AppModule {
     }
 
     fn run_app_at_index(&self, index: usize) {
-        let first = self
-            .app_list
-            .get(index)
-            .expect("selected to run valid index");
+        let Some(first) = self.app_list.get(index) else {
+            return;
+        };
 
         // Increment app frequency hashmap
         let mut map = self.app_frequencies.clone();
