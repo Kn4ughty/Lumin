@@ -30,6 +30,7 @@ struct State {
 
 impl std::default::Default for State {
     fn default() -> State {
+        let start = iced::debug::time("load modules");
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
         modules.insert("=".to_string(), Box::new(Calc::new()));
 
@@ -37,6 +38,7 @@ impl std::default::Default for State {
 
         modules.insert("".to_string(), Box::new(AppModule::new()));
 
+        start.finish();
         State {
             text_value: "".to_string(),
             text_id: widget::Id::new("text_entry"),

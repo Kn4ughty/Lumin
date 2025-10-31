@@ -54,8 +54,11 @@ impl AppModule {
                 Err(e) => log::error!("Could not read app_frequencies to hashmap. E: {e:#?}"),
             }
         } else {
-            // Only a warning since this could be the first time the file is created
-            log::warn!("Could not read app_frequencies to string");
+            log::warn!(
+                "Could not read app_frequencies to string.\
+                Once any app is launched for the first time, \
+                this warning should go away as the hashmap should have been written"
+            );
         };
 
         AppModule {
@@ -125,9 +128,6 @@ impl Module for AppModule {
     }
 
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
-        // let ModuleMessage::TextChanged(input) = msg else {
-        //     return Task::none();
-        // };
         match msg {
             ModuleMessage::TextChanged(input) => {
                 if self.app_list.is_empty() {
@@ -181,4 +181,3 @@ impl Module for AppModule {
         iced::exit()
     }
 }
-

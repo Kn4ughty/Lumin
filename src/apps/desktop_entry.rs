@@ -47,7 +47,7 @@ impl From<DesktopEntry> for App {
             args,
             working_dir,
             subname: desktop_entry.generic_name,
-            icon: None
+            icon: None,
         }
     }
 }
