@@ -8,23 +8,31 @@ use crate::{
 
 pub struct Drun {
     options: Vec<String>,
+    text_input: String,
 }
 
 impl Drun {
     pub fn new(input: Vec<String>) -> Self {
-        Drun { options: input }
+        Drun {
+            options: input,
+            text_input: "".into(),
+        }
     }
 
     fn run_at_index(&self, index: usize) {
         let mut stdout = std::io::stdout();
-        stdout
-            .write_all(
+
+        if self.options.is_empty() {
+            stdout.write_all(self.text_input.as_bytes())
+        } else {
+            stdout.write_all(
                 self.options
                     .get(index)
                     .expect("Can get option at requested index")
                     .as_bytes(),
             )
-            .expect("Can write to stdout");
+        }
+        .expect("Can write to stdoi");
     }
 }
 
@@ -32,6 +40,7 @@ impl Module for Drun {
     fn update(&mut self, msg: ModuleMessage) -> iced::Task<ModuleMessage> {
         match msg {
             ModuleMessage::TextChanged(input) => {
+                self.text_input = input.clone();
                 let input = &input.to_lowercase();
                 self.options.sort_by_cached_key(|opt| {
                     // Not a fan of this duplicated logic from app/mod.rs
