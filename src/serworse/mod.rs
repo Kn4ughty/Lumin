@@ -8,8 +8,8 @@ pub enum ParseError {
 }
 
 /// Input data is a csv
-pub fn parse_csv<'a, T: std::str::FromStr>(
-    data: &'a str,
+pub fn parse_csv<T: std::str::FromStr>(
+    data: &str,
 ) -> Result<HashMap<String, T>, ParseError> {
     let mut map = HashMap::new();
     for line in data.lines() {

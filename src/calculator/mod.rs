@@ -173,7 +173,7 @@ impl Calc {
 
                 match iter.peek() {
                     Some((_, '.')) | Some((_, '0'..='9')) => {
-                        let next = iter.next().unwrap();
+                        let next = iter.next().expect("Can get next");
                         log::trace!("Next character ({}) was a num or .", next.1);
                         number_buf.push(next.1)
                     }
@@ -195,7 +195,9 @@ impl Calc {
 
             if !number_buf.is_empty() {
                 log::trace!("Number buf len was not 0 with {c}");
-                out.push(Expr::Number(number_buf.parse().unwrap()));
+                out.push(Expr::Number(
+                    number_buf.parse().expect("can parse to number"),
+                ));
                 number_buf.clear();
             }
 

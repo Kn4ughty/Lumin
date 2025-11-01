@@ -1,3 +1,4 @@
+#![deny(clippy::unwrap_used)]
 pub mod apps;
 pub mod calculator;
 pub mod module;

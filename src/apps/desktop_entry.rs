@@ -63,7 +63,7 @@ fn can_parse_app_from_desktop_entry() {
     let app = App {
         name: "anki".to_string(),
         cmd: "/usr/bin/flatpak".to_string(),
-        args: vec!["run", "--branch=stable", "net.ankiweb.Anki", "@@", "@@"]
+        args: ["run", "--branch=stable", "net.ankiweb.Anki", "@@", "@@"]
             .iter()
             .map(|k| k.to_string())
             .collect(),
@@ -253,7 +253,6 @@ fn can_parse_entry_from_str() {
             r#"[Desktop Entry]
 Type=Application
 Categories=System;TerminalEmulator;"#
-                .into()
         )
         .unwrap(),
         hash
@@ -532,8 +531,7 @@ Actions=New;
 [Desktop Action New]
 Name=New Terminal
 Exec=testaction
-    "#
-    .into();
+    "#;
 
     let entry = parse_from_hashmap(parse_entry_from_string(test).unwrap()).unwrap();
 

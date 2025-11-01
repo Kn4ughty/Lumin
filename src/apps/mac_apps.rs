@@ -43,7 +43,7 @@ impl MacApp {
 
         let name = path
             .split('/')
-            .last()
+            .next_back()
             .expect("Should be able to split up path and has last")
             .to_string();
 
@@ -64,11 +64,11 @@ impl MacApp {
 
         let file =
             BufReader::new(File::open(icon_path).map_err(|_| MacAppError::IconPathWasWrong)?);
-        let icon_family = icns::IconFamily::read(file).unwrap();
+        let icon_family = icns::IconFamily::read(file).expect("Can read iconfile");
         let avail_icons = icon_family.available_icons();
         let icns_image = icon_family
-            .get_icon_with_type(*avail_icons.get(0).expect("App should have an icon"))
-            .unwrap();
+            .get_icon_with_type(*avail_icons.first().expect("App should have an icon"))
+            .expect("Can get_icon_with_type. Data May be malformed");
         log::trace!("mac icon type is {:?}", icns_image.pixel_format());
         let iced_image: iced::advanced::image::Handle = Handle::from_rgba(
             icns_image.width(),
@@ -90,15 +90,17 @@ fn is_app(entry: &DirEntry) -> bool {
 pub fn load_all_apps() -> Vec<MacApp> {
     let mut full_apps = Vec::new();
     // There is probably a better way to do it that isnt hardcoding.
-    for dir in vec!["/Applications/", "/System/Applications/"] {
+    for dir in ["/Applications/", "/System/Applications/"] {
         WalkDir::new(dir)
             .max_depth(4)
             .follow_links(true)
             .into_iter()
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().is_dir())
-            .filter(|e| is_app(e))
-            .map(|e| MacApp::new_from_path(e.path().to_str().unwrap().to_string()))
+            .filter(is_app)
+            .map(|e| {
+                MacApp::new_from_path(e.path().to_str().expect("Path is valid utf8").to_string())
+            })
             .filter_map(|e| e.ok())
             .for_each(|e| full_apps.push(e))
     }

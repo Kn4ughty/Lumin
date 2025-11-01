@@ -43,7 +43,7 @@ impl Default for AppModule {
 impl AppModule {
     pub fn new() -> Self {
         // attempt to load hashmap from disk
-        let home = std::env::var("HOME").unwrap();
+        let home = std::env::var("HOME").expect("Can get home EnvVar");
         let path_string = home + constants::DATA_DIR + APP_FREQUENCY_LOOKUP_RELPATH;
         let path = std::path::Path::new(&path_string);
 
@@ -82,7 +82,7 @@ impl AppModule {
 
         log::debug!("New app_frequencies hashmap is {map:#?}");
 
-        let home = std::env::var("HOME").unwrap();
+        let home = std::env::var("HOME").expect("Can get home EnvVar");
         let path_string = home + constants::DATA_DIR + APP_FREQUENCY_LOOKUP_RELPATH;
         let path = std::path::Path::new(&path_string);
 
@@ -99,7 +99,7 @@ impl AppModule {
             first.args.clone(),
             first.working_dir.clone(),
         )
-        .unwrap();
+        .expect("Can execute_command_detached");
     }
 }
 
@@ -165,7 +165,7 @@ impl Module for AppModule {
                 Task::none()
             }
             ModuleMessage::ActivatedIndex(i) => {
-                Self::run_app_at_index(&self, i);
+                Self::run_app_at_index(self, i);
                 iced::exit()
             }
             x => {
@@ -176,7 +176,7 @@ impl Module for AppModule {
     }
 
     fn run(&self) -> Task<crate::message::Message> {
-        Self::run_app_at_index(&self, 0);
+        Self::run_app_at_index(self, 0);
         iced::exit()
     }
 }

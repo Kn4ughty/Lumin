@@ -40,7 +40,7 @@ impl Web {
                 // https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:User-Agent_policy
                 .user_agent("LuminAppLauncher/0.0 (https://github.com/Kn4ughty)")
                 .build()
-                .unwrap(),
+                .expect("Can create web client"),
         }
     }
 
@@ -85,10 +85,14 @@ impl Web {
         Task::perform(
             async move { (url.clone(), Self::get_image(client, &url).await) },
             |r| {
-                ModuleMessage::WebMessage(WebMsg::FetchedImage((
-                    r.0,
-                    widget::image::Handle::from_bytes(r.1.unwrap()),
-                )))
+                let image = match r.1 {
+                    Ok(bytes) => Ok(widget::image::Handle::from_bytes(bytes)),
+                    Err(e) => {
+                        log::warn!("Could not get image from url: {e:?}");
+                        Err(())
+                    }
+                };
+                ModuleMessage::WebMessage(WebMsg::FetchedImage((r.0, image)))
             },
         )
     }
@@ -136,7 +140,7 @@ impl Module for Web {
 
                 let image = match result.image_url {
                     None => None,
-                    Some(url) => self.image_hashmap.get(&url).map(|handle| handle.clone()),
+                    Some(url) => self.image_hashmap.get(&url).cloned(),
                 };
 
                 widglets::listrow(
@@ -193,8 +197,10 @@ impl Module for Web {
                         log::trace!(
                             "We got a result for a fetched image! url: {url}, image_handle: {image:?}"
                         );
-                        self.image_hashmap.insert(url.clone(), image);
-                        return Task::none();
+                        if let Ok(image) = image {
+                            self.image_hashmap.insert(url.clone(), image);
+                        }
+                        Task::none()
                     }
                 }
             }

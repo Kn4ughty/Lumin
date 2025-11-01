@@ -1,3 +1,5 @@
+#![deny(clippy::unwrap_used)]
+
 use iced::{Task, keyboard, widget};
 
 use std::collections::HashMap;
@@ -68,7 +70,7 @@ impl State {
                 log::info!("Text input submitted");
 
                 // TODO. Dont just unwrap
-                self.find_module().unwrap().0.run()
+                self.find_module().expect("Can find module").0.run()
             }
             Message::WindowOpened(id) => {
                 self.window_id = Some(id);
@@ -108,7 +110,7 @@ impl State {
 
         let result = self
             .find_module()
-            .unwrap()
+            .expect("can find module")
             .0
             .view()
             .map(|s: ModuleMessage| Message::PluginMessage(s));
@@ -127,6 +129,7 @@ impl State {
         Some(iced::theme::Theme::CatppuccinMocha)
     }
 
+    #[allow(clippy::borrowed_box)]
     fn find_module(&self) -> Option<(&Box<dyn Module>, usize)> {
         self.modules
             .iter()
@@ -146,7 +149,7 @@ impl State {
 
 fn subscription(_state: &State) -> iced::Subscription<Message> {
     iced::Subscription::batch(vec![
-        iced::window::open_events().map(|id| Message::WindowOpened(id)),
+        iced::window::open_events().map(Message::WindowOpened),
         iced::keyboard::on_key_release(handle_hotkeys),
     ])
 }
@@ -164,7 +167,7 @@ fn main() -> iced::Result {
     pretty_env_logger::init();
 
     // Ensure that DATA_DIR exists to stop problems later
-    let home = std::env::var("HOME").unwrap();
+    let home = std::env::var("HOME").expect("Can get home enviroment variable");
     let path_str = &(home + constants::DATA_DIR);
     let path = std::path::Path::new(path_str);
 
