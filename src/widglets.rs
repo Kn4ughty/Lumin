@@ -62,7 +62,9 @@ pub fn listrow<'a>(
             widget::container(real_image)
         } else {
             // TODO. Get image from user icon theme
-            widget::container(widget::image("assets/image-missing-symbolic.png"))
+            widget::container(widget::image(widget::image::Handle::from_bytes(
+                include_bytes!("../assets/image-missing-symbolic.png").to_vec(),
+            )))
         }
         .clip(true)
         .width(size.height)
