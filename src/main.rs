@@ -14,6 +14,9 @@ use calculator::Calc;
 mod websearch;
 use websearch::Web;
 
+mod drun;
+use drun::Drun;
+
 mod constants;
 mod module;
 mod serworse;
@@ -30,8 +33,8 @@ struct State {
     modules: HashMap<String, Box<dyn Module>>,
 }
 
-impl std::default::Default for State {
-    fn default() -> State {
+impl State {
+    fn new_multi_modal() -> Self {
         let start = iced::debug::time("load modules");
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
         modules.insert("=".to_string(), Box::new(Calc::new()));
@@ -48,9 +51,29 @@ impl std::default::Default for State {
             modules,
         }
     }
-}
 
-impl State {
+    fn new_drun() -> Self {
+        let start = iced::debug::time("load modules");
+        let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
+
+        let stdin = std::io::stdin();
+        let mut lines = Vec::new();
+        for line in stdin.lines() {
+            lines.push(line.expect("Can read line from stdin"));
+        }
+
+        modules.insert("".to_string(), Box::new(Drun::new(lines)));
+
+        start.finish();
+
+        State {
+            text_value: "".to_string(),
+            text_id: widget::Id::new("text_entry"),
+            window_id: None,
+            modules,
+        }
+    }
+
     fn update(&mut self, message: Message) -> Task<Message> {
         log::trace!("update fn run");
         match message {
@@ -175,7 +198,18 @@ fn main() -> iced::Result {
         std::fs::create_dir_all(path).expect("Could create DATA_DIR");
     }
 
-    iced::application(State::default, State::update, State::view)
+    let mut state = State::new_multi_modal as fn() -> State;
+
+    for arg in std::env::args() {
+        match arg.as_str() {
+            "--dmenu" => {
+                state = State::new_drun as fn() -> State;
+            }
+            unknown => log::warn!("Unknown arg {unknown}"),
+        }
+    }
+
+    iced::application(state, State::update, State::view)
         .title("Lumin")
         .settings(iced::Settings {
             default_font: iced::Font::MONOSPACE,

@@ -7,11 +7,11 @@
 - Linux and MacOS app launching 
 - Calculator module
 - Wikipedia web searching (!w to quickly search articles)
+- dmenu support with `--dmenu` flag
 
 # ToDo (ordered)
 - [ ] Change default macos font
 - [ ] App Icon support
-- [ ] dmenu support
 - [ ] Allow for user theming
 - [ ] Create a nice default theme
 - [ ] Templates for UI elements 
