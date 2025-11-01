@@ -59,15 +59,17 @@ pub fn listrow<'a>(
         if let Some(icon) = icon.clone() {
             let real_image = widget::image::Image::new(icon).content_fit(iced::ContentFit::Cover);
 
-            widget::container(real_image).style(widget::container::bordered_box)
+            widget::container(real_image)
         } else {
-            widget::container(widget::space())
+            // TODO. Get image from user icon theme
+            widget::container(widget::image("assets/image-missing-symbolic.png"))
         }
         .clip(true)
         .width(size.height)
         .height(size.height)
         .padding(0)
         .align_y(iced::Alignment::Center)
+        .align_x(iced::Alignment::Center)
         .into()
     })
     .width(iced::Shrink)
