@@ -208,7 +208,7 @@ impl Calc {
                 '+' => Expr::Plus,
                 '-' => Expr::Minus,
                 '*' | 'x' => Expr::Multiply,
-                '/' => Expr::Divide,
+                '/' | '÷' => Expr::Divide,
                 '^' => Expr::Power,
                 '%' => Expr::Modulo,
                 '(' => Expr::OpenParen,
