@@ -207,7 +207,7 @@ impl Calc {
                 ' ' => continue,
                 '+' => Expr::Plus,
                 '-' => Expr::Minus,
-                '*' => Expr::Multiply,
+                '*' | 'x' => Expr::Multiply,
                 '/' => Expr::Divide,
                 '^' => Expr::Power,
                 '%' => Expr::Modulo,
