@@ -2,7 +2,8 @@
 
 #![allow(dead_code, reason = "Compile time importing shennanigans")]
 
-use std::{collections::HashMap, vec::Vec};
+use icon;
+use std::{collections::HashMap, path::PathBuf, vec::Vec};
 use walkdir::WalkDir;
 
 use super::App;
@@ -47,7 +48,7 @@ impl From<DesktopEntry> for App {
             args,
             working_dir,
             subname: desktop_entry.generic_name,
-            icon: None,
+            icon: desktop_entry.icon.map(iced::widget::image::Handle::from),
         }
     }
 }
@@ -98,8 +99,7 @@ pub struct DesktopEntry {
     pub generic_name: Option<String>,
     // No display not included since its irrelevant. Should be handled in parsing
     pub comment: Option<String>,
-    // pub icon_path: Option<std::path::PathBuf>, // https://specifications.freedesktop.org/icon-theme-spec/latest/
-    pub icon_path: Option<String>, // https://specifications.freedesktop.org/icon-theme-spec/latest/
+    pub icon: Option<PathBuf>,
     // Handle files with Hidden at parsing level
     pub only_show_in: Vec<String>,
     pub not_show_in: Vec<String>,
@@ -124,7 +124,7 @@ impl std::default::Default for DesktopEntry {
             name: "".to_string(),
             generic_name: None,
             comment: None,
-            icon_path: None,
+            icon: None,
             only_show_in: Vec::new(),
             not_show_in: Vec::new(),
             try_exec: None,
@@ -152,6 +152,10 @@ pub enum ParseError {
 }
 
 pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
+    let start = iced::debug::time("get icon_searcher");
+    let icon_searcher = icon::Icons::new();
+    start.finish();
+
     let mut entries = Vec::new();
     let Ok(raw_data_dirs) = std::env::var("XDG_DATA_DIRS") else {
         return Err(ParseError::MissingDataDirsEnvVar);
@@ -173,7 +177,7 @@ pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
 
             log::trace!("{}", entry.path().display());
 
-            entries.push(parse_from_file(entry.path()).map_err(|e| {
+            entries.push(parse_from_file(entry.path(), &icon_searcher).map_err(|e| {
                 log::trace!("error parsing file {:#?} with error: {:?}", entry.path(), e)
             }));
         }
@@ -186,10 +190,13 @@ pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
     Ok(entries.into_iter().filter_map(|a| a.ok()).collect())
 }
 
-fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseError> {
+fn parse_from_file(
+    file_path: &std::path::Path,
+    icon_searcher: &icon::Icons,
+) -> Result<DesktopEntry, ParseError> {
     let contents = std::fs::read_to_string(file_path).map_err(|_| ParseError::CouldNotLoadFile)?;
 
-    parse_from_hashmap(parse_entry_from_string(&contents)?)
+    parse_from_hashmap(parse_entry_from_string(&contents)?, icon_searcher)
 }
 
 // Using lifetimes here may look ugly, but it leads to a 30% performance improvement from reduced
@@ -261,6 +268,7 @@ Categories=System;TerminalEmulator;"#
 
 fn parse_from_hashmap<'a>(
     input: HashMap<&'a str, HashMap<&'a str, &'a str>>,
+    icon_searcher: &icon::Icons,
 ) -> Result<DesktopEntry, ParseError> {
     let Some(entry_keys) = input.get("Desktop Entry") else {
         return Err(ParseError::DesktopEntryHeaderNotFound);
@@ -297,7 +305,16 @@ fn parse_from_hashmap<'a>(
         ),
         generic_name: entry_keys.get("GenericName").map(|s| s.to_string()),
         comment: entry_keys.get("Comment").map(|s| s.to_string()),
-        icon_path: entry_keys.get("Icon").map(|s| s.to_string()),
+        icon: {
+            if let Some(name) = entry_keys.get("Icon") {
+                // TODO. Dont hardcode theme
+                icon_searcher
+                    .find_icon(name, 32, 1, "Adwaita")
+                    .map(|i| i.path)
+            } else {
+                None
+            }
+        },
         only_show_in: parse_string_list(entry_keys.get("OnlyShowIn").copied()),
         not_show_in: parse_string_list(entry_keys.get("NotShowIn").copied()),
         working_dir: entry_keys.get("Path").map(|s| s.to_string()),
@@ -447,72 +464,6 @@ fn can_parse_exec_key() {
     );
 }
 
-// https://specifications.freedesktop.org/icon-theme-spec/latest/
-// fn find_icon(name: &str, size: i32, scale: i32) -> Option<std::path::PathBuf> {
-//     // gsettings get org.gnome.desktop.interface gtk-theme
-//     let mut user_theme_string: Option<String> = None;
-//
-//     if let Ok(get_theme_cmd) = std::process::Command::new("gsettings")
-//         .args(["get", "org.gnome.desktop.interface", "gtk-theme"])
-//         .output()
-//     {
-//         user_theme_string = Some(
-//             String::from_utf8_lossy(&get_theme_cmd.stdout)
-//                 .trim()
-//                 .trim_matches('\'')
-//                 .to_string(),
-//         );
-//     }
-//
-//     println!("user theme streing is : {user_theme_string:?}");
-//
-//     if user_theme_string.is_some() {
-//         if let Some(filename) = find_icon_helper(name, size, scale, &user_theme_string.unwrap()) {
-//             return Some(filename)
-//         };
-//     }
-//
-//     if let Some(filename) = find_icon_helper(name, size, scale, "hicolor") {
-//         return Some(filename)
-//     };
-//
-//
-//     lookup_fallback_icon(name)
-// }
-//
-// #[test]
-// fn can_find_icon() {
-//     find_icon("", 1, 1);
-//     assert!(1 == 1);
-// }
-//
-// fn find_icon_helper(
-//     name: &str,
-//     size: i32,
-//     scale: i32,
-//     theme: &str,
-// ) -> Option<std::path::PathBuf> {
-//     if let Some(filename) = lookup_icon(name, size, scale, theme) {
-//         return Some(filename)
-//     };
-//     // Theme has parents??
-//
-//     Some("find icon helper".into())
-// }
-//
-// fn lookup_icon(
-//     name: &str,
-//     size: i32,
-//     scale: i32,
-//     theme: &str,) -> Option<std::path::PathBuf> {
-//
-//     Some("lookup icon".into())
-// }
-//
-// fn lookup_fallback_icon(name: &str) -> Option<std::path::PathBuf> {
-//     Some("Fallback icon".into())
-// }
-
 #[test]
 fn can_parse_full_app() {
     let test = r#"
@@ -532,8 +483,9 @@ Actions=New;
 Name=New Terminal
 Exec=testaction
     "#;
+    let icon_searcher = icon::Icons::new();
 
-    let entry = parse_from_hashmap(parse_entry_from_string(test).unwrap()).unwrap();
+    let entry = parse_from_hashmap(parse_entry_from_string(test).unwrap(), &icon_searcher).unwrap();
 
     assert_eq!(entry.name, "Test Name");
     assert_eq!(entry.entry_type, EntryType::Application);

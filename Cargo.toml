@@ -33,6 +33,7 @@ walkdir = "2.5.0"
 serde = {version = "1.0.225", features = ["derive"]}
 serde_json = "1.0.145"
 icns = "0.3.1"
+icon = "0.1.2"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
