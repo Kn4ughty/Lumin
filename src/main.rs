@@ -92,7 +92,6 @@ impl State {
             Message::TextInputSubmitted(_text) => {
                 log::info!("Text input submitted");
 
-                // TODO. Dont just unwrap
                 self.find_module().expect("Can find module").0.run()
             }
             Message::WindowOpened(id) => {

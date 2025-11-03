@@ -269,7 +269,7 @@ impl Module for AppModule {
             ModuleMessage::AppMessage(AppMessage::IconLoaded(key, res)) => {
                 log::trace!("iconloaded: {key}");
                 let start = iced::debug::time("IconLoaded");
-                let what_to_insert = if let Some((path, handle)) = res {
+                let icon_handle = if let Some((path, handle)) = res {
                     ICON_CACHE
                         .lock()
                         .expect("Can lock cache")
@@ -293,7 +293,7 @@ impl Module for AppModule {
                         // log::debug!("Comparing {app_key} with {app:?}");
                         if key == *app_key {
                             log::trace!("Updating app: {app:?}");
-                            app.icon = what_to_insert.clone()
+                            app.icon = icon_handle.clone()
                         }
                     });
 
@@ -348,6 +348,7 @@ async fn get_icon(icon_name: String) -> Option<(String, iced::widget::image::Han
             .insert(icon_name.to_owned(), path_str.clone());
         start.finish();
 
+        // TODO. Turn svg's into images
         return Some((path_str, iced::widget::image::Handle::from_path(path)));
     }
     start.finish();
