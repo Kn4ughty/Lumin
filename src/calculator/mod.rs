@@ -74,7 +74,7 @@ impl Module for Calc {
 
         if let Ok(number) = self.answer {
             iced::clipboard::write(number.to_string()).chain(Task::perform(
-                std::future::ready(1),
+                std::future::ready(()),
                 |_| {
                     // little stupid hack to make it wait for a moment so the clipboard manager can copy it
                     std::thread::sleep(std::time::Duration::from_millis(1));
