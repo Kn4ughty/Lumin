@@ -247,7 +247,7 @@ impl Module for AppModule {
                     .for_each(|(app_key, app)| {
                         // log::debug!("Comparing {app_key} with {app:?}");
                         if key == *app_key {
-                            log::info!("Updating app");
+                            log::trace!("Updating app: {app:?}");
                             app.icon = what_to_insert.clone()
                         }
                     });
