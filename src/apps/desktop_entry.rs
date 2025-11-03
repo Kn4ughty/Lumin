@@ -314,7 +314,7 @@ impl From<DesktopEntry> for App {
 
 pub fn load_icon(s: String) -> Option<iced::widget::image::Handle> {
     ICON_SEARCHER
-        .find_icon(s.as_str(), 32, 1, "Adwaita") // TODO. Dont hardcode theme
+        .find_icon(s.as_str(), 64, 1, "Adwaita") // TODO. Dont hardcode theme
         .map(|icon| iced::widget::image::Handle::from_path(icon.path))
 }
 
