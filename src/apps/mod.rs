@@ -267,6 +267,7 @@ impl Module for AppModule {
 }
 
 async fn get_icon(icon_name: String) -> Option<iced::widget::image::Handle> {
+    let start = iced::debug::time("GetIconTime");
     if let Some(handle) = ICON_CACHE
         .lock()
         .expect("Can unlock")
@@ -287,5 +288,6 @@ async fn get_icon(icon_name: String) -> Option<iced::widget::image::Handle> {
             .expect("Can unlock")
             .insert(icon_name.to_owned(), h.clone());
     }
+    start.finish();
     handle
 }
