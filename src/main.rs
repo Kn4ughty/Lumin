@@ -35,7 +35,7 @@ struct State {
 
 impl State {
     fn new_multi_modal() -> Self {
-        let start = iced::debug::time("load modules");
+        let start = std::time::Instant::now();
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
         modules.insert("=".to_string(), Box::new(Calc::new()));
 
@@ -43,7 +43,7 @@ impl State {
 
         modules.insert("".to_string(), Box::new(AppModule::new()));
 
-        start.finish();
+        log::info!("Time to initialise modules: {:#?}", start.elapsed());
         State {
             text_value: "".to_string(),
             text_id: widget::Id::new("text_entry"),
@@ -191,11 +191,18 @@ fn main() -> iced::Result {
 
     // Ensure that DATA_DIR exists to stop problems later
     let home = std::env::var("HOME").expect("Can get home enviroment variable");
-    let path_str = &(home + constants::DATA_DIR);
-    let path = std::path::Path::new(path_str);
+    let path_str = constants::DATA_DIR.get_or_init(|| home.clone() + "/.local/share/lumin/");
 
-    if !std::fs::exists(path).expect("Can check if DATA_DIR exists") {
-        std::fs::create_dir_all(path).expect("Could create DATA_DIR");
+    if !std::fs::exists(path_str).expect("Can check if data_path exists") {
+        log::info!("Data dir not found. Creating at path {path_str:?}");
+        std::fs::create_dir_all(path_str).expect("Could create DATA_DIR");
+    }
+
+    let cache_dir = constants::CACHE_DIR.get_or_init(|| home.clone() + "/.cache/lumin/");
+
+    if !std::fs::exists(cache_dir).expect("Can check if cache_dir exists") {
+        log::info!("Data dir not found. Creating at path {cache_dir:?}");
+        std::fs::create_dir_all(cache_dir).expect("Could create cache_dir");
     }
 
     let mut state = State::new_multi_modal as fn() -> State;

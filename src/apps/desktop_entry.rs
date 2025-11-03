@@ -1,7 +1,7 @@
 // https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
 #![allow(dead_code, reason = "Compile time importing shennanigans")]
 
-use std::{collections::HashMap, sync::LazyLock, vec::Vec};
+use std::{collections::HashMap, path::PathBuf, sync::LazyLock, vec::Vec};
 
 use icon;
 use walkdir::WalkDir;
@@ -114,10 +114,10 @@ pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
             }));
         }
 
-        log::info!("file_count for dir: {dir}, {file_count}");
+        log::debug!("file_count for dir: {dir}, {file_count}");
     }
 
-    log::info!("{dir_count:#?}");
+    log::debug!("{dir_count:#?}");
 
     Ok(entries.into_iter().filter_map(|a| a.ok()).collect())
 }
@@ -307,15 +307,15 @@ impl From<DesktopEntry> for App {
             args,
             working_dir,
             subname: desktop_entry.generic_name,
-            icon: desktop_entry.icon.map(|s| Icon::NotFoundYet(s)),
+            icon: desktop_entry.icon.map(Icon::NotFoundYet),
         }
     }
 }
 
-pub fn load_icon(s: String) -> Option<iced::widget::image::Handle> {
+pub fn load_icon(s: String) -> Option<PathBuf> {
     ICON_SEARCHER
-        .find_icon(s.as_str(), 64, 1, "Adwaita") // TODO. Dont hardcode theme
-        .map(|icon| iced::widget::image::Handle::from_path(icon.path))
+        .find_icon(s.as_str(), 64, 1, "Adwaita")
+        .map(|i| i.path) // TODO. Dont hardcode theme
 }
 
 #[test]

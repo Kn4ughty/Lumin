@@ -22,9 +22,10 @@ use crate::widglets;
 // const ICON_LOOKUP_BATCH_AMOUNT: i32 = 4;
 
 const APP_FREQUENCY_LOOKUP_RELPATH: &str = "app_lookup";
+const ICON_CACHE_RELPATH: &str = "icon_cache";
 
 // erhg
-static ICON_CACHE: LazyLock<Mutex<HashMap<String, widget::image::Handle>>> =
+static ICON_CACHE: LazyLock<Mutex<HashMap<String, String>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[derive(Clone, PartialEq, Debug)]
@@ -45,7 +46,7 @@ pub enum Icon {
 
 #[derive(Clone, Debug)]
 pub enum AppMessage {
-    IconLoaded(String, Option<iced::widget::image::Handle>),
+    IconLoaded(String, Option<(String, iced::widget::image::Handle)>),
 }
 
 pub struct AppModule {
@@ -60,10 +61,14 @@ impl Default for AppModule {
 }
 
 impl AppModule {
+    // Duplicated logic betweeen new and open_app which is sad. should fix this
     pub fn new() -> Self {
         // attempt to load hashmap from disk
-        let home = std::env::var("HOME").expect("Can get home EnvVar");
-        let path_string = home + constants::DATA_DIR + APP_FREQUENCY_LOOKUP_RELPATH;
+        let path_string = constants::DATA_DIR
+            .get()
+            .expect("DATA_DIR initialised")
+            .to_owned()
+            + APP_FREQUENCY_LOOKUP_RELPATH;
         let path = std::path::Path::new(&path_string);
 
         let mut freq_map: HashMap<String, u32> = HashMap::new();
@@ -71,6 +76,30 @@ impl AppModule {
             match serworse::parse_csv::<u32>(&data) {
                 Ok(map1) => freq_map = map1,
                 Err(e) => log::error!("Could not read app_frequencies to hashmap. E: {e:#?}"),
+            }
+        } else {
+            log::warn!(
+                "Could not read app_frequencies to string.\
+                Once any app is launched for the first time, \
+                this warning should go away as the hashmap should have been written"
+            );
+        };
+
+        let icon_cache_path = constants::CACHE_DIR
+            .get()
+            .expect("CACHE_DIR init'ed")
+            .to_owned()
+            + ICON_CACHE_RELPATH;
+
+        if let Ok(data) = std::fs::read_to_string(icon_cache_path) {
+            match serworse::parse_csv::<String>(&data) {
+                Ok(disk_cache) => {
+                    let mut main_map = ICON_CACHE.lock().expect("can get ICON_CACHE");
+                    for (key, val) in disk_cache.iter() {
+                        main_map.insert(key.to_string(), val.to_string());
+                    }
+                }
+                Err(e) => log::error!("Could not read icon_cache to hashmap. E: {e:#?}"),
             }
         } else {
             log::warn!(
@@ -103,16 +132,35 @@ impl AppModule {
 
         log::debug!("New app_frequencies hashmap is {map:#?}");
 
-        let home = std::env::var("HOME").expect("Can get home EnvVar");
-        let path_string = home + constants::DATA_DIR + APP_FREQUENCY_LOOKUP_RELPATH;
-        let path = std::path::Path::new(&path_string);
+        let path_string = constants::DATA_DIR
+            .get()
+            .expect("DATA_DIR initialised")
+            .to_owned()
+            + APP_FREQUENCY_LOOKUP_RELPATH;
+        let app_freq_path = std::path::Path::new(&path_string);
 
-        if let Err(e) = std::fs::write(path, serworse::hash_map_to_csv(map)) {
+        if let Err(e) = std::fs::write(app_freq_path, serworse::hash_map_to_csv(map)) {
             log::error!(
                 "Could not write new app frequency hashmap to file!! e: {e}\nHashmap is: {e:#?}"
             );
         } else {
-            log::trace!("Successfully wrote to path: {path:?}");
+            log::trace!("Successfully wrote to path: {app_freq_path:?}");
+        };
+
+        // Write icon_cache to disk
+
+        let icon_cache_path = constants::CACHE_DIR
+            .get()
+            .expect("CACHE_DIR init'ed")
+            .to_owned()
+            + ICON_CACHE_RELPATH;
+
+        let cache_map = ICON_CACHE.lock().expect("not poisoned").clone();
+
+        if let Err(e) = std::fs::write(icon_cache_path, serworse::hash_map_to_csv(cache_map)) {
+            log::error!("Could not write icon_cache to file!! e: {e}\nHashmap is: {e:#?}");
+        } else {
+            log::debug!("Successfully wrote to path: {app_freq_path:?}");
         };
 
         util::execute_command_detached(
@@ -218,14 +266,14 @@ impl Module for AppModule {
                 Self::run_app_at_index(self, i);
                 iced::exit()
             }
-            ModuleMessage::AppMessage(AppMessage::IconLoaded(key, handle)) => {
+            ModuleMessage::AppMessage(AppMessage::IconLoaded(key, res)) => {
                 log::trace!("iconloaded: {key}");
                 let start = iced::debug::time("IconLoaded");
-                let what_to_insert = if let Some(handle) = handle {
+                let what_to_insert = if let Some((path, handle)) = res {
                     ICON_CACHE
                         .lock()
                         .expect("Can lock cache")
-                        .insert(key.clone(), handle.clone());
+                        .insert(key.clone(), path.clone());
 
                     Some(Icon::ImageHandle(handle.clone()))
                 } else {
@@ -266,28 +314,43 @@ impl Module for AppModule {
     }
 }
 
-async fn get_icon(icon_name: String) -> Option<iced::widget::image::Handle> {
+async fn get_icon(icon_name: String) -> Option<(String, iced::widget::image::Handle)> {
     let start = iced::debug::time("GetIconTime");
-    if let Some(handle) = ICON_CACHE
+    if let Some(icon_path) = ICON_CACHE
         .lock()
         .expect("Can unlock")
         .get(&icon_name)
         .cloned()
     {
-        log::debug!("Cache hit! name: {icon_name}");
-        return Some(handle);
+        log::trace!("Cache hit! name: {icon_name}");
+        start.finish();
+        return Some((
+            icon_path.clone(),
+            iced::widget::image::Handle::from_path(icon_path),
+        ));
     }
+
     let copy = icon_name.clone();
-    let handle = tokio::task::spawn_blocking(move || app_searcher::load_icon(copy))
+    let icon_path = tokio::task::spawn_blocking(move || app_searcher::load_icon(copy))
         .await
         .ok()
         .flatten();
-    if let Some(h) = &handle {
+
+    if let Some(path) = &icon_path {
+        let path_str = path
+            .to_str()
+            .expect("icon_path is valid unicode")
+            .to_owned();
+
         ICON_CACHE
             .lock()
             .expect("Can unlock")
-            .insert(icon_name.to_owned(), h.clone());
+            .insert(icon_name.to_owned(), path_str.clone());
+        start.finish();
+
+        return Some((path_str, iced::widget::image::Handle::from_path(path)));
     }
     start.finish();
-    handle
+
+    None
 }

@@ -1,1 +1,4 @@
-pub const DATA_DIR: &str = "/.local/share/lumin/";
+use std::sync::OnceLock;
+
+pub static DATA_DIR: OnceLock<String> = OnceLock::new();
+pub static CACHE_DIR: OnceLock<String> = OnceLock::new();
