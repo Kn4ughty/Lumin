@@ -313,6 +313,10 @@ impl From<DesktopEntry> for App {
 }
 
 pub fn load_icon(s: String) -> Option<PathBuf> {
+    if s.starts_with('/') {
+        return Some(PathBuf::from(s));
+    }
+
     ICON_SEARCHER
         .find_icon(s.as_str(), 64, 1, "Adwaita")
         .map(|i| i.path) // TODO. Dont hardcode theme
