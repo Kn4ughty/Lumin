@@ -10,6 +10,7 @@ pub enum ModuleMessage {
     ActivatedIndex(usize),
     AppMessage(apps::AppMessage),
     WebMessage(websearch::WebMsg),
+    DoNothing,
 }
 
 pub trait Module {

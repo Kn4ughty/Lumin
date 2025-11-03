@@ -209,13 +209,10 @@ impl Module for AppModule {
                     })
                 });
 
-                log::debug!(
-                    "Time to get icons_to_lookup: {:#?}. Len: {}",
-                    start.elapsed(),
-                    tasks.len()
-                );
-
-                Task::batch(tasks)
+                Task::batch(tasks).chain(Task::perform(std::future::ready(()), move |_| {
+                    log::info!("Total time to get icons: {:#?}", start.elapsed());
+                    ModuleMessage::DoNothing
+                }))
             }
             ModuleMessage::ActivatedIndex(i) => {
                 Self::run_app_at_index(self, i);
