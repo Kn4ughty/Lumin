@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::sync::LazyLock;
+use std::sync::Mutex;
 
 use iced::Task;
 use iced::widget;
@@ -7,9 +9,9 @@ pub mod desktop_entry;
 pub mod mac_apps;
 
 #[cfg(target_os = "linux")]
-use desktop_entry::get_apps;
+use desktop_entry as app_searcher;
 #[cfg(target_os = "macos")]
-use mac_apps::get_apps;
+use mac_apps as app_searcher;
 
 use crate::constants;
 use crate::module::{Module, ModuleMessage};
@@ -17,16 +19,33 @@ use crate::serworse;
 use crate::util;
 use crate::widglets;
 
+// const ICON_LOOKUP_BATCH_AMOUNT: i32 = 4;
+
 const APP_FREQUENCY_LOOKUP_RELPATH: &str = "app_lookup";
+
+// erhg
+static ICON_CACHE: LazyLock<Mutex<HashMap<String, widget::image::Handle>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct App {
     cmd: String,
-    icon: Option<widget::image::Handle>,
+    icon: Option<Icon>,
     args: Vec<String>,
     working_dir: Option<String>,
     name: String,
     subname: Option<String>,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum Icon {
+    ImageHandle(widget::image::Handle),
+    NotFoundYet(String),
+}
+
+#[derive(Clone, Debug)]
+pub enum AppMessage {
+    IconLoaded(String, Option<iced::widget::image::Handle>),
 }
 
 pub struct AppModule {
@@ -47,10 +66,10 @@ impl AppModule {
         let path_string = home + constants::DATA_DIR + APP_FREQUENCY_LOOKUP_RELPATH;
         let path = std::path::Path::new(&path_string);
 
-        let mut map: HashMap<String, u32> = HashMap::new();
+        let mut freq_map: HashMap<String, u32> = HashMap::new();
         if let Ok(data) = std::fs::read_to_string(path) {
             match serworse::parse_csv::<u32>(&data) {
-                Ok(map1) => map = map1,
+                Ok(map1) => freq_map = map1,
                 Err(e) => log::error!("Could not read app_frequencies to hashmap. E: {e:#?}"),
             }
         } else {
@@ -61,9 +80,11 @@ impl AppModule {
             );
         };
 
+        // let mut icon_map: HashMap<String, widget::image::Handle> = HashMap::new();
+
         AppModule {
             app_list: Vec::new(),
-            app_frequencies: map,
+            app_frequencies: freq_map,
         }
     }
 
@@ -112,11 +133,17 @@ impl Module for AppModule {
                     .into_iter()
                     .enumerate()
                     .map(|(i, app)| {
+                        let icon = match app.icon {
+                            None => None,
+                            Some(Icon::NotFoundYet(_)) => None,
+                            Some(Icon::ImageHandle(h)) => Some(h),
+                        };
+
                         widglets::listrow(
                             app.name,
                             app.subname,
                             Some(ModuleMessage::ActivatedIndex(i)),
-                            app.icon,
+                            icon,
                         )
                         .into()
                     }),
@@ -132,7 +159,7 @@ impl Module for AppModule {
                 if self.app_list.is_empty() {
                     log::trace!("Generating app_list");
                     let start = std::time::Instant::now();
-                    self.app_list = get_apps();
+                    self.app_list = app_searcher::get_apps();
                     log::info!(
                         "Time to get #{} apps: {:#?}",
                         self.app_list.len(),
@@ -162,11 +189,72 @@ impl Module for AppModule {
                     start.elapsed()
                 );
 
-                Task::none()
+                let start = std::time::Instant::now();
+
+                let icons_to_lookup: Vec<&str> = self
+                    .app_list
+                    .iter()
+                    .filter_map(|app| match &app.icon {
+                        Some(Icon::NotFoundYet(a)) => Some(a.as_str()),
+                        Some(Icon::ImageHandle(_)) => None,
+                        None => None,
+                    })
+                    .collect();
+
+                let tasks = icons_to_lookup.iter().map(|key| {
+                    let k: String = key.to_string();
+                    Task::perform(get_icon(k.clone()), move |handle| {
+                        let k = k.clone();
+                        ModuleMessage::AppMessage(AppMessage::IconLoaded(k, handle))
+                    })
+                });
+
+                log::debug!(
+                    "Time to get icons_to_lookup: {:#?}. Len: {}",
+                    start.elapsed(),
+                    tasks.len()
+                );
+
+                Task::batch(tasks)
             }
             ModuleMessage::ActivatedIndex(i) => {
                 Self::run_app_at_index(self, i);
                 iced::exit()
+            }
+            ModuleMessage::AppMessage(AppMessage::IconLoaded(key, handle)) => {
+                log::trace!("iconloaded: {key}");
+                let start = iced::debug::time("IconLoaded");
+                let what_to_insert = if let Some(handle) = handle {
+                    ICON_CACHE
+                        .lock()
+                        .expect("Can lock cache")
+                        .insert(key.clone(), handle.clone());
+
+                    Some(Icon::ImageHandle(handle.clone()))
+                } else {
+                    // Failed to lookup icon for app
+                    log::warn!("Failed to lookup icon: key: {key}");
+                    None
+                };
+
+                self.app_list
+                    .iter_mut()
+                    .filter_map(|app| match &app.icon.clone() {
+                        Some(Icon::NotFoundYet(key)) => Some((key.clone(), app)),
+                        Some(Icon::ImageHandle(_)) => None,
+                        None => None,
+                    })
+                    .for_each(|(app_key, app)| {
+                        // log::debug!("Comparing {app_key} with {app:?}");
+                        if key == *app_key {
+                            log::info!("Updating app");
+                            app.icon = what_to_insert.clone()
+                        }
+                    });
+
+                start.finish();
+
+                Task::none()
             }
             x => {
                 log::trace!("App module received irrelevant msg: {x:?}");
@@ -179,4 +267,28 @@ impl Module for AppModule {
         Self::run_app_at_index(self, 0);
         iced::exit()
     }
+}
+
+async fn get_icon(icon_name: String) -> Option<iced::widget::image::Handle> {
+    if let Some(handle) = ICON_CACHE
+        .lock()
+        .expect("Can unlock")
+        .get(&icon_name)
+        .cloned()
+    {
+        log::debug!("Cache hit! name: {icon_name}");
+        return Some(handle);
+    }
+    let copy = icon_name.clone();
+    let handle = tokio::task::spawn_blocking(move || app_searcher::load_icon(copy))
+        .await
+        .ok()
+        .flatten();
+    if let Some(h) = &handle {
+        ICON_CACHE
+            .lock()
+            .expect("Can unlock")
+            .insert(icon_name.to_owned(), h.clone());
+    }
+    handle
 }

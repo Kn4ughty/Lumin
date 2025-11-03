@@ -8,7 +8,7 @@ use walkdir::{DirEntry, WalkDir};
 
 use iced::advanced::image::Handle;
 
-use super::App;
+use super::{App, Icon};
 
 pub fn get_apps() -> Vec<App> {
     let m_apps = load_all_apps();
@@ -16,7 +16,7 @@ pub fn get_apps() -> Vec<App> {
         .iter()
         .map(|a| App {
             name: a.name.clone(),
-            icon: a.icon_image.clone(),
+            icon: a.icon_image.clone().map(Icon::ImageHandle),
             cmd: "open".into(),
             args: vec![a.path.clone()],
             working_dir: None,

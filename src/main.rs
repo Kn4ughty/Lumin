@@ -104,7 +104,7 @@ impl State {
                 iced::exit()
             }
             Message::PluginMessage(a) => {
-                log::info!("Handling module message {a:?}");
+                log::trace!("Handling module message {a:?}");
                 // TODO. match by exact prefix and pass message
                 if let Some((module, prefix)) = self.find_module_mut() {
                     log::trace!("Module handled had prefix {prefix}");

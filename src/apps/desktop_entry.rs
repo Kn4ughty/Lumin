@@ -1,80 +1,14 @@
 // https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
-
 #![allow(dead_code, reason = "Compile time importing shennanigans")]
 
+use std::{collections::HashMap, sync::LazyLock, vec::Vec};
+
 use icon;
-use std::{collections::HashMap, path::PathBuf, vec::Vec};
 use walkdir::WalkDir;
 
-use super::App;
+use super::{App, Icon};
 
-pub fn get_apps() -> Vec<App> {
-    load_desktop_entries()
-        .expect("Can load apps")
-        .into_iter()
-        .map(App::from)
-        .collect()
-}
-
-impl From<DesktopEntry> for App {
-    fn from(desktop_entry: DesktopEntry) -> Self {
-        // https://docs.iced.rs/iced/advanced/image/index.html
-        log::trace!("{}", desktop_entry.exec.replace(' ', "*"));
-        let (cmd, args) = match desktop_entry.exec.split_once(' ') {
-            Some((cmd, args)) => {
-                let mut arg: Vec<String> = args
-                    .split(" ")
-                    .map(|s| s.to_string())
-                    .filter(|x| !x.is_empty())
-                    .collect();
-
-                log::trace!("arg is: {:#?}", arg);
-
-                if arg == vec!["".to_string()] {
-                    log::trace!("ARGS LEN 0");
-                    arg.clear();
-                }
-
-                (cmd.to_string(), arg)
-            }
-            None => (desktop_entry.exec, vec!["".to_string()]),
-        };
-
-        let working_dir = desktop_entry.working_dir;
-
-        App {
-            name: desktop_entry.name,
-            cmd,
-            args,
-            working_dir,
-            subname: desktop_entry.generic_name,
-            icon: desktop_entry.icon.map(iced::widget::image::Handle::from),
-        }
-    }
-}
-
-#[test]
-fn can_parse_app_from_desktop_entry() {
-    let entry = DesktopEntry {
-        name: "anki".to_string(),
-        exec: "/usr/bin/flatpak run --branch=stable net.ankiweb.Anki @@ @@".to_string(),
-        working_dir: Some("/".to_string()),
-        ..Default::default()
-    };
-    let app = App {
-        name: "anki".to_string(),
-        cmd: "/usr/bin/flatpak".to_string(),
-        args: ["run", "--branch=stable", "net.ankiweb.Anki", "@@", "@@"]
-            .iter()
-            .map(|k| k.to_string())
-            .collect(),
-        working_dir: Some("/".to_string()),
-        subname: None,
-        icon: None,
-    };
-
-    assert_eq!(app, App::from(entry));
-}
+static ICON_SEARCHER: LazyLock<icon::Icons> = LazyLock::new(icon::Icons::new);
 
 #[derive(Debug, PartialEq)]
 pub struct Action {
@@ -97,21 +31,16 @@ pub struct DesktopEntry {
     pub version: Option<String>,
     pub name: String,
     pub generic_name: Option<String>,
-    // No display not included since its irrelevant. Should be handled in parsing
     pub comment: Option<String>,
-    pub icon: Option<PathBuf>,
-    // Handle files with Hidden at parsing level
+    pub icon: Option<String>,
     pub only_show_in: Vec<String>,
     pub not_show_in: Vec<String>,
-    // I do not support dbus activation idk what that is
     pub try_exec: Option<String>,
     pub exec: String, // Techicially optional, nuh uh.
     pub working_dir: Option<String>,
     pub terminal: bool,
     pub action_list: Vec<Action>,
-    // mime_types: Option<
     pub categories: Vec<String>,
-    // No impliments
     pub keywords: Vec<String>,
     pub url: Option<String>,
 }
@@ -150,12 +79,15 @@ pub enum ParseError {
     ActionMissingName,
     MissingDataDirsEnvVar,
 }
+pub fn get_apps() -> Vec<App> {
+    load_desktop_entries()
+        .expect("Can load apps")
+        .into_iter()
+        .map(App::from)
+        .collect()
+}
 
 pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
-    let start = iced::debug::time("get icon_searcher");
-    let icon_searcher = icon::Icons::new();
-    start.finish();
-
     let mut entries = Vec::new();
     let Ok(raw_data_dirs) = std::env::var("XDG_DATA_DIRS") else {
         return Err(ParseError::MissingDataDirsEnvVar);
@@ -177,7 +109,7 @@ pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
 
             log::trace!("{}", entry.path().display());
 
-            entries.push(parse_from_file(entry.path(), &icon_searcher).map_err(|e| {
+            entries.push(parse_from_file(entry.path()).map_err(|e| {
                 log::trace!("error parsing file {:#?} with error: {:?}", entry.path(), e)
             }));
         }
@@ -190,13 +122,10 @@ pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
     Ok(entries.into_iter().filter_map(|a| a.ok()).collect())
 }
 
-fn parse_from_file(
-    file_path: &std::path::Path,
-    icon_searcher: &icon::Icons,
-) -> Result<DesktopEntry, ParseError> {
+fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseError> {
     let contents = std::fs::read_to_string(file_path).map_err(|_| ParseError::CouldNotLoadFile)?;
 
-    parse_from_hashmap(parse_entry_from_string(&contents)?, icon_searcher)
+    parse_from_hashmap(parse_entry_from_string(&contents)?)
 }
 
 // Using lifetimes here may look ugly, but it leads to a 30% performance improvement from reduced
@@ -268,7 +197,6 @@ Categories=System;TerminalEmulator;"#
 
 fn parse_from_hashmap<'a>(
     input: HashMap<&'a str, HashMap<&'a str, &'a str>>,
-    icon_searcher: &icon::Icons,
 ) -> Result<DesktopEntry, ParseError> {
     let Some(entry_keys) = input.get("Desktop Entry") else {
         return Err(ParseError::DesktopEntryHeaderNotFound);
@@ -305,16 +233,7 @@ fn parse_from_hashmap<'a>(
         ),
         generic_name: entry_keys.get("GenericName").map(|s| s.to_string()),
         comment: entry_keys.get("Comment").map(|s| s.to_string()),
-        icon: {
-            if let Some(name) = entry_keys.get("Icon") {
-                // TODO. Dont hardcode theme
-                icon_searcher
-                    .find_icon(name, 32, 1, "Adwaita")
-                    .map(|i| i.path)
-            } else {
-                None
-            }
-        },
+        icon: { entry_keys.get("Icon").map(|s| s.to_string()) },
         only_show_in: parse_string_list(entry_keys.get("OnlyShowIn").copied()),
         not_show_in: parse_string_list(entry_keys.get("NotShowIn").copied()),
         working_dir: entry_keys.get("Path").map(|s| s.to_string()),
@@ -354,6 +273,72 @@ fn parse_from_hashmap<'a>(
     };
 
     Ok(entry)
+}
+
+impl From<DesktopEntry> for App {
+    fn from(desktop_entry: DesktopEntry) -> Self {
+        // https://docs.iced.rs/iced/advanced/image/index.html
+        log::trace!("{}", desktop_entry.exec.replace(' ', "*"));
+        let (cmd, args) = match desktop_entry.exec.split_once(' ') {
+            Some((cmd, args)) => {
+                let mut arg: Vec<String> = args
+                    .split(" ")
+                    .map(|s| s.to_string())
+                    .filter(|x| !x.is_empty())
+                    .collect();
+
+                log::trace!("arg is: {:#?}", arg);
+
+                if arg == vec!["".to_string()] {
+                    log::trace!("ARGS LEN 0");
+                    arg.clear();
+                }
+
+                (cmd.to_string(), arg)
+            }
+            None => (desktop_entry.exec, vec!["".to_string()]),
+        };
+
+        let working_dir = desktop_entry.working_dir;
+
+        App {
+            name: desktop_entry.name,
+            cmd,
+            args,
+            working_dir,
+            subname: desktop_entry.generic_name,
+            icon: desktop_entry.icon.map(|s| Icon::NotFoundYet(s)),
+        }
+    }
+}
+
+pub fn load_icon(s: String) -> Option<iced::widget::image::Handle> {
+    ICON_SEARCHER
+        .find_icon(s.as_str(), 32, 1, "Adwaita") // TODO. Dont hardcode theme
+        .map(|icon| iced::widget::image::Handle::from_path(icon.path))
+}
+
+#[test]
+fn can_parse_app_from_desktop_entry() {
+    let entry = DesktopEntry {
+        name: "anki".to_string(),
+        exec: "/usr/bin/flatpak run --branch=stable net.ankiweb.Anki @@ @@".to_string(),
+        working_dir: Some("/".to_string()),
+        ..Default::default()
+    };
+    let app = App {
+        name: "anki".to_string(),
+        cmd: "/usr/bin/flatpak".to_string(),
+        args: ["run", "--branch=stable", "net.ankiweb.Anki", "@@", "@@"]
+            .iter()
+            .map(|k| k.to_string())
+            .collect(),
+        working_dir: Some("/".to_string()),
+        subname: None,
+        icon: None,
+    };
+
+    assert_eq!(app, App::from(entry));
 }
 
 fn parse_string_list(input: Option<&str>) -> Vec<String> {
@@ -483,9 +468,8 @@ Actions=New;
 Name=New Terminal
 Exec=testaction
     "#;
-    let icon_searcher = icon::Icons::new();
 
-    let entry = parse_from_hashmap(parse_entry_from_string(test).unwrap(), &icon_searcher).unwrap();
+    let entry = parse_from_hashmap(parse_entry_from_string(test).unwrap()).unwrap();
 
     assert_eq!(entry.name, "Test Name");
     assert_eq!(entry.entry_type, EntryType::Application);

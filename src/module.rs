@@ -1,5 +1,6 @@
 use iced::{Element, Task};
 
+use crate::apps;
 use crate::message::Message;
 use crate::websearch;
 
@@ -7,6 +8,7 @@ use crate::websearch;
 pub enum ModuleMessage {
     TextChanged(String),
     ActivatedIndex(usize),
+    AppMessage(apps::AppMessage),
     WebMessage(websearch::WebMsg),
 }
 

@@ -8,9 +8,7 @@ pub enum ParseError {
 }
 
 /// Input data is a csv
-pub fn parse_csv<T: std::str::FromStr>(
-    data: &str,
-) -> Result<HashMap<String, T>, ParseError> {
+pub fn parse_csv<T: std::str::FromStr>(data: &str) -> Result<HashMap<String, T>, ParseError> {
     let mut map = HashMap::new();
     for line in data.lines() {
         let (start, end) = line.split_once(',').ok_or(ParseError::MissingSeperator)?;
