@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::LazyLock;
 use std::sync::Mutex;
 
@@ -316,6 +317,9 @@ impl Module for AppModule {
 
 async fn get_icon(icon_name: String) -> Option<(String, iced::widget::image::Handle)> {
     let start = iced::debug::time("GetIconTime");
+
+    let mut final_path = PathBuf::new();
+
     if let Some(icon_path) = ICON_CACHE
         .lock()
         .expect("Can unlock")
@@ -323,35 +327,50 @@ async fn get_icon(icon_name: String) -> Option<(String, iced::widget::image::Han
         .cloned()
     {
         log::trace!("Cache hit! name: {icon_name}");
-        start.finish();
-        return Some((
-            icon_path.clone(),
-            iced::widget::image::Handle::from_path(icon_path),
-        ));
+
+        final_path = icon_path.clone().into();
+    } else {
+        log::trace!("Cache miss! name: {icon_name}");
+
+        let copy = icon_name.clone();
+        let icon_path = tokio::task::spawn_blocking(move || app_searcher::load_icon(copy))
+            .await
+            .ok()
+            .flatten();
+
+        if let Some(path) = &icon_path {
+            let path_str = path
+                .to_str()
+                .expect("icon_path is valid unicode")
+                .to_owned();
+
+            ICON_CACHE
+                .lock()
+                .expect("Can unlock")
+                .insert(icon_name.to_owned(), path_str.clone());
+            final_path = path.to_path_buf();
+        }
     }
 
-    let copy = icon_name.clone();
-    let icon_path = tokio::task::spawn_blocking(move || app_searcher::load_icon(copy))
-        .await
-        .ok()
-        .flatten();
+    let final_image_handle = {
+        if final_path.extension() == Some(std::ffi::OsStr::new("svg")) {
+            match widglets::svg_path_to_handle(final_path.clone()).await {
+                Ok(image) => Some(image),
+                Err(e) => {
+                    log::warn!("Failed to load SVG at {final_path:?} with error: {e}");
+                    None
+                }
+            }
+        } else {
+            Some(iced::widget::image::Handle::from_path(final_path.clone()))
+        }
+    }?;
 
-    if let Some(path) = &icon_path {
-        let path_str = path
-            .to_str()
-            .expect("icon_path is valid unicode")
-            .to_owned();
-
-        ICON_CACHE
-            .lock()
-            .expect("Can unlock")
-            .insert(icon_name.to_owned(), path_str.clone());
-        start.finish();
-
-        // TODO. Turn svg's into images
-        return Some((path_str, iced::widget::image::Handle::from_path(path)));
-    }
     start.finish();
 
-    None
+    if final_path == PathBuf::new() {
+        None
+    } else {
+        Some((final_path.to_str()?.to_string(), final_image_handle))
+    }
 }

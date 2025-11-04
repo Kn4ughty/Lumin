@@ -29,7 +29,6 @@ Then once it is in your path just run `lumin`
 
 
 # ToDo
-- [ ] Load SVG icons
 - [ ] Change default macos font
 - [ ] Allow for user theming
 - [ ] Create a nice default theme
