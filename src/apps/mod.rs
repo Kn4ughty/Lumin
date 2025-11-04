@@ -263,10 +263,6 @@ impl Module for AppModule {
                     ModuleMessage::DoNothing
                 }))
             }
-            ModuleMessage::ActivatedIndex(i) => {
-                Self::run_app_at_index(self, i);
-                iced::exit()
-            }
             ModuleMessage::AppMessage(AppMessage::IconLoaded(key, res)) => {
                 log::trace!("iconloaded: {key}");
                 let start = iced::debug::time("IconLoaded");
@@ -302,6 +298,10 @@ impl Module for AppModule {
 
                 Task::none()
             }
+            ModuleMessage::ActivatedIndex(i) => {
+                Self::run_app_at_index(self, i);
+                iced::exit()
+            }
             x => {
                 log::trace!("App module received irrelevant msg: {x:?}");
                 Task::none()
@@ -333,10 +333,13 @@ async fn get_icon(icon_name: String) -> Option<(String, iced::widget::image::Han
         log::trace!("Cache miss! name: {icon_name}");
 
         let copy = icon_name.clone();
-        let icon_path = tokio::task::spawn_blocking(move || app_searcher::load_icon(copy))
-            .await
-            .ok()
-            .flatten();
+        let icon_path = app_searcher::load_icon(copy);
+        // let icon_path = tokio::task::spawn_blocking(move || app_searcher::load_icon(copy))
+        //     .await
+        //     .ok()
+        //     .flatten();
+
+        log::trace!("Icon path from app_searcher with name {icon_name} is {icon_path:?}");
 
         if let Some(path) = &icon_path {
             let path_str = path

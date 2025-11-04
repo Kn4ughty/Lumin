@@ -318,8 +318,8 @@ pub fn load_icon(s: String) -> Option<PathBuf> {
     }
 
     ICON_SEARCHER
-        .find_icon(s.as_str(), 64, 1, "Adwaita")
-        .map(|i| i.path) // TODO. Dont hardcode theme
+        .find_icon(s.as_str(), 64, 1, "Adwaita") // TODO. Dont hardcode theme
+        .map(|i| i.path)
 }
 
 #[test]
