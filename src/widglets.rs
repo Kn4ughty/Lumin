@@ -2,8 +2,6 @@ use std::{fs, path::PathBuf};
 
 use iced::widget;
 
-use resvg;
-
 use crate::module::ModuleMessage;
 
 const PADDING: f32 = 4.0;
@@ -24,7 +22,11 @@ pub async fn svg_path_to_handle(path: PathBuf) -> Result<iced::widget::image::Ha
     )
     .ok_or("Can create pixmap")?;
 
-    let transform = resvg::tiny_skia::Transform::identity();
+    let svg_size = tree.size();
+    let transform = resvg::tiny_skia::Transform::from_scale(
+        SVG_WIDTH as f32 / svg_size.width(),
+        SVG_HEIGHT as f32 / svg_size.height(),
+    );
     resvg::render(&tree, transform, &mut pixmap);
 
     Ok(iced::widget::image::Handle::from_rgba(
