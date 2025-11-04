@@ -206,7 +206,8 @@ fn main() -> iced::Result {
 
     let mut state = State::new_multi_modal as fn() -> State;
 
-    for arg in std::env::args() {
+    // Skip first arg (program name)
+    for arg in std::env::args().skip(1) {
         match arg.as_str() {
             "--dmenu" => {
                 state = State::new_drun as fn() -> State;
