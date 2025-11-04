@@ -1,7 +1,38 @@
-use crate::module::ModuleMessage;
+use std::{fs, path::PathBuf};
+
 use iced::widget;
 
+use resvg;
+
+use crate::module::ModuleMessage;
+
 const PADDING: f32 = 4.0;
+const SVG_HEIGHT: usize = 64;
+const SVG_WIDTH: usize = 64;
+
+pub async fn svg_path_to_handle(path: PathBuf) -> Result<iced::widget::image::Handle, String> {
+    let contents = fs::read_to_string(path).map_err(|_e| "couldnt read path to string")?;
+    let tree = resvg::usvg::Tree::from_str(&contents, &resvg::usvg::Options::default())
+        .map_err(|_e| "Could not turn contents to tree")?;
+
+    let mut data: Box<[u8]> = vec![0; SVG_HEIGHT * SVG_WIDTH * 4].into_boxed_slice();
+
+    let mut pixmap = resvg::tiny_skia::PixmapMut::from_bytes(
+        &mut data,
+        SVG_WIDTH.try_into().expect("Cant fail"),
+        SVG_HEIGHT.try_into().expect("Cant fail"),
+    )
+    .ok_or("Can create pixmap")?;
+
+    let transform = resvg::tiny_skia::Transform::identity();
+    resvg::render(&tree, transform, &mut pixmap);
+
+    Ok(iced::widget::image::Handle::from_rgba(
+        SVG_WIDTH.try_into().expect("cant fail"),
+        SVG_HEIGHT.try_into().expect("cant fail"),
+        data,
+    ))
+}
 
 #[allow(dead_code)]
 pub enum HeadingLevel {
