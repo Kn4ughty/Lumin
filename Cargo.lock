@@ -2035,8 +2035,7 @@ dependencies = [
 [[package]]
 name = "icon"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72bdb82572b56fdb8cfa697a7ea7494df3656ee4460e6e1870023a77c5b44e99"
+source = "git+https://github.com/Kn4ughty/linux_icons#ddf944637c81ed0c7f0a03768dedcb876c38db08"
 dependencies = [
  "freedesktop_entry_parser",
  "thiserror 2.0.16",

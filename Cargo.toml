@@ -33,7 +33,7 @@ walkdir = "2.5.0"
 serde = {version = "1.0.225", features = ["derive"]}
 serde_json = "1.0.145"
 icns = "0.3.1"
-icon = "0.1.2"
+icon = { git = "https://github.com/Kn4ughty/linux_icons" }
 resvg = "0.45.1"
 
 [dev-dependencies]
