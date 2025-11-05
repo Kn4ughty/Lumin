@@ -188,13 +188,11 @@ impl Module for AppModule {
                             Some(Icon::ImageHandle(h)) => Some(h),
                         };
 
-                        widglets::listrow(
-                            app.name,
-                            app.subname,
-                            Some(ModuleMessage::ActivatedIndex(i)),
-                            icon,
-                        )
-                        .into()
+                        widglets::ListRow::new(app.name)
+                            .optional_subtext(app.subname)
+                            .on_activate(ModuleMessage::ActivatedIndex(i))
+                            .optional_icon(icon)
+                            .into()
                     }),
             )
             .width(iced::Fill),

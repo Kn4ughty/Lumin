@@ -69,8 +69,9 @@ impl Module for Drun {
                 .clone()
                 .into_iter()
                 .enumerate()
-                .map(|(i, opt)| {
-                    widglets::listrow(opt, None, Some(ModuleMessage::ActivatedIndex(i)), None)
+                .map(|(i, item)| {
+                    widglets::ListRow::new(item)
+                        .on_activate(ModuleMessage::ActivatedIndex(i))
                         .into()
                 }),
         ))

@@ -2,7 +2,8 @@ use std::{fs, path::PathBuf};
 
 use iced::widget;
 
-use crate::module::ModuleMessage;
+pub mod list;
+pub use list::ListRow;
 
 const PADDING: f32 = 4.0;
 const SVG_HEIGHT: usize = 64;
@@ -77,68 +78,4 @@ pub fn heading<'a>(
             };
             widget::text::Style { color: c }
         })
-}
-
-pub fn listrow<'a>(
-    text: String,
-    subtext: Option<String>,
-    on_press: Option<ModuleMessage>,
-    icon: Option<iced::widget::image::Handle>,
-) -> widget::Container<'a, ModuleMessage> {
-    let mut row_widget = widget::Row::new().padding(0);
-
-    let full_icon = widget::Responsive::new(move |size| {
-        // wish i didnt have to clone
-        if let Some(icon) = icon.clone() {
-            let real_image = widget::image::Image::new(icon).content_fit(iced::ContentFit::Cover);
-
-            widget::container(real_image)
-        } else {
-            // TODO. Get image from user icon theme
-            widget::container(widget::image(widget::image::Handle::from_bytes(
-                include_bytes!("../assets/image-missing-symbolic.png").to_vec(),
-            )))
-        }
-        .clip(true)
-        .width(size.height)
-        .height(size.height)
-        .padding(0)
-        .align_y(iced::Alignment::Center)
-        .align_x(iced::Alignment::Center)
-        .into()
-    })
-    .width(iced::Shrink)
-    .height(iced::Length::Fixed(32.0)); // i dont like this
-
-    row_widget = row_widget.push(full_icon);
-    row_widget = row_widget.push(widget::space().width(iced::Length::Fixed(PADDING)));
-
-    // let colw = widget::Column::new();
-
-    let text_widget = widget::container(
-        heading(HeadingLevel::H3, text, None)
-            .align_x(iced::Left)
-            .align_y(iced::Alignment::Center)
-            .width(iced::Fill),
-    );
-    row_widget = row_widget.push(text_widget);
-    // let colw = colw.push(text_widget);
-
-    let subtext_widget = widget::container(
-        heading(HeadingLevel::Subheading, subtext.unwrap_or("".into()), None)
-            .align_x(iced::Right)
-            .align_y(iced::Alignment::Center),
-    );
-    row_widget = row_widget.push(subtext_widget);
-    // let colw = colw.push(subtext_widget);
-    // row_widget = row_widget.push(colw);
-
-    widget::container(
-        widget::button(row_widget)
-            .width(iced::Fill)
-            .height(iced::Shrink)
-            .on_press_maybe(on_press)
-            .style(widget::button::secondary),
-    )
-    .padding(PADDING)
 }

@@ -143,15 +143,13 @@ impl Module for Web {
                     Some(url) => self.image_hashmap.get(&url).cloned(),
                 };
 
-                widglets::listrow(
-                    result.title,
-                    Some(result.description),
-                    Some(ModuleMessage::WebMessage(WebMsg::ResultSelected(
+                widglets::ListRow::new(result.title)
+                    .subtext(result.description)
+                    .on_activate(ModuleMessage::WebMessage(WebMsg::ResultSelected(
                         result.destination_url,
-                    ))), // eww
-                    image,
-                )
-                .into()
+                    )))
+                    .optional_icon(image)
+                    .into()
             })
             .collect();
 
