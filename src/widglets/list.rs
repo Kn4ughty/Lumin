@@ -82,10 +82,7 @@ where
 
                 widget::container(real_image)
             } else {
-                // TODO. Get image from user icon theme
-                widget::container(widget::image(widget::image::Handle::from_bytes(
-                    include_bytes!("../../assets/image-missing-symbolic.png").to_vec(),
-                )))
+                widget::container(widget::image(super::MISSING_IMAGE.clone()))
             }
             .clip(true)
             .width(size.height)

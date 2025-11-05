@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::{fs, path::PathBuf, sync::LazyLock};
 
 use iced::widget;
 
@@ -8,6 +8,13 @@ pub use list::ListRow;
 const PADDING: f32 = 4.0;
 const SVG_HEIGHT: usize = 64;
 const SVG_WIDTH: usize = 64;
+
+// TODO. Get image from user icon theme
+static MISSING_IMAGE: LazyLock<iced::widget::image::Handle> = LazyLock::new(|| {
+    widget::image::Handle::from_bytes(
+        include_bytes!("../../assets/image-missing-symbolic.png").to_vec(),
+    )
+});
 
 pub async fn svg_path_to_handle(path: PathBuf) -> Result<iced::widget::image::Handle, String> {
     let contents = fs::read_to_string(path).map_err(|_e| "couldnt read path to string")?;

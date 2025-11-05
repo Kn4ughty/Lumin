@@ -21,7 +21,7 @@ rustflags = ["-Clink-arg=-fuse-ld=lld", "-Clink-arg=-Wl,--no-rosegment"]
 
 
 [dependencies]
-iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "tokio", "image"], rev= "92888a3" }
+iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "tokio", "image"], rev= "ea614387f4d94960911b0a7d8ce25c02edb470c5" }
 anyhow = "1.0.99"
 libc = "0.2.175"
 log = "0.4.28"
