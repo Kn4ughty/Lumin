@@ -11,6 +11,7 @@ struct WikiResults {
 struct WikiResultSingle {
     key: String,
     title: String,
+    #[serde(default)]
     description: String,
     #[serde(rename = "thumbnail")]
     raw_thumb: Option<RawThumb>,
