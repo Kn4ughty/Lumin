@@ -1,8 +1,8 @@
 #[derive(Debug, Clone)]
 pub enum WebMsg {
-    GotResult(Result<Vec<SearchResult>, SearchError>),
+    GotResult(String, Result<Vec<SearchResult>, SearchError>),
     FetchedImage((String, Result<iced::widget::image::Handle, ()>)),
-    ResultSelected(String), // URL
+    ResultActivated(String), // URL
 }
 
 #[derive(Debug, Clone)]

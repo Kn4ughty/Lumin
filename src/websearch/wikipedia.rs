@@ -33,29 +33,36 @@ impl From<WikiResultSingle> for SearchResult {
     }
 }
 
+// the search_text is passed back through, so that the later parts of the task_perform can keep
+// ownership
 pub async fn search(
     client: &reqwest::Client,
     search_text: &str,
-) -> Result<Vec<SearchResult>, SearchError> {
+    full_text: String,
+) -> (String, Result<Vec<SearchResult>, SearchError>) {
     let url =
         format!("https://en.wikipedia.org/w/rest.php/v1/search/title?q={search_text}&limit=5");
+    let req_result = async |url| -> Result<Vec<SearchResult>, SearchError> {
+        {
+            let response =
+                client.get(url).send().await.map_err(|e| {
+                    SearchError::BadResponse(format!("failed to get response: {}", e))
+                })?;
 
-    let response = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| SearchError::BadResponse(format!("failed to get response: {}", e)))?;
+            let text = response
+                .text()
+                .await
+                .map_err(|e| SearchError::BadResponse(format!("failed to get text: {}", e)))?;
+            log::trace!("text found from wikipedia: {}", text);
+            let data: WikiResults = serde_json::from_str(&text).map_err(|e| {
+                SearchError::BadResponse(format!("failed to parse from json: {}", e))
+            })?;
 
-    let text = response
-        .text()
-        .await
-        .map_err(|e| SearchError::BadResponse(format!("failed to get text: {}", e)))?;
-    log::trace!("text found from wikipedia: {}", text);
-    let data: WikiResults = serde_json::from_str(&text)
-        .map_err(|e| SearchError::BadResponse(format!("failed to parse from json: {}", e)))?;
+            let parsed = data.pages.into_iter().map(|result| result.into()).collect();
+            log::debug!("parsed text from wikipedia: {:#?}", parsed);
+            Ok(parsed)
+        }
+    };
 
-    let parsed = data.pages.into_iter().map(|result| result.into()).collect();
-    log::debug!("parsed text from wikipedia: {:#?}", parsed);
-
-    Ok(parsed)
+    (full_text, req_result(url).await)
 }

@@ -16,7 +16,7 @@ mod wikipedia;
 #[derive(Debug)]
 pub struct Web {
     input_for_results: String,
-    cached_results: Vec<SearchResult>, // TODO. Convert to hashmap with input for actual caching
+    cached_results: HashMap<String, Vec<SearchResult>>,
 
     // The memory cost of this isnt actually that bad. Each image is just a couple kB each since
     // they are very small thumbnails. It only increased a few mB over like 10s of useage
@@ -34,7 +34,7 @@ impl Web {
     pub fn new() -> Self {
         Self {
             input_for_results: String::new(),
-            cached_results: vec![],
+            cached_results: HashMap::new(),
             image_hashmap: HashMap::new(),
             client: reqwest::ClientBuilder::new()
                 // https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:User-Agent_policy
@@ -46,8 +46,12 @@ impl Web {
 
     /// Split up just bc the indentation was getting to be too much
     fn handle_text_change(&mut self, input: String) -> Task<ModuleMessage> {
-        self.cached_results.clear();
         self.input_for_results = input.to_string();
+
+        // Is this search text already in the cache
+        if self.cached_results.contains_key(&self.input_for_results) {
+            return Task::none();
+        };
 
         let input_chars = self.input_for_results.chars();
         let first = input_chars.clone().next();
@@ -58,10 +62,13 @@ impl Web {
             (Some('w'), search_text) => {
                 log::info!("wikipedia time!");
                 let client = self.client.clone();
+
+                let full_text = self.input_for_results.clone();
                 // trim first character. TODO. Dont hardcode
+                let trimmed_text = search_text[1..].to_owned();
                 Task::perform(
-                    async move { wikipedia::search(&client, &search_text[1..]).await },
-                    |r| ModuleMessage::WebMessage(WebMsg::GotResult(r)),
+                    async move { wikipedia::search(&client, trimmed_text.as_str(), full_text).await },
+                    |r| ModuleMessage::WebMessage(WebMsg::GotResult(r.0, r.1)),
                 )
             }
             (None, _) => {
@@ -131,8 +138,13 @@ impl Module for Web {
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
         log::debug!("Web view function run");
         log::trace!("Self. {self:#?}");
-        let elements: Vec<iced::Element<'_, ModuleMessage>> = self
+        let empty = Vec::new();
+        let results = self
             .cached_results
+            .get(&self.input_for_results)
+            .unwrap_or(&empty);
+
+        let elements: Vec<iced::Element<'_, ModuleMessage>> = results
             .clone()
             .into_iter()
             .map(|result| {
@@ -145,7 +157,7 @@ impl Module for Web {
 
                 widglets::ListRow::new(result.title)
                     .subtext(result.description)
-                    .on_activate(ModuleMessage::WebMessage(WebMsg::ResultSelected(
+                    .on_activate(ModuleMessage::WebMessage(WebMsg::ResultActivated(
                         result.destination_url,
                     )))
                     .optional_icon(image)
@@ -165,17 +177,19 @@ impl Module for Web {
                 log::trace!("received a webMessage yay!!! inner {inner:?}");
 
                 match inner {
-                    WebMsg::GotResult(r) => {
-                        log::trace!("message was result: {r:?}");
-                        match r {
+                    WebMsg::GotResult(search_text, res) => {
+                        log::trace!("message was result: {res:?}");
+                        match res {
                             Ok(o) => {
-                                self.cached_results = o;
+                                self.cached_results.insert(search_text.clone(), o);
                                 // now need to create task for getting images
 
                                 // stupid double clone
                                 let client = self.client.clone();
                                 let tasks = self
                                     .cached_results
+                                    .get(&search_text)
+                                    .expect("was just put there, should be fine")
                                     .iter()
                                     .map(|r| Self::handle_getting_image(client.clone(), r.clone()));
                                 Task::batch(tasks)
@@ -186,7 +200,7 @@ impl Module for Web {
                             }
                         }
                     }
-                    WebMsg::ResultSelected(url) => {
+                    WebMsg::ResultActivated(url) => {
                         log::info!("Launching webresult with URL: {url}");
                         Self::launch_url(&url);
                         iced::exit()
@@ -210,12 +224,19 @@ impl Module for Web {
     }
 
     fn run(&self) -> Task<crate::message::Message> {
-        let first = self
-            .cached_results
-            .first()
-            .expect("There are some web results");
-        log::info!("first WebResult is: {:?}", first);
-        Self::launch_url(&first.destination_url);
-        iced::exit()
+        match self.cached_results.get(&self.input_for_results) {
+            Some(v) => {
+                if let Some(search_res) = v.first() {
+                    Self::launch_url(&search_res.destination_url);
+                    iced::exit()
+                } else {
+                    log::warn!(
+                        "Selected search_result list was empty? This doesnt make sense. Self: {self:?}"
+                    );
+                    Task::none()
+                }
+            }
+            None => Task::none(),
+        }
     }
 }
