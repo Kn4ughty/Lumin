@@ -34,8 +34,6 @@ impl From<WikiResultSingle> for SearchResult {
     }
 }
 
-// the search_text is passed back through, so that the later parts of the task_perform can keep
-// ownership
 pub async fn search(
     client: &reqwest::Client,
     search_text: &str,
