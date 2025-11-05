@@ -20,38 +20,40 @@ use crate::serworse;
 use crate::util;
 use crate::widglets;
 
-// const ICON_LOOKUP_BATCH_AMOUNT: i32 = 4;
-
 const APP_FREQUENCY_LOOKUP_RELPATH: &str = "app_lookup";
 const ICON_CACHE_RELPATH: &str = "icon_cache";
 
-// erhg
+// Big type name!
 static ICON_CACHE: LazyLock<Mutex<HashMap<String, String>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct App {
     cmd: String,
-    icon: Option<Icon>,
     args: Vec<String>,
     working_dir: Option<String>,
     name: String,
     subname: Option<String>,
+    icon: Option<Icon>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
+/// Icon Metatype to handle all cases
 pub enum Icon {
     ImageHandle(widget::image::Handle),
+    /// i.e not found yet, just path on disk
     NotFoundYet(String),
 }
 
 #[derive(Clone, Debug)]
 pub enum AppMessage {
+    /// Fetched an icon from disk. Path is given so it can be used in the `ICON_CACHE`
     IconLoaded(String, Option<(String, iced::widget::image::Handle)>),
 }
 
 pub struct AppModule {
     app_list: Vec<App>,
+    /// How many times has the app been run before. Used for search score weighting.
     app_frequencies: HashMap<String, u32>,
 }
 
