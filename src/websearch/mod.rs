@@ -19,7 +19,7 @@ pub struct Web {
     cached_results: HashMap<String, Vec<SearchResult>>,
 
     // The memory cost of this isnt actually that bad. Each image is just a couple kB each since
-    // they are very small thumbnails. It only increased a few mB over like 10s of useage
+    // they are very small thumbnails. It only increased a few mB over like 10s of usage
     image_hashmap: HashMap<String, widget::image::Handle>,
     client: reqwest::Client,
 }
@@ -60,14 +60,18 @@ impl Web {
         match (first, search_text) {
             // get first char
             (Some('w'), search_text) => {
-                log::info!("wikipedia time!");
+                log::debug!("wikipedia time!");
                 let client = self.client.clone();
 
                 let full_text = self.input_for_results.clone();
                 // trim first character. TODO. Dont hardcode
                 let trimmed_text = search_text[1..].to_owned();
                 Task::perform(
-                    async move { wikipedia::search(&client, trimmed_text.as_str(), full_text).await },
+                    async move {
+                        let res = wikipedia::search(&client, trimmed_text.as_str()).await;
+                        // this little tuple maneuver is cool
+                        (full_text, res)
+                    },
                     |r| ModuleMessage::WebMessage(WebMsg::GotResult(r.0, r.1)),
                 )
             }
