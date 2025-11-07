@@ -152,17 +152,21 @@ impl State {
             .view()
             .map(|s: ModuleMessage| Message::PluginMessage(s));
 
-        let root_continer = widget::container(widget::column![text_input, result])
-            .style(|theme| {
-                let mut base_theme = widget::container::bordered_box(theme);
-                base_theme.border = iced::Border {
-                    radius: 15.0.into(),
-                    ..base_theme.border
-                };
-                base_theme
-            })
-            .padding(10)
-            .align_top(iced::Fill);
+        let root_continer = widget::container(widget::column![
+            text_input,
+            widget::space().height(8),
+            result
+        ])
+        .style(|theme| {
+            let mut base_theme = widget::container::bordered_box(theme);
+            base_theme.border = iced::Border {
+                radius: 15.0.into(),
+                ..base_theme.border
+            };
+            base_theme
+        })
+        .padding(10)
+        .align_top(iced::Fill);
 
         let mouse = widget::mouse_area(root_continer).on_press(Message::ShouldDrag);
 
@@ -254,7 +258,7 @@ fn main() -> iced::Result {
         .decorations(false)
         .antialiasing(true)
         .transparent(true)
-        .window_size((800.0, 320.0))
+        .window_size((800.0, 330.0))
         .theme(State::theme)
         // .theme(|s| iced::theme::Theme::CatppuccinMocha)
         // .theme(|_s| {
