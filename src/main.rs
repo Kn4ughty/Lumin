@@ -134,12 +134,13 @@ impl State {
             .id(self.text_id.clone())
             .on_input(Message::TextInputChanged)
             .on_submit(Message::TextInputSubmitted("test".to_string()))
+            .padding(8.0)
             .style(|theme, status| {
                 let mut base_style = widget::text_input::default(theme, status);
                 base_style.border = iced::Border {
                     color: iced::Color::TRANSPARENT,
                     width: 0.0,
-                    radius: 0.0.into(),
+                    radius: 10.0.into(),
                 };
                 base_style
             });
@@ -246,7 +247,7 @@ fn main() -> iced::Result {
         .decorations(false)
         .antialiasing(true)
         .transparent(true)
-        .window_size((800.0, 300.0))
+        .window_size((800.0, 320.0))
         .theme(State::theme)
         // .theme(|s| iced::theme::Theme::CatppuccinMocha)
         // .theme(|_s| {

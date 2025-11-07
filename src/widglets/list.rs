@@ -3,6 +3,8 @@ use iced::widget;
 use super::PADDING;
 use super::{HeadingLevel, heading};
 
+const ICON_SIZE: f32 = 32.0;
+
 // pub struct ResultList<Message> {
 //     selected_index: usize,
 //     rows: Vec<ListRow<Message>>,
@@ -93,18 +95,20 @@ where
             .into()
         })
         .width(iced::Shrink)
-        .height(iced::Length::Fixed(32.0)); // i dont like this
+        .height(iced::Length::Fixed(ICON_SIZE));
 
         row_widget = row_widget.push(icon_widget);
         row_widget = row_widget.push(widget::space().width(iced::Length::Fixed(PADDING)));
 
-        let text_widget = widget::container(
+        let mut text_area = widget::column(vec![]);
+
+        let main_name = widget::container(
             heading(HeadingLevel::H3, value.text, None)
                 .align_x(iced::Left)
                 .align_y(iced::Alignment::Center)
                 .width(iced::Fill),
         );
-        row_widget = row_widget.push(text_widget);
+        text_area = text_area.push(main_name);
 
         let subtext_widget = widget::container(
             heading(
@@ -115,7 +119,9 @@ where
             .align_x(iced::Right)
             .align_y(iced::Alignment::Center),
         );
-        row_widget = row_widget.push(subtext_widget);
+        text_area = text_area.push(subtext_widget);
+
+        row_widget = row_widget.push(text_area);
 
         widget::container(
             widget::button(row_widget)
@@ -130,7 +136,7 @@ where
                     match status {
                         widget::button::Status::Hovered => {
                             button_style =
-                                button_style.with_background(ext_pallet.primary.weak.color);
+                                button_style.with_background(ext_pallet.secondary.weak.color);
                         }
                         widget::button::Status::Active | widget::button::Status::Pressed => {
                             button_style = button_style.with_background(iced::color!(0, 0, 0, 0.0));

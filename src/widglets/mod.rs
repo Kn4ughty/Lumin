@@ -60,16 +60,11 @@ pub fn heading<'a>(
     let mut font = font.unwrap_or(iced::Font::DEFAULT);
 
     let font_mult = match level {
-        HeadingLevel::H1 => 3.0,
-        HeadingLevel::H2 => 2.0,
-        HeadingLevel::H3 => 1.25,
-        HeadingLevel::Subheading => 1.0,
+        HeadingLevel::H1 => 2.0,
+        HeadingLevel::H2 => 1.5,
+        HeadingLevel::H3 => 1.0,
+        HeadingLevel::Subheading => 0.7,
     };
-
-    // let font_color = match level {
-    //     HeadingLevel::Subheading => iced
-    //     _ => None
-    // }
 
     font.weight = match level {
         HeadingLevel::H1 | HeadingLevel::H2 => iced::font::Weight::Bold,
@@ -80,7 +75,7 @@ pub fn heading<'a>(
         .size(iced::Settings::default().default_text_size * font_mult)
         .style(move |theme: &iced::Theme| {
             let c = match level {
-                HeadingLevel::Subheading => Some(theme.extended_palette().background.strong.text),
+                HeadingLevel::Subheading => Some(iced::color!(140, 140, 150)),
                 _ => None,
             };
             widget::text::Style { color: c }
