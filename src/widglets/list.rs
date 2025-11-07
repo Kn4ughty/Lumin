@@ -98,8 +98,6 @@ where
         row_widget = row_widget.push(icon_widget);
         row_widget = row_widget.push(widget::space().width(iced::Length::Fixed(PADDING)));
 
-        // let colw = widget::Column::new();
-
         let text_widget = widget::container(
             heading(HeadingLevel::H3, value.text, None)
                 .align_x(iced::Left)
@@ -107,7 +105,6 @@ where
                 .width(iced::Fill),
         );
         row_widget = row_widget.push(text_widget);
-        // let colw = colw.push(text_widget);
 
         let subtext_widget = widget::container(
             heading(
@@ -125,7 +122,23 @@ where
                 .width(iced::Fill)
                 .height(iced::Shrink)
                 .on_press_maybe(value.on_activate)
-                .style(widget::button::secondary),
+                .style(|theme, status| {
+                    let mut button_style = widget::button::secondary(theme, status);
+
+                    let ext_pallet = theme.extended_palette();
+                    button_style.text_color = ext_pallet.background.base.text;
+                    match status {
+                        widget::button::Status::Hovered => {
+                            button_style =
+                                button_style.with_background(ext_pallet.primary.weak.color);
+                        }
+                        widget::button::Status::Active | widget::button::Status::Pressed => {
+                            button_style = button_style.with_background(iced::color!(0, 0, 0, 0.0));
+                        }
+                        _ => {}
+                    }
+                    button_style
+                }),
         )
         .padding(PADDING)
         .into()

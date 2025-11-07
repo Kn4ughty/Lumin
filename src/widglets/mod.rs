@@ -80,7 +80,7 @@ pub fn heading<'a>(
         .size(iced::Settings::default().default_text_size * font_mult)
         .style(move |theme: &iced::Theme| {
             let c = match level {
-                HeadingLevel::Subheading => Some(theme.extended_palette().primary.weak.text),
+                HeadingLevel::Subheading => Some(theme.extended_palette().background.strong.text),
                 _ => None,
             };
             widget::text::Style { color: c }
