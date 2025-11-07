@@ -186,6 +186,106 @@ impl AppModule {
         )
         .expect("Can execute_command_detached");
     }
+
+    fn handle_text_change(&mut self, input: String) -> Task<ModuleMessage> {
+        if self.app_list.is_empty() {
+            log::trace!("Generating app_list");
+            let start = std::time::Instant::now();
+            self.app_list = APP_SEARCHER.get_apps();
+            log::info!(
+                "Time to get #{} apps: {:#?}",
+                self.app_list.len(),
+                start.elapsed()
+            )
+        }
+
+        let start = std::time::Instant::now();
+        // Cached_key seems to be much faster which is interesting since text_value is
+        // always changing
+        let input = &input.to_lowercase();
+        self.app_list.sort_by_cached_key(|app| {
+            let mut score = util::longest_common_substr(&app.name.to_lowercase(), input);
+            if app.name.to_lowercase().starts_with(input) {
+                score += 2;
+            }
+            if let Some(raw_freq) = self.app_frequencies.get(&app.name) {
+                score += (*raw_freq as f32).ln().max(0.0).floor() as i32;
+            }
+
+            -score
+        });
+
+        log::debug!(
+            "Time to sort #{} apps: {:#?}",
+            self.app_list.len(),
+            start.elapsed()
+        );
+
+        let start = std::time::Instant::now();
+
+        let icons_to_lookup: Vec<&str> = self
+            .app_list
+            .iter()
+            .filter_map(|app| match &app.icon {
+                Some(Icon::NotFoundYet(a)) => Some(a.as_str()),
+                Some(Icon::ImageHandle(_)) => None,
+                None => None,
+            })
+            .collect();
+
+        let tasks = icons_to_lookup.iter().map(|key| {
+            let k: String = key.to_string();
+            Task::perform(get_icon(k.clone()), move |handle| {
+                let k = k.clone();
+                ModuleMessage::AppMessage(AppMessage::IconLoaded(k, handle))
+            })
+        });
+
+        Task::batch(tasks).chain(Task::perform(std::future::ready(()), move |_| {
+            log::info!("Total time to get icons: {:#?}", start.elapsed());
+            ModuleMessage::DoNothing
+        }))
+    }
+
+    fn handle_icon_loaded(
+        &mut self,
+        key: String,
+        res: Option<(String, widget::image::Handle)>,
+    ) -> Task<ModuleMessage> {
+        log::trace!("iconloaded: {key}");
+        let start = iced::debug::time("IconLoaded");
+        let icon_handle = if let Some((path, handle)) = res {
+            ICON_CACHE
+                .lock()
+                .expect("Can lock cache")
+                .insert(key.clone(), path.clone());
+
+            Some(Icon::ImageHandle(handle.clone()))
+        } else {
+            // Failed to lookup icon for app
+            log::warn!("Failed to lookup icon: key: {key}");
+            None
+        };
+
+        self.app_list
+            .iter_mut()
+            .filter_map(|app| match &app.icon.clone() {
+                Some(Icon::NotFoundYet(key)) => Some((key.clone(), app)),
+                Some(Icon::ImageHandle(_)) => None,
+                None => None,
+            })
+            .for_each(|(app_key, app)| {
+                // log::debug!("Comparing {app_key} with {app:?}");
+                if key == *app_key {
+                    log::trace!("Updating app: {app:?}");
+                    app.icon = icon_handle.clone()
+                }
+            });
+
+        start.finish();
+
+        Task::none()
+    }
 }
 
 impl Module for AppModule {
@@ -217,99 +317,9 @@ impl Module for AppModule {
 
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
         match msg {
-            ModuleMessage::TextChanged(input) => {
-                if self.app_list.is_empty() {
-                    log::trace!("Generating app_list");
-                    let start = std::time::Instant::now();
-                    self.app_list = APP_SEARCHER.get_apps();
-                    log::info!(
-                        "Time to get #{} apps: {:#?}",
-                        self.app_list.len(),
-                        start.elapsed()
-                    )
-                }
-
-                let start = std::time::Instant::now();
-                // Cached_key seems to be much faster which is interesting since text_value is
-                // always changing
-                let input = &input.to_lowercase();
-                self.app_list.sort_by_cached_key(|app| {
-                    let mut score = util::longest_common_substr(&app.name.to_lowercase(), input);
-                    if app.name.to_lowercase().starts_with(input) {
-                        score += 2;
-                    }
-                    if let Some(raw_freq) = self.app_frequencies.get(&app.name) {
-                        score += (*raw_freq as f32).ln().max(0.0).floor() as i32;
-                    }
-
-                    -score
-                });
-
-                log::debug!(
-                    "Time to sort #{} apps: {:#?}",
-                    self.app_list.len(),
-                    start.elapsed()
-                );
-
-                let start = std::time::Instant::now();
-
-                let icons_to_lookup: Vec<&str> = self
-                    .app_list
-                    .iter()
-                    .filter_map(|app| match &app.icon {
-                        Some(Icon::NotFoundYet(a)) => Some(a.as_str()),
-                        Some(Icon::ImageHandle(_)) => None,
-                        None => None,
-                    })
-                    .collect();
-
-                let tasks = icons_to_lookup.iter().map(|key| {
-                    let k: String = key.to_string();
-                    Task::perform(get_icon(k.clone()), move |handle| {
-                        let k = k.clone();
-                        ModuleMessage::AppMessage(AppMessage::IconLoaded(k, handle))
-                    })
-                });
-
-                Task::batch(tasks).chain(Task::perform(std::future::ready(()), move |_| {
-                    log::info!("Total time to get icons: {:#?}", start.elapsed());
-                    ModuleMessage::DoNothing
-                }))
-            }
+            ModuleMessage::TextChanged(input) => Self::handle_text_change(self, input),
             ModuleMessage::AppMessage(AppMessage::IconLoaded(key, res)) => {
-                log::trace!("iconloaded: {key}");
-                let start = iced::debug::time("IconLoaded");
-                let icon_handle = if let Some((path, handle)) = res {
-                    ICON_CACHE
-                        .lock()
-                        .expect("Can lock cache")
-                        .insert(key.clone(), path.clone());
-
-                    Some(Icon::ImageHandle(handle.clone()))
-                } else {
-                    // Failed to lookup icon for app
-                    log::warn!("Failed to lookup icon: key: {key}");
-                    None
-                };
-
-                self.app_list
-                    .iter_mut()
-                    .filter_map(|app| match &app.icon.clone() {
-                        Some(Icon::NotFoundYet(key)) => Some((key.clone(), app)),
-                        Some(Icon::ImageHandle(_)) => None,
-                        None => None,
-                    })
-                    .for_each(|(app_key, app)| {
-                        // log::debug!("Comparing {app_key} with {app:?}");
-                        if key == *app_key {
-                            log::trace!("Updating app: {app:?}");
-                            app.icon = icon_handle.clone()
-                        }
-                    });
-
-                start.finish();
-
-                Task::none()
+                Self::handle_icon_loaded(self, key, res)
             }
             ModuleMessage::ActivatedIndex(i) => {
                 Self::run_app_at_index(self, i);
