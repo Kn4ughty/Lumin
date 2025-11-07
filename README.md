@@ -1,10 +1,13 @@
 # Lumin
-<img width="1766" height="766" alt="image" src="https://github.com/user-attachments/assets/83661a1d-7d13-4353-ab56-2f09b49f6ab4" />
+<img width="1760" height="804" alt="image" src="https://github.com/user-attachments/assets/9e9f1c89-04ac-4928-9131-5c564a55addc" />
+
+
 
 [![Tests](https://github.com/Kn4ughty/Lumin/actions/workflows/rust.yml/badge.svg)](https://github.com/Kn4ughty/Lumin/actions/workflows/rust.yml)
 
 # Features and Useage
-- Linux and MacOS app launching with async icon lookup
+- Linux and MacOS app launching with async icon lookup using greenthreads.
+    - Loads all icons in **2 frames** from input, competing launcher [rofi](https://github.com/davatorium/rofi) takes **6**
 - Calculator module with homemade parser 
     - Use `=` prefix and type your equation
 - Async web searching 
