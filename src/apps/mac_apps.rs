@@ -19,7 +19,7 @@ impl OSAppSearcher for MacOsAppSearcher {
             .iter()
             .map(|a| App {
                 name: a.name.clone(),
-                icon: a.icon_image.clone().map(Icon::ImageHandle),
+                icon: Some(Icon::NotFoundYet(a.path.clone())),
                 cmd: "open".into(),
                 args: vec![a.path.clone()],
                 working_dir: None,
@@ -28,54 +28,21 @@ impl OSAppSearcher for MacOsAppSearcher {
             .collect()
     }
 
-    fn load_icon_path(&self, _s: String) -> Option<PathBuf> {
-        None
-    }
-
-    fn load_icon_image(&self, _path: &Path) -> Option<iced::widget::image::Handle> {
-        None
-    }
-}
-
-pub struct MacApp {
-    pub name: String,
-    pub path: String,
-    pub icon_image: Option<iced::advanced::image::Handle>,
-}
-
-enum MacAppError {
-    IconPathWasWrong,
-}
-
-impl MacApp {
-    fn new_from_path(path: String) -> Result<MacApp, MacAppError> {
-        log::trace!("making new app from path: {path}");
-
-        let icon_image = Self::get_app_icon(&path).ok();
-
-        let name = path
-            .split('/')
-            .next_back()
-            .expect("Should be able to split up path and has last")
-            .to_string();
-
-        // Remove the .app from filename
-        let name = name[0..(name.len() - 4)].to_string();
-
-        Ok(Self {
-            name,
-            path,
-            icon_image,
-        })
-    }
-
-    fn get_app_icon(path: &str) -> Result<Handle, MacAppError> {
+    fn load_icon_path(&self, s: String) -> Option<PathBuf> {
         // TODO. Don't hardcode path, and read info.plist file
-        let icon_path = format!("{path}/Contents/Resources/AppIcon.icns");
-        log::trace!("generated path for the appIconicns is {icon_path}");
+        let icon_path = format!("{s}/Contents/Resources/AppIcon.icns");
+        Some(icon_path.into())
+    }
 
-        let file =
-            BufReader::new(File::open(icon_path).map_err(|_| MacAppError::IconPathWasWrong)?);
+    fn load_icon_image(&self, path: &Path) -> Option<iced::widget::image::Handle> {
+        log::trace!("generated path for the appIconicns is {path:?}");
+
+        let file = BufReader::new(
+            File::open(path)
+                .map_err(|_| MacAppError::IconPathWasWrong)
+                .ok()?,
+        );
+
         let icon_family = icns::IconFamily::read(file).expect("Can read iconfile");
         let avail_icons = icon_family.available_icons();
         let icns_image = icon_family
@@ -87,7 +54,33 @@ impl MacApp {
             icns_image.height(),
             icns_image.into_data(),
         );
-        Ok(iced_image)
+        Some(iced_image)
+    }
+}
+
+pub struct MacApp {
+    pub name: String,
+    pub path: String,
+}
+
+enum MacAppError {
+    IconPathWasWrong,
+}
+
+impl MacApp {
+    fn new_from_path(path: String) -> Result<MacApp, MacAppError> {
+        log::trace!("making new app from path: {path}");
+
+        let name = path
+            .split('/')
+            .next_back()
+            .expect("Should be able to split up path and has last")
+            .to_string();
+
+        // Remove the .app from filename
+        let name = name[0..(name.len() - 4)].to_string();
+
+        Ok(Self { name, path })
     }
 }
 
