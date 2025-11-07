@@ -2,6 +2,7 @@
 
 use iced::{Task, keyboard, widget};
 
+use std::cell::LazyCell;
 use std::collections::HashMap;
 
 mod apps;
@@ -30,18 +31,18 @@ struct State {
     text_value: String,
     text_id: widget::Id,
     window_id: Option<iced::window::Id>,
-    modules: HashMap<String, Box<dyn Module>>,
+    modules: HashMap<String, LazyCell<Box<dyn Module>>>,
 }
 
 impl State {
     fn new_multi_modal() -> Self {
         let start = std::time::Instant::now();
-        let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
-        modules.insert("=".to_string(), Box::new(Calc::new()));
+        let mut modules: HashMap<String, LazyCell<Box<dyn Module>>> = HashMap::new();
+        modules.insert("=".to_string(), LazyCell::new(|| Box::new(Calc::new())));
 
-        modules.insert("!".to_string(), Box::new(Web::new()));
+        modules.insert("!".to_string(), LazyCell::new(|| Box::new(Web::new())));
 
-        modules.insert("".to_string(), Box::new(AppModule::new()));
+        modules.insert("".to_string(), LazyCell::new(|| Box::new(AppModule::new())));
 
         log::info!("Time to initialise modules: {:#?}", start.elapsed());
         State {
@@ -54,15 +55,19 @@ impl State {
 
     fn new_drun() -> Self {
         let start = iced::debug::time("load modules");
-        let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
+        let mut modules: HashMap<String, LazyCell<Box<dyn Module>>> = HashMap::new();
 
-        let stdin = std::io::stdin();
-        let mut lines = Vec::new();
-        for line in stdin.lines() {
-            lines.push(line.expect("Can read line from stdin"));
-        }
-
-        modules.insert("".to_string(), Box::new(Drun::new(lines)));
+        modules.insert(
+            "".to_string(),
+            LazyCell::new(|| {
+                let stdin = std::io::stdin();
+                let mut lines = Vec::new();
+                for line in stdin.lines() {
+                    lines.push(line.expect("Can read line from stdin"));
+                }
+                Box::new(Drun::new(lines))
+            }),
+        );
 
         start.finish();
 
@@ -152,7 +157,7 @@ impl State {
     }
 
     #[allow(clippy::borrowed_box)]
-    fn find_module(&self) -> Option<(&Box<dyn Module>, usize)> {
+    fn find_module(&self) -> Option<(&LazyCell<Box<dyn Module>>, usize)> {
         self.modules
             .iter()
             .filter(|(k, _)| self.text_value.starts_with(k.as_str()))
@@ -160,12 +165,16 @@ impl State {
             .map(|(prefix, m)| (m, prefix.len()))
     }
 
-    fn find_module_mut(&mut self) -> Option<(&mut Box<dyn Module>, usize)> {
-        self.modules
+    fn find_module_mut(&mut self) -> Option<(&mut LazyCell<Box<dyn Module>>, usize)> {
+        let start = iced::debug::time("find_module_mut");
+        let res = self
+            .modules
             .iter_mut()
             .filter(|(k, _)| self.text_value.starts_with(k.as_str()))
             .max_by_key(|(prefix, _)| prefix.len())
-            .map(|(prefix, m)| (m, prefix.len()))
+            .map(|(prefix, m)| (m, prefix.len()));
+        start.finish();
+        res
     }
 }
 
