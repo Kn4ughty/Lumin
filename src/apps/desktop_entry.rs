@@ -1,7 +1,11 @@
 // https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
-#![allow(dead_code, reason = "Compile time importing shennanigans")]
 
-use std::{collections::HashMap, path::PathBuf, sync::LazyLock, vec::Vec};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    sync::LazyLock,
+    vec::Vec,
+};
 
 use icon;
 use walkdir::WalkDir;
@@ -9,6 +13,42 @@ use walkdir::WalkDir;
 use super::{App, Icon};
 
 static ICON_SEARCHER: LazyLock<icon::Icons> = LazyLock::new(icon::Icons::new);
+
+#[derive(Default)]
+pub struct LinuxAppSearcher {}
+impl super::OSAppSearcher for LinuxAppSearcher {
+    fn get_apps(&self) -> Vec<App> {
+        load_desktop_entries()
+            .expect("Can load apps")
+            .into_iter()
+            .map(App::from)
+            .collect()
+    }
+
+    fn load_icon_path(&self, s: String) -> Option<PathBuf> {
+        if s.starts_with('/') {
+            return Some(PathBuf::from(s));
+        }
+
+        ICON_SEARCHER
+            .find_icon(s.as_str(), 64, 1, "Adwaita") // TODO. Dont hardcode theme
+            .map(|i| i.path)
+    }
+
+    fn load_icon_image(&self, path: &Path) -> Option<iced::widget::image::Handle> {
+        if path.extension() == Some(std::ffi::OsStr::new("svg")) {
+            match crate::widglets::svg_path_to_handle(path.to_path_buf()) {
+                Ok(image) => Some(image),
+                Err(e) => {
+                    log::warn!("Failed to load SVG at {path:?} with error: {e}");
+                    None
+                }
+            }
+        } else {
+            Some(iced::widget::image::Handle::from_path(path))
+        }
+    }
+}
 
 #[derive(Debug, PartialEq)]
 pub struct Action {
@@ -78,13 +118,6 @@ pub enum ParseError {
     NoDisplayTrue,
     ActionMissingName,
     MissingDataDirsEnvVar,
-}
-pub fn get_apps() -> Vec<App> {
-    load_desktop_entries()
-        .expect("Can load apps")
-        .into_iter()
-        .map(App::from)
-        .collect()
 }
 
 pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
@@ -310,16 +343,6 @@ impl From<DesktopEntry> for App {
             icon: desktop_entry.icon.map(Icon::NotFoundYet),
         }
     }
-}
-
-pub fn load_icon(s: String) -> Option<PathBuf> {
-    if s.starts_with('/') {
-        return Some(PathBuf::from(s));
-    }
-
-    ICON_SEARCHER
-        .find_icon(s.as_str(), 64, 1, "Adwaita") // TODO. Dont hardcode theme
-        .map(|i| i.path)
 }
 
 #[test]

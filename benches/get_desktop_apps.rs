@@ -3,10 +3,11 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use pprof::criterion::{Output, PProfProfiler};
 use pprof::flamegraph;
 
-use lumin::apps::desktop_entry::get_apps;
+use lumin::apps::{OSAppSearcher, desktop_entry::LinuxAppSearcher};
 
 pub fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("get apps", |b| b.iter(|| get_apps()));
+    let searcher = LinuxAppSearcher::default();
+    c.bench_function("get apps", |b| b.iter(|| searcher.get_apps()));
 }
 
 criterion_group! {

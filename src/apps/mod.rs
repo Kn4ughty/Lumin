@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::Path;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use std::sync::Mutex;
@@ -9,16 +10,22 @@ use iced::widget;
 pub mod desktop_entry;
 pub mod mac_apps;
 
-#[cfg(target_os = "linux")]
-use desktop_entry as app_searcher;
-#[cfg(target_os = "macos")]
-use mac_apps as app_searcher;
-
 use crate::constants;
 use crate::module::{Module, ModuleMessage};
 use crate::serworse;
 use crate::util;
 use crate::widglets;
+
+static APP_SEARCHER: LazyLock<Box<dyn OSAppSearcher>> = LazyLock::new(|| {
+    let searcher: Box<dyn OSAppSearcher> = if cfg!(target_os = "linux") {
+        Box::new(desktop_entry::LinuxAppSearcher::default())
+    } else if cfg!(target_os = "macos") {
+        Box::new(mac_apps::MacOsAppSearcher::default())
+    } else {
+        panic!("Unknown operating system")
+    };
+    searcher
+});
 
 const APP_FREQUENCY_LOOKUP_RELPATH: &str = "app_lookup";
 const ICON_CACHE_RELPATH: &str = "icon_cache";
@@ -26,6 +33,12 @@ const ICON_CACHE_RELPATH: &str = "icon_cache";
 // Big type name!
 static ICON_CACHE: LazyLock<Mutex<HashMap<String, String>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
+
+pub trait OSAppSearcher: Sync + Send {
+    fn get_apps(&self) -> Vec<App>;
+    fn load_icon_path(&self, s: String) -> Option<PathBuf>;
+    fn load_icon_image(&self, path: &Path) -> Option<widget::image::Handle>;
+}
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct App {
@@ -106,7 +119,7 @@ impl AppModule {
             }
         } else {
             log::warn!(
-                "Could not read app_frequencies to string.\
+                "Could not read Icon to string.\
                 Once any app is launched for the first time, \
                 this warning should go away as the hashmap should have been written"
             );
@@ -208,7 +221,7 @@ impl Module for AppModule {
                 if self.app_list.is_empty() {
                     log::trace!("Generating app_list");
                     let start = std::time::Instant::now();
-                    self.app_list = app_searcher::get_apps();
+                    self.app_list = APP_SEARCHER.get_apps();
                     log::info!(
                         "Time to get #{} apps: {:#?}",
                         self.app_list.len(),
@@ -318,9 +331,7 @@ impl Module for AppModule {
 async fn get_icon(icon_name: String) -> Option<(String, iced::widget::image::Handle)> {
     let start = iced::debug::time("GetIconTime");
 
-    let mut final_path = PathBuf::new();
-
-    if let Some(icon_path) = ICON_CACHE
+    let final_path = if let Some(icon_path) = ICON_CACHE
         .lock()
         .expect("Can unlock")
         .get(&icon_name)
@@ -328,46 +339,26 @@ async fn get_icon(icon_name: String) -> Option<(String, iced::widget::image::Han
     {
         log::trace!("Cache hit! name: {icon_name}");
 
-        final_path = icon_path.clone().into();
+        icon_path.clone().into()
     } else {
         log::trace!("Cache miss! name: {icon_name}");
 
         let copy = icon_name.clone();
-        let icon_path = app_searcher::load_icon(copy);
-        // let icon_path = tokio::task::spawn_blocking(move || app_searcher::load_icon(copy))
-        //     .await
-        //     .ok()
-        //     .flatten();
 
-        log::trace!("Icon path from app_searcher with name {icon_name} is {icon_path:?}");
+        if let Some(path) = &APP_SEARCHER.load_icon_path(copy) {
+            log::trace!("Icon path from app_searcher with name {icon_name} is {path:?}");
 
-        if let Some(path) = &icon_path {
-            let path_str = path
-                .to_str()
-                .expect("icon_path is valid unicode")
-                .to_owned();
-
-            ICON_CACHE
-                .lock()
-                .expect("Can unlock")
-                .insert(icon_name.to_owned(), path_str.clone());
-            final_path = path.to_path_buf();
-        }
-    }
-
-    let final_image_handle = {
-        if final_path.extension() == Some(std::ffi::OsStr::new("svg")) {
-            match widglets::svg_path_to_handle(final_path.clone()).await {
-                Ok(image) => Some(image),
-                Err(e) => {
-                    log::warn!("Failed to load SVG at {final_path:?} with error: {e}");
-                    None
-                }
-            }
+            ICON_CACHE.lock().expect("Can unlock").insert(
+                icon_name.to_owned(),
+                path.clone().to_str().expect("invalid unicode").to_owned(),
+            );
+            path.to_path_buf()
         } else {
-            Some(iced::widget::image::Handle::from_path(final_path.clone()))
+            PathBuf::new()
         }
-    }?;
+    };
+
+    let final_image_handle = APP_SEARCHER.load_icon_image(final_path.as_path())?;
 
     start.finish();
 

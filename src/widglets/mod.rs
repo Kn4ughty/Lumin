@@ -16,7 +16,7 @@ static MISSING_IMAGE: LazyLock<iced::widget::image::Handle> = LazyLock::new(|| {
     )
 });
 
-pub async fn svg_path_to_handle(path: PathBuf) -> Result<iced::widget::image::Handle, String> {
+pub fn svg_path_to_handle(path: PathBuf) -> Result<iced::widget::image::Handle, String> {
     let contents = fs::read_to_string(path).map_err(|_e| "couldnt read path to string")?;
     let tree = resvg::usvg::Tree::from_str(&contents, &resvg::usvg::Options::default())
         .map_err(|_e| "Could not turn contents to tree")?;
