@@ -233,6 +233,10 @@ impl AppModule {
             })
             .collect();
 
+        if icons_to_lookup.is_empty() {
+            return Task::none();
+        }
+
         let tasks = icons_to_lookup.iter().map(|key| {
             let k: String = key.to_string();
             Task::perform(get_icon(k.clone()), move |handle| {
@@ -252,7 +256,7 @@ impl AppModule {
         key: String,
         res: Option<(String, widget::image::Handle)>,
     ) -> Task<ModuleMessage> {
-        log::trace!("iconloaded: {key}");
+        log::debug!("iconloaded: {key}");
         let start = iced::debug::time("IconLoaded");
         let icon_handle = if let Some((path, handle)) = res {
             ICON_CACHE
@@ -326,7 +330,7 @@ impl Module for AppModule {
                 iced::exit()
             }
             x => {
-                log::trace!("App module received irrelevant msg: {x:?}");
+                log::warn!("App module received irrelevant msg: {x:?}");
                 Task::none()
             }
         }
@@ -347,11 +351,11 @@ async fn get_icon(icon_name: String) -> Option<(String, iced::widget::image::Han
         .get(&icon_name)
         .cloned()
     {
-        log::trace!("Cache hit! name: {icon_name}");
+        log::debug!("Cache hit! name: {icon_name}");
 
         icon_path.clone().into()
     } else {
-        log::trace!("Cache miss! name: {icon_name}");
+        log::debug!("Cache miss! name: {icon_name}");
 
         let copy = icon_name.clone();
 
