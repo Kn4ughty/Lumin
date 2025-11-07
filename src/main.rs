@@ -153,7 +153,14 @@ impl State {
             .map(|s: ModuleMessage| Message::PluginMessage(s));
 
         let root_continer = widget::container(widget::column![text_input, result])
-            .style(widget::container::bordered_box)
+            .style(|theme| {
+                let mut base_theme = widget::container::bordered_box(theme);
+                base_theme.border = iced::Border {
+                    radius: 15.0.into(),
+                    ..base_theme.border
+                };
+                base_theme
+            })
             .padding(10)
             .align_top(iced::Fill);
 
