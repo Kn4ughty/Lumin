@@ -170,6 +170,22 @@ impl Module for Web {
             .collect();
 
         widget::scrollable(widget::column(elements))
+            .style(|theme, status| {
+                let mut base_widget = widget::scrollable::default(theme, status);
+                base_widget.vertical_rail = widget::scrollable::Rail {
+                    background: None,
+                    border: iced::Border {
+                        color: iced::Color::TRANSPARENT,
+                        width: 0.0,
+                        ..Default::default()
+                    },
+                    scroller: widget::scrollable::Scroller {
+                        color: iced::Color::TRANSPARENT,
+                        border: base_widget.horizontal_rail.border,
+                    },
+                };
+                base_widget
+            })
             .width(iced::Fill)
             .into()
     }

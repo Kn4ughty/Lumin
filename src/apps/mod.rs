@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ops::Mul;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::LazyLock;
@@ -212,7 +213,8 @@ impl AppModule {
                 score += 2;
             }
             if let Some(raw_freq) = self.app_frequencies.get(&app.name) {
-                score += (*raw_freq as f32).ln().max(0.0).floor() as i32;
+                // Preview: https://www.desmos.com/calculator/vyac5ua1as
+                score += (*raw_freq as f32).ln().mul(0.75).max(0.0).floor() as i32;
             }
 
             -score
@@ -328,6 +330,22 @@ impl Module for AppModule {
             )
             .width(iced::Fill),
         )
+        .style(|theme, status| {
+            let mut base_widget = widget::scrollable::default(theme, status);
+            base_widget.vertical_rail = widget::scrollable::Rail {
+                background: None,
+                border: iced::Border {
+                    color: iced::Color::TRANSPARENT,
+                    width: 0.0,
+                    ..Default::default()
+                },
+                scroller: widget::scrollable::Scroller {
+                    color: iced::Color::TRANSPARENT,
+                    border: base_widget.horizontal_rail.border,
+                },
+            };
+            base_widget
+        })
         .into()
     }
 
