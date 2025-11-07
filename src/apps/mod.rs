@@ -68,6 +68,8 @@ pub struct AppModule {
     app_list: Vec<App>,
     /// How many times has the app been run before. Used for search score weighting.
     app_frequencies: HashMap<String, u32>,
+    /// To prevent searching again if already searching
+    have_started_icon_search: bool,
 }
 
 impl Default for AppModule {
@@ -130,6 +132,7 @@ impl AppModule {
         AppModule {
             app_list: Vec::new(),
             app_frequencies: freq_map,
+            have_started_icon_search: false,
         }
     }
 
@@ -221,7 +224,16 @@ impl AppModule {
             start.elapsed()
         );
 
+        self.do_icon_lookup()
+    }
+
+    fn do_icon_lookup(&mut self) -> Task<ModuleMessage> {
         let start = std::time::Instant::now();
+
+        if self.have_started_icon_search {
+            return Task::none();
+        }
+        self.have_started_icon_search = true;
 
         let icons_to_lookup: Vec<&str> = self
             .app_list
