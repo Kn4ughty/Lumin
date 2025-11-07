@@ -133,7 +133,16 @@ impl State {
         let text_input = widget::text_input("Type to search", &self.text_value)
             .id(self.text_id.clone())
             .on_input(Message::TextInputChanged)
-            .on_submit(Message::TextInputSubmitted("test".to_string()));
+            .on_submit(Message::TextInputSubmitted("test".to_string()))
+            .style(|theme, status| {
+                let mut base_style = widget::text_input::default(theme, status);
+                base_style.border = iced::Border {
+                    color: iced::Color::TRANSPARENT,
+                    width: 0.0,
+                    radius: 0.0.into(),
+                };
+                base_style
+            });
 
         let result = self
             .find_module()
