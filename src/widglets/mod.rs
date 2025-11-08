@@ -73,7 +73,7 @@ pub fn heading<'a>(
 
     widget::text(text)
         .size(iced::Settings::default().default_text_size * font_mult)
-        .style(move |theme: &iced::Theme| {
+        .style(move |_theme: &iced::Theme| {
             let c = match level {
                 HeadingLevel::Subheading => Some(iced::color!(140, 140, 150)),
                 _ => None,
