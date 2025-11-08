@@ -16,5 +16,10 @@ pub enum ModuleMessage {
 pub trait Module {
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage>;
     fn view(&self) -> Element<'_, ModuleMessage>;
-    fn run(&self) -> Task<Message>; // executed when enter key pressed
+    /// Executed when user presses the enter key
+    fn run(&self) -> Task<Message>;
+    /// Short overview of what the module does
+    fn description(&self) -> String {
+        String::from("No description")
+    }
 }

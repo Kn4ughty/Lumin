@@ -139,6 +139,10 @@ impl Web {
 }
 
 impl Module for Web {
+    fn description(&self) -> String {
+        String::from("Quick access to search different websites")
+    }
+
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
         log::debug!("Web view function run");
         log::trace!("Self. {self:#?}");

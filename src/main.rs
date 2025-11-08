@@ -27,9 +27,12 @@ use module::{Module, ModuleMessage};
 
 use message::Message;
 
+const HELP_SCREEN_PREFIX: &str = "?";
+
 struct State {
     text_value: String,
     text_id: widget::Id,
+    has_user_typed: bool,
     window_id: Option<iced::window::Id>,
     modules: HashMap<String, LazyCell<Box<dyn Module>>>,
 }
@@ -49,6 +52,7 @@ impl State {
             text_value: "".to_string(),
             text_id: widget::Id::new("text_entry"),
             window_id: None,
+            has_user_typed: false,
             modules,
         }
     }
@@ -75,6 +79,7 @@ impl State {
             text_value: "".to_string(),
             text_id: widget::Id::new("text_entry"),
             window_id: None,
+            has_user_typed: false,
             modules,
         }
     }
@@ -84,6 +89,7 @@ impl State {
 
         match message {
             Message::TextInputChanged(content) => {
+                self.has_user_typed = true;
                 self.text_value = content;
                 // Lookup module and pass in text
                 let input = self.text_value.clone();
@@ -146,12 +152,7 @@ impl State {
                 base_style
             });
 
-        let result = self
-            .find_module()
-            .expect("can find module")
-            .0
-            .view()
-            .map(|s: ModuleMessage| Message::PluginMessage(s));
+        let result = self.get_result_to_display();
 
         let root_continer = widget::container(widget::column![
             text_input,
@@ -172,6 +173,54 @@ impl State {
         let mouse = widget::mouse_area(root_continer).on_press(Message::ShouldDrag);
 
         mouse.into()
+    }
+
+    fn get_result_to_display(&self) -> iced::Element<'_, Message> {
+        if !self.has_user_typed || self.text_value == HELP_SCREEN_PREFIX {
+            return self.show_overview_screen();
+        }
+
+        self.find_module()
+            .expect("can find module")
+            .0
+            .view()
+            .map(|s: ModuleMessage| Message::PluginMessage(s))
+    }
+
+    fn show_overview_screen(&self) -> iced::Element<'_, Message> {
+        let mut prefix_col = widget::column![widget::text("Prefix")];
+        prefix_col = prefix_col.push(widget::rule::horizontal(1));
+
+        let mut description_col = widget::column![widget::text("Description")];
+        description_col = description_col.push(widget::rule::horizontal(1));
+
+        let mut all_modules: Vec<(String, String)> = self
+            .modules
+            .iter()
+            .map(|(key, module)| (key.clone(), module.description()))
+            .collect();
+        all_modules.sort_by(|first, other| first.0.cmp(&other.0));
+
+        // Since the overview screen module is magic, it needs special logic for info
+        all_modules.push((
+            HELP_SCREEN_PREFIX.to_string(),
+            "This help screen".to_string(),
+        ));
+
+        for (prefix, module) in all_modules {
+            prefix_col = prefix_col.push(widget::text(prefix));
+            prefix_col = prefix_col.push(widget::rule::horizontal(1));
+
+            description_col = description_col.push(widget::text(module));
+            description_col = description_col.push(widget::rule::horizontal(1));
+        }
+
+        widget::row![
+            widget::container(prefix_col).width(iced::Shrink),
+            widget::container(widget::rule::vertical(2)).padding(8),
+            description_col
+        ]
+        .into()
     }
 
     fn theme(&self) -> Option<iced::Theme> {

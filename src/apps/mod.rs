@@ -307,6 +307,10 @@ impl AppModule {
 }
 
 impl Module for AppModule {
+    fn description(&self) -> String {
+        String::from("Launch your installed apps")
+    }
+
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
         widget::scrollable(
             widget::column(

@@ -39,6 +39,5 @@ Then once it is in your path just run `lumin`
     - [x] ListBox and List elements
     - [ ] Investigate https://github.com/pop-os/cosmic-time
 - [ ] Dictionary module
-- [ ] Default screen gives small usage guide
 - [ ] Refactor calculator
 - [ ] Reduce dependencies

@@ -30,6 +30,10 @@ impl Calc {
 }
 
 impl Module for Calc {
+    fn description(&self) -> String {
+        String::from("Quickly do basic calculations")
+    }
+
     fn view(&self) -> Element<'_, ModuleMessage> {
         let font = iced::Font::MONOSPACE;
 
