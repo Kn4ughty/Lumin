@@ -81,6 +81,7 @@ impl State {
 
     fn update(&mut self, message: Message) -> Task<Message> {
         log::trace!("update fn run");
+
         match message {
             Message::TextInputChanged(content) => {
                 self.text_value = content;
@@ -239,6 +240,14 @@ fn main() -> iced::Result {
     // Skip first arg (program name)
     for arg in std::env::args().skip(1) {
         match arg.as_str() {
+            "-v" | "--version" => {
+                println!(
+                    "{} Version: {}",
+                    env!("CARGO_PKG_NAME"),
+                    env!("CARGO_PKG_VERSION"),
+                );
+                return Ok(());
+            }
             "--dmenu" => {
                 state = State::new_drun as fn() -> State;
             }
