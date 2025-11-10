@@ -3,7 +3,7 @@ use std::io::Write;
 
 use crate::{
     module::{Module, ModuleMessage},
-    util, widglets,
+    sorting, widglets,
 };
 
 pub struct Drun {
@@ -40,16 +40,8 @@ impl Module for Drun {
     fn update(&mut self, msg: ModuleMessage) -> iced::Task<ModuleMessage> {
         match msg {
             ModuleMessage::TextChanged(input) => {
-                self.text_input = input.clone();
-                let input = &input.to_lowercase();
-                self.options.sort_by_cached_key(|opt| {
-                    // Not a fan of this duplicated logic from app/mod.rs
-                    let mut score = util::longest_common_substr(opt, input);
-                    if opt.to_lowercase().starts_with(input) {
-                        score += 2;
-                    }
-                    -score
-                });
+                self.options
+                    .sort_by_cached_key(|opt| -sorting::score_element(&input, opt));
                 Task::none()
             }
             ModuleMessage::ActivatedIndex(i) => {

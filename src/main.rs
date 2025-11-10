@@ -21,6 +21,7 @@ use drun::Drun;
 mod constants;
 mod module;
 mod serworse;
+mod sorting;
 mod util;
 mod widglets;
 use module::{Module, ModuleMessage};

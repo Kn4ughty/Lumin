@@ -9,4 +9,5 @@ pub mod widglets;
 
 mod constants;
 mod message;
+mod sorting;
 mod util;

@@ -14,6 +14,7 @@ pub mod mac_apps;
 use crate::constants;
 use crate::module::{Module, ModuleMessage};
 use crate::serworse;
+use crate::sorting;
 use crate::util;
 use crate::widglets;
 
@@ -206,12 +207,10 @@ impl AppModule {
         let start = std::time::Instant::now();
         // Cached_key seems to be much faster which is interesting since text_value is
         // always changing
-        let input = &input.to_lowercase();
+        // let input = &input.to_lowercase();
         self.app_list.sort_by_cached_key(|app| {
-            let mut score = util::longest_common_substr(&app.name.to_lowercase(), input);
-            if app.name.to_lowercase().starts_with(input) {
-                score += 2;
-            }
+            let mut score = sorting::score_element(&input, &app.name);
+
             if let Some(raw_freq) = self.app_frequencies.get(&app.name) {
                 // Preview: https://www.desmos.com/calculator/vyac5ua1as
                 score += (*raw_freq as f32).ln().mul(0.75).max(0.0).floor() as i32;
