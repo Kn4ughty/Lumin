@@ -22,9 +22,9 @@ fn longest_common_substr(s1: &str, s2: &str) -> i32 {
 
     let mut res: i32 = 0;
 
-    for i in 1..m + 1 {
+    for i in 1..=m {
         let mut curr = vec![0; n + 1];
-        for j in 1..n + 1 {
+        for j in 1..=n {
             if s1[i - 1] == s2[j - 1] {
                 curr[j] = prev[j - 1] + 1;
                 res = res.max(curr[j]);
