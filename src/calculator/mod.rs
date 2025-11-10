@@ -166,7 +166,7 @@ impl Calc {
         let mut out = Vec::new();
         let chars = source.chars();
 
-        let mut number_buf: String = "".to_string();
+        let mut number_buf: String = String::new();
 
         let mut iter = chars.enumerate().peekable();
         while let Some((idx, c)) = iter.next() {

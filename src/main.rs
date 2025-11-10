@@ -46,11 +46,11 @@ impl State {
 
         modules.insert("!".to_string(), LazyCell::new(|| Box::new(Web::new())));
 
-        modules.insert("".to_string(), LazyCell::new(|| Box::new(AppModule::new())));
+        modules.insert(String::new(), LazyCell::new(|| Box::new(AppModule::new())));
 
         log::info!("Time to initialise modules: {:#?}", start.elapsed());
         State {
-            text_value: "".to_string(),
+            text_value: String::new(),
             text_id: widget::Id::new("text_entry"),
             window_id: None,
             has_user_typed: false,
@@ -63,7 +63,7 @@ impl State {
         let mut modules: HashMap<String, LazyCell<Box<dyn Module>>> = HashMap::new();
 
         modules.insert(
-            "".to_string(),
+            String::new(),
             LazyCell::new(|| {
                 let stdin = std::io::stdin();
                 let mut lines = Vec::new();
@@ -80,7 +80,7 @@ impl State {
         start.finish();
 
         State {
-            text_value: "".to_string(),
+            text_value: String::new(),
             text_id: widget::Id::new("text_entry"),
             window_id: None,
             has_user_typed: false,

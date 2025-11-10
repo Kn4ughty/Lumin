@@ -90,14 +90,14 @@ impl std::default::Default for DesktopEntry {
         DesktopEntry {
             entry_type: EntryType::Application,
             version: None,
-            name: "".to_string(),
+            name: String::new(),
             generic_name: None,
             comment: None,
             icon: None,
             only_show_in: Vec::new(),
             not_show_in: Vec::new(),
             try_exec: None,
-            exec: "".to_string(),
+            exec: String::new(),
             working_dir: None,
             terminal: false,
             action_list: Vec::new(),
@@ -322,14 +322,14 @@ impl From<DesktopEntry> for App {
 
                 log::trace!("arg is: {:#?}", arg);
 
-                if arg == vec!["".to_string()] {
+                if arg == vec![String::new()] {
                     log::trace!("ARGS LEN 0");
                     arg.clear();
                 }
 
                 (cmd.to_string(), arg)
             }
-            None => (desktop_entry.exec, vec!["".to_string()]),
+            None => (desktop_entry.exec, vec![String::new()]),
         };
 
         let working_dir = desktop_entry.working_dir;
@@ -405,7 +405,7 @@ fn can_parse_string_list() {
 
 fn parse_exec_key(input: &str, icon: Option<&str>, name: Option<&str>) -> String {
     // https://specifications.freedesktop.org/desktop-entry-spec/latest/exec-variables.html
-    let mut escaped_result = "".to_string();
+    let mut escaped_result = String::new();
     let mut chars = input.chars().peekable();
 
     // Lots of nesting here..
