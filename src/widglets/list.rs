@@ -10,6 +10,8 @@ const ICON_SIZE: f32 = 32.0;
 //     rows: Vec<ListRow<Message>>,
 // }
 
+/// A single list item displayed to the user.
+/// Is activatable by clicking
 pub struct ListRow<Message> {
     text: String,
     subtext: Option<String>,
@@ -77,8 +79,7 @@ where
         let mut row_widget = widget::Row::new().padding(0);
 
         let icon_widget = widget::Responsive::new(move |size| {
-            // wish i didnt have to clone
-            if let Some(icon) = value.icon.clone() {
+            if let Some(icon) = &value.icon {
                 let real_image =
                     widget::image::Image::new(icon).content_fit(iced::ContentFit::Cover);
 

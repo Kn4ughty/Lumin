@@ -16,6 +16,9 @@ static MISSING_IMAGE: LazyLock<iced::widget::image::Handle> = LazyLock::new(|| {
     )
 });
 
+/// Uses resvg library to convert `path` to an image, with scaling to fit in bounds.
+/// # Errors
+/// Either, could not load from file, or there are errors in the SVG.
 pub fn svg_path_to_handle(path: PathBuf) -> Result<iced::widget::image::Handle, String> {
     let contents = fs::read_to_string(path).map_err(|_e| "couldnt read path to string")?;
     let tree = resvg::usvg::Tree::from_str(&contents, &resvg::usvg::Options::default())
@@ -51,7 +54,7 @@ pub enum HeadingLevel {
     H3,
     Subheading,
 }
-
+/// Does appropriate sizing, weighting and colouring for a given heading level
 pub fn heading<'a>(
     level: HeadingLevel,
     text: String,
