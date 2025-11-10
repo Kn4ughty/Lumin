@@ -67,7 +67,10 @@ impl State {
                 let stdin = std::io::stdin();
                 let mut lines = Vec::new();
                 for line in stdin.lines() {
-                    lines.push(line.expect("Can read line from stdin"));
+                    match line {
+                        Ok(line_ok) => lines.push(line_ok),
+                        Err(e) => log::warn!("Line was not valid utf8!!: {e:?}"),
+                    }
                 }
                 Box::new(Drun::new(lines))
             }),
