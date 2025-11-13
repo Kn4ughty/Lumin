@@ -17,8 +17,18 @@ pub static CACHE_DIR: LazyLock<String> = LazyLock::new(|| {
     let cache_dir = HOME_DIR.clone() + "/.cache/lumin/";
 
     if !std::fs::exists(&cache_dir).expect("Can check if cache_dir exists") {
-        log::info!("Data dir not found. Creating at path {cache_dir:?}");
+        log::info!("cache_dir not found. Creating at path {cache_dir:?}");
         std::fs::create_dir_all(&cache_dir).expect("Could create cache_dir");
     }
     cache_dir
+});
+
+pub static CONFIG_DIR: LazyLock<String> = LazyLock::new(|| {
+    let config_dir = HOME_DIR.clone() + "/.config/lumin/";
+
+    if !std::fs::exists(&config_dir).expect("Can check if config_dir exists") {
+        log::info!("Config dir not found. Creating at path {config_dir:?}");
+        std::fs::create_dir_all(&config_dir).expect("Could create config_dir");
+    }
+    config_dir
 });
