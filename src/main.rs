@@ -18,6 +18,7 @@ use websearch::Web;
 mod drun;
 use drun::Drun;
 
+mod config;
 mod constants;
 mod module;
 mod serworse;
@@ -228,7 +229,7 @@ impl State {
     }
 
     fn theme(&self) -> Option<iced::Theme> {
-        Some(iced::theme::Theme::CatppuccinMocha)
+        Some(config::SETTINGS.clone().color_scheme)
     }
 
     #[allow(clippy::borrowed_box)]

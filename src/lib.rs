@@ -1,6 +1,7 @@
 #![deny(clippy::unwrap_used)]
 pub mod apps;
 pub mod calculator;
+pub mod config;
 pub mod drun;
 pub mod module;
 pub mod serworse;

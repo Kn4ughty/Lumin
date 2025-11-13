@@ -32,7 +32,6 @@ Then once it is in your path just run `lumin`
 
 # ToDo
 - [ ] Change default macos font
-- [ ] Allow for user theming
 - [ ] Templates for UI elements 
     - [ ] Investiage https://austinmreppert.github.io/iced-reference/chapter_3.html
     - [x] ListBox and List elements
