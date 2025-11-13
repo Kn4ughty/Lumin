@@ -32,6 +32,12 @@ static APP_SEARCHER: LazyLock<Box<dyn OSAppSearcher>> = LazyLock::new(|| {
 const APP_FREQUENCY_LOOKUP_RELPATH: &str = "app_lookup";
 const ICON_CACHE_RELPATH: &str = "icon_cache";
 
+static APP_FREQUENCY_FILE_PATH: LazyLock<String> =
+    LazyLock::new(|| constants::DATA_DIR.to_owned() + APP_FREQUENCY_LOOKUP_RELPATH);
+
+static ICON_CACHE_FILE_PATH: LazyLock<String> =
+    LazyLock::new(|| constants::CACHE_DIR.to_owned() + ICON_CACHE_RELPATH);
+
 // Big type name!
 static ICON_CACHE: LazyLock<Mutex<HashMap<String, String>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
@@ -84,11 +90,8 @@ impl AppModule {
     // Duplicated logic betweeen new and open_app which is sad. should fix this
     pub fn new() -> Self {
         // attempt to load hashmap from disk
-        let path_string = constants::DATA_DIR.to_owned() + APP_FREQUENCY_LOOKUP_RELPATH;
-        let path = std::path::Path::new(&path_string);
-
         let mut freq_map: HashMap<String, u32> = HashMap::new();
-        if let Ok(data) = std::fs::read_to_string(path) {
+        if let Ok(data) = std::fs::read_to_string(APP_FREQUENCY_FILE_PATH.clone()) {
             match serworse::parse_csv::<u32>(&data) {
                 Ok(map1) => freq_map = map1,
                 Err(e) => log::error!("Could not read app_frequencies to hashmap. E: {e:#?}"),
@@ -101,9 +104,7 @@ impl AppModule {
             );
         };
 
-        let icon_cache_path = constants::CACHE_DIR.to_owned() + ICON_CACHE_RELPATH;
-
-        if let Ok(data) = std::fs::read_to_string(icon_cache_path) {
+        if let Ok(data) = std::fs::read_to_string(ICON_CACHE_FILE_PATH.clone()) {
             match serworse::parse_csv::<String>(&data) {
                 Ok(disk_cache) => {
                     let mut main_map = ICON_CACHE.lock().expect("can get ICON_CACHE");
@@ -145,27 +146,28 @@ impl AppModule {
 
         log::debug!("New app_frequencies hashmap is {map:#?}");
 
-        let path_string = constants::DATA_DIR.to_owned() + APP_FREQUENCY_LOOKUP_RELPATH;
-        let app_freq_path = std::path::Path::new(&path_string);
-
-        if let Err(e) = std::fs::write(app_freq_path, serworse::hash_map_to_csv(map)) {
+        if let Err(e) = std::fs::write(
+            APP_FREQUENCY_FILE_PATH.clone(),
+            serworse::hash_map_to_csv(map),
+        ) {
             log::error!(
                 "Could not write new app frequency hashmap to file!! e: {e}\nHashmap is: {e:#?}"
             );
         } else {
-            log::trace!("Successfully wrote to path: {app_freq_path:?}");
+            log::debug!("Successfully wrote to path: {APP_FREQUENCY_FILE_PATH:?}");
         };
 
         // Write icon_cache to disk
 
-        let icon_cache_path = constants::CACHE_DIR.to_owned() + ICON_CACHE_RELPATH;
-
         let cache_map = ICON_CACHE.lock().expect("not poisoned").clone();
 
-        if let Err(e) = std::fs::write(icon_cache_path, serworse::hash_map_to_csv(cache_map)) {
+        if let Err(e) = std::fs::write(
+            ICON_CACHE_FILE_PATH.clone(),
+            serworse::hash_map_to_csv(cache_map),
+        ) {
             log::error!("Could not write icon_cache to file!! e: {e}\nHashmap is: {e:#?}");
         } else {
-            log::debug!("Successfully wrote to path: {app_freq_path:?}");
+            log::debug!("Successfully wrote to path: {ICON_CACHE_FILE_PATH:?}");
         };
 
         util::execute_command_detached(
