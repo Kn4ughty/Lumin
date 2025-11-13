@@ -3,7 +3,9 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum ParseError {
+    /// Missing seperator between key and value
     MissingSeperator,
+    /// Failed to turn key/value of item into type required
     IntoFailure,
 }
 
@@ -21,7 +23,7 @@ pub fn parse_csv<T: std::str::FromStr>(data: &str) -> Result<HashMap<String, T>,
     Ok(map)
 }
 
-/// Invere function of parse_csv
+/// Inverse function of parse_csv
 pub fn hash_map_to_csv<T: std::string::ToString + Clone>(map: HashMap<String, T>) -> String {
     let mut out = String::new();
     for (key, val) in map.iter() {
