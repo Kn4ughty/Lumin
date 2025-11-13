@@ -6,6 +6,7 @@ pub enum Message {
     ShouldDrag,
     WindowOpened(iced::window::Id),
     TextInputSubmitted(String),
+    #[allow(clippy::enum_variant_names)]
     PluginMessage(ModuleMessage),
     Close,
 }
