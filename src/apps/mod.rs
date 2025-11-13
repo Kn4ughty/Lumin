@@ -84,11 +84,7 @@ impl AppModule {
     // Duplicated logic betweeen new and open_app which is sad. should fix this
     pub fn new() -> Self {
         // attempt to load hashmap from disk
-        let path_string = constants::DATA_DIR
-            .get()
-            .expect("DATA_DIR initialised")
-            .to_owned()
-            + APP_FREQUENCY_LOOKUP_RELPATH;
+        let path_string = constants::DATA_DIR.to_owned() + APP_FREQUENCY_LOOKUP_RELPATH;
         let path = std::path::Path::new(&path_string);
 
         let mut freq_map: HashMap<String, u32> = HashMap::new();
@@ -105,11 +101,7 @@ impl AppModule {
             );
         };
 
-        let icon_cache_path = constants::CACHE_DIR
-            .get()
-            .expect("CACHE_DIR init'ed")
-            .to_owned()
-            + ICON_CACHE_RELPATH;
+        let icon_cache_path = constants::CACHE_DIR.to_owned() + ICON_CACHE_RELPATH;
 
         if let Ok(data) = std::fs::read_to_string(icon_cache_path) {
             match serworse::parse_csv::<String>(&data) {
@@ -153,11 +145,7 @@ impl AppModule {
 
         log::debug!("New app_frequencies hashmap is {map:#?}");
 
-        let path_string = constants::DATA_DIR
-            .get()
-            .expect("DATA_DIR initialised")
-            .to_owned()
-            + APP_FREQUENCY_LOOKUP_RELPATH;
+        let path_string = constants::DATA_DIR.to_owned() + APP_FREQUENCY_LOOKUP_RELPATH;
         let app_freq_path = std::path::Path::new(&path_string);
 
         if let Err(e) = std::fs::write(app_freq_path, serworse::hash_map_to_csv(map)) {
@@ -170,11 +158,7 @@ impl AppModule {
 
         // Write icon_cache to disk
 
-        let icon_cache_path = constants::CACHE_DIR
-            .get()
-            .expect("CACHE_DIR init'ed")
-            .to_owned()
-            + ICON_CACHE_RELPATH;
+        let icon_cache_path = constants::CACHE_DIR.to_owned() + ICON_CACHE_RELPATH;
 
         let cache_map = ICON_CACHE.lock().expect("not poisoned").clone();
 

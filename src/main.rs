@@ -272,22 +272,6 @@ fn handle_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) -> Option<
 fn main() -> iced::Result {
     pretty_env_logger::init();
 
-    // Ensure that DATA_DIR exists to stop problems later
-    let home = std::env::var("HOME").expect("Can get home enviroment variable");
-    let path_str = constants::DATA_DIR.get_or_init(|| home.clone() + "/.local/share/lumin/");
-
-    if !std::fs::exists(path_str).expect("Can check if data_path exists") {
-        log::info!("Data dir not found. Creating at path {path_str:?}");
-        std::fs::create_dir_all(path_str).expect("Could create DATA_DIR");
-    }
-
-    let cache_dir = constants::CACHE_DIR.get_or_init(|| home.clone() + "/.cache/lumin/");
-
-    if !std::fs::exists(cache_dir).expect("Can check if cache_dir exists") {
-        log::info!("Data dir not found. Creating at path {cache_dir:?}");
-        std::fs::create_dir_all(cache_dir).expect("Could create cache_dir");
-    }
-
     let mut state = State::new_multi_modal as fn() -> State;
 
     // Skip first arg (program name)
