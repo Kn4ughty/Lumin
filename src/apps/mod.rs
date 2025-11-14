@@ -199,7 +199,7 @@ impl AppModule {
 
             if let Some(raw_freq) = self.app_frequencies.get(&app.name) {
                 // Preview: https://www.desmos.com/calculator/vyac5ua1as
-                score += (*raw_freq as f32).ln().mul(0.75).max(0.0).floor() as i32;
+                score += (*raw_freq as f32).ln().mul(0.5).max(0.0).floor() as i32;
             }
 
             -score
