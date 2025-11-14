@@ -25,7 +25,7 @@ cargo build --release
 ```
 I reccomend adding to path by symlinking to the release.
 ```sh
-ls -s target/release/lumin ~/bin/
+ln -s target/release/lumin ~/bin/
 ```
 Then once it is in your path just run `lumin`
 
