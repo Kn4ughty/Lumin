@@ -16,6 +16,7 @@ pub struct ListRow<Message> {
     text: String,
     subtext: Option<String>,
     icon: Option<iced::widget::image::Handle>,
+    icon_background: iced::Color,
     on_activate: Option<Message>,
 }
 
@@ -28,6 +29,7 @@ impl<Message> ListRow<Message> {
             text: text.to_string(),
             subtext: None,
             icon: None,
+            icon_background: iced::Color::TRANSPARENT,
             on_activate: None,
         }
     }
@@ -56,6 +58,11 @@ impl<Message> ListRow<Message> {
         self
     }
 
+    pub fn icon_background(mut self, color: iced::Color) -> Self {
+        self.icon_background = color;
+        self
+    }
+
     pub fn optional_icon(self, handle: Option<widget::image::Handle>) -> Self {
         if let Some(h) = handle {
             self.icon(h)
@@ -78,25 +85,32 @@ where
     fn from(value: ListRow<Message>) -> Self {
         let mut row_widget = widget::Row::new().padding(0);
 
-        let icon_widget = widget::Responsive::new(move |size| {
-            if let Some(icon) = &value.icon {
-                let real_image =
-                    widget::image::Image::new(icon).content_fit(iced::ContentFit::Cover);
+        let bg = value.icon_background;
+        let icon_widget = widget::container(
+            widget::Responsive::new(move |size| {
+                if let Some(icon) = &value.icon {
+                    let real_image =
+                        widget::image::Image::new(icon).content_fit(iced::ContentFit::Cover);
 
-                widget::container(real_image)
-            } else {
-                widget::container(widget::image(super::MISSING_IMAGE.clone()))
-            }
-            .clip(true)
-            .width(size.height)
-            .height(size.height)
-            .padding(0)
-            .align_y(iced::Alignment::Center)
-            .align_x(iced::Alignment::Center)
-            .into()
-        })
-        .width(iced::Shrink)
-        .height(iced::Length::Fixed(ICON_SIZE));
+                    widget::container(real_image)
+                } else {
+                    widget::container(widget::image(super::MISSING_IMAGE.clone()))
+                }
+                .clip(true)
+                .width(size.height)
+                .height(size.height)
+                .padding(0)
+                .align_y(iced::Alignment::Center)
+                .align_x(iced::Alignment::Center)
+                .into()
+            })
+            .width(iced::Shrink)
+            .height(iced::Length::Fixed(ICON_SIZE)),
+        )
+        .style(move |_theme| widget::container::Style {
+            background: Some(iced::Background::Color(bg)),
+            ..Default::default()
+        });
 
         row_widget = row_widget.push(icon_widget);
         row_widget = row_widget.push(widget::space().width(iced::Length::Fixed(PADDING)));

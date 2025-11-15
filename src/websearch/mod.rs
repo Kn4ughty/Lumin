@@ -169,6 +169,7 @@ impl Module for Web {
                         result.destination_url,
                     )))
                     .optional_icon(image)
+                    .icon_background(iced::Color::WHITE)
                     .into()
             })
             .collect();
