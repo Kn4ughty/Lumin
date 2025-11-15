@@ -34,6 +34,10 @@ pub fn svg_path_to_handle(path: PathBuf) -> Result<iced::widget::image::Handle, 
     .ok_or("Can create pixmap")?;
 
     let svg_size = tree.size();
+    if svg_size.width() == 0.0 || svg_size.height() == 0.0 {
+        return Err(String::from("Svg size or width was zero! Cannot scale"));
+    }
+
     let transform = resvg::tiny_skia::Transform::from_scale(
         SVG_WIDTH as f32 / svg_size.width(),
         SVG_HEIGHT as f32 / svg_size.height(),
