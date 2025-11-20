@@ -376,6 +376,10 @@ impl Calc {
                     )),
                 };
 
+                if input.clone().get(idx + 1).is_none() {
+                    input.push(Expr::Number(0.0));
+                }
+
                 let rhs = match input.clone().get(idx + 1).ok_or(CalcError::from_expr_list(
                     "RHS of operator not found".to_string(),
                     input.clone(),
