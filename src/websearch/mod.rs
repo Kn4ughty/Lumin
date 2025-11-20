@@ -108,10 +108,7 @@ impl Web {
         )
     }
 
-    async fn get_image(
-        client: reqwest::Client,
-        url: &str,
-    ) -> Result<iced::advanced::image::Bytes, SearchError> {
+    async fn get_image(client: reqwest::Client, url: &str) -> Result<bytes::Bytes, SearchError> {
         let response = client.get(url).send().await.map_err(|e| {
             SearchError::BadResponse(format!(
                 "failed to get response for image: {}. url: {url}",

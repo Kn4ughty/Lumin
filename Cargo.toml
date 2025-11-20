@@ -21,7 +21,7 @@ rustflags = ["-Clink-arg=-fuse-ld=lld", "-Clink-arg=-Wl,--no-rosegment"]
 
 
 [dependencies]
-iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "tokio", "image"], rev= "ea614387f4d94960911b0a7d8ce25c02edb470c5" }
+iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "tokio", "image"], rev= "281e58da8e0413bbf9e34f15e756c08e4366e08a" }
 anyhow = "1.0.99"
 libc = "0.2.175"
 log = "0.4.28"
@@ -35,6 +35,7 @@ serde_json = "1.0.145"
 icns = "0.3.1"
 icon = { git = "https://github.com/Kn4ughty/linux_icons" }
 resvg = "0.45.1"
+bytes = "1.11.0"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
