@@ -1,6 +1,6 @@
 #![deny(clippy::unwrap_used)]
 
-use iced::{Task, keyboard, widget};
+use iced::{Task, keyboard, theme::Style, widget};
 
 use std::cell::LazyCell;
 use std::collections::HashMap;
@@ -170,6 +170,9 @@ impl State {
                 radius: 15.0.into(),
                 ..base_theme.border
             };
+            if config::SETTINGS.transparent_background {
+                base_theme = base_theme.background(iced::Color::TRANSPARENT);
+            }
             base_theme
         })
         .padding(10)
@@ -178,6 +181,13 @@ impl State {
         let mouse = widget::mouse_area(root_continer).on_press(Message::ShouldDrag);
 
         mouse.into()
+    }
+
+    fn style(&self, theme: &iced::Theme) -> Style {
+        Style {
+            background_color: iced::Color::TRANSPARENT,
+            text_color: theme.palette().text,
+        }
     }
 
     fn get_result_to_display(&self) -> iced::Element<'_, Message> {
@@ -301,12 +311,18 @@ fn main() -> iced::Result {
         })
         .subscription(subscription)
         .level(iced::window::Level::AlwaysOnTop)
-        .resizable(false)
-        .decorations(false)
         .antialiasing(true)
-        .transparent(true)
-        .window_size((800.0, 330.0))
+        .window(iced::window::Settings {
+            blur: true,
+            resizable: false,
+            decorations: false,
+            transparent: true,
+            size: (800.0, 330.0).into(),
+
+            ..Default::default()
+        })
         .theme(State::theme)
+        .style(State::style)
         // .theme(|s| iced::theme::Theme::CatppuccinMocha)
         // .theme(|_s| {
         //     // iced::Theme::custom(
