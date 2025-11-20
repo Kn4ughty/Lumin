@@ -30,12 +30,13 @@ ln -s target/release/lumin ~/bin/
 Then once it is in your path just run `lumin`
 
 
-# ToDo
-- [ ] Change default macos font
-- [ ] Templates for UI elements 
-    - [ ] Investiage https://austinmreppert.github.io/iced-reference/chapter_3.html
-    - [x] ListBox and List elements
-    - [ ] Investigate https://github.com/pop-os/cosmic-time
-- [ ] Dictionary module
-- [ ] Refactor calculator
-- [ ] Reduce dependencies
+<!-- Hidden since it is for me and not users -->
+<!-- # ToDo -->
+<!-- - [ ] Change default macos font -->
+<!-- - [ ] Templates for UI elements  -->
+<!--     - [ ] Investiage https://austinmreppert.github.io/iced-reference/chapter_3.html -->
+<!--     - [x] ListBox and List elements -->
+<!--     - [ ] Investigate https://github.com/pop-os/cosmic-time -->
+<!-- - [ ] Dictionary module -->
+<!-- - [ ] Refactor calculator -->
+<!-- - [ ] Reduce dependencies -->
