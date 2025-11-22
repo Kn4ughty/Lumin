@@ -1,10 +1,6 @@
 use super::{SearchError, SearchResult};
 use serde::Deserialize;
 
-#[derive(Debug, Clone)]
-enum DictMessage {
-    ResultFetched(String, Response),
-}
 #[derive(Clone, Debug, Deserialize)]
 struct Response {
     // phonetic: String,
@@ -15,7 +11,7 @@ struct Response {
 #[derive(Deserialize, Debug, Clone)]
 struct Meaning {
     #[serde(rename = "partOfSpeech")]
-    part_of_speech: String,
+    // part_of_speech: String,
     definitions: Vec<Defintion>,
 }
 
