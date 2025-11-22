@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use super::bits::{SearchError, SearchResult};
+use super::{SearchError, SearchResult};
 
 #[derive(Deserialize)]
 struct WikiResults {

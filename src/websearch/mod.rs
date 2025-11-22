@@ -3,15 +3,39 @@ use std::collections::HashMap;
 
 use crate::{
     module::{Module, ModuleMessage},
-    util,
-    websearch::bits::SearchError,
-    widglets,
+    util, widglets,
 };
 
-mod bits;
-use bits::SearchResult;
-pub use bits::WebMsg;
+// mod dictionary;
 mod wikipedia;
+
+#[derive(Debug, Clone)]
+pub enum WebMsg {
+    GotResult(String, Result<Vec<SearchResult>, SearchError>),
+    FetchedImage((String, Result<iced::widget::image::Handle, ()>)),
+    ResultActivated(String), // URL
+}
+
+#[derive(Debug, Clone)]
+pub struct SearchResult {
+    pub destination_url: String,
+    pub title: String,
+    pub description: String,
+    pub image_url: Option<String>,
+}
+
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum SearchError {
+    BadResponse(String),
+}
+
+impl std::fmt::Display for SearchError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::BadResponse(inner) => f.write_str(&format!("Bad Response: {inner}")),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct Web {
@@ -57,9 +81,9 @@ impl Web {
         let first = input_chars.clone().next();
         let search_text = input.trim().to_string();
 
-        match (first, search_text) {
+        match first {
             // get first char
-            (Some('w'), search_text) => {
+            Some('w') => {
                 log::debug!("wikipedia time!");
                 let client = self.client.clone();
 
@@ -75,7 +99,11 @@ impl Web {
                     |r| ModuleMessage::WebMessage(WebMsg::GotResult(r.0, r.1)),
                 )
             }
-            (None, _) => {
+            Some('d') => {
+                log::debug!("Dictionary module");
+                Task::none()
+            }
+            None => {
                 log::info!("Did not match in web searcher");
                 Task::none()
             }
