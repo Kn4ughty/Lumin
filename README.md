@@ -3,7 +3,7 @@
 
 [![Tests](https://github.com/Kn4ughty/Lumin/actions/workflows/rust.yml/badge.svg)](https://github.com/Kn4ughty/Lumin/actions/workflows/rust.yml)
 
-# Features and Useage
+# Features and Usage
 - Linux and MacOS app launching with async icon lookup using greenthreads.
     - Loads all icons in **2 frames** from input, competing launcher [rofi](https://github.com/davatorium/rofi) takes **6**
 - Calculator module with homemade parser 
