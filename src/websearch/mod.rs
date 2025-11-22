@@ -6,7 +6,7 @@ use crate::{
     util, widglets,
 };
 
-// mod dictionary;
+mod dictionary;
 mod wikipedia;
 
 #[derive(Debug, Clone)]
@@ -101,7 +101,19 @@ impl Web {
             }
             Some('d') => {
                 log::debug!("Dictionary module");
-                Task::none()
+                let client = self.client.clone();
+                let full_text = self.input_for_results.clone();
+                // trim first character. TODO. Dont hardcode
+                let trimmed_text = search_text[1..].to_owned();
+
+                Task::perform(
+                    async move {
+                        let res = dictionary::search(&client, trimmed_text.as_str()).await;
+                        // this little tuple maneuver is cool
+                        (full_text, res)
+                    },
+                    |r| ModuleMessage::WebMessage(WebMsg::GotResult(r.0, r.1)),
+                )
             }
             None => {
                 log::info!("Did not match in web searcher");
