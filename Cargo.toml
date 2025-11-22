@@ -36,6 +36,7 @@ icns = "0.3.1"
 icon = { git = "https://github.com/Kn4ughty/linux_icons" }
 resvg = "0.45.1"
 bytes = "1.11.0"
+toml = "0.9.8"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
