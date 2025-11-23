@@ -34,6 +34,7 @@ const HELP_SCREEN_PREFIX: &str = "?";
 struct State {
     text_value: String,
     text_id: widget::Id,
+    /// Used for showing the help screen on startup
     has_user_typed: bool,
     window_id: Option<iced::window::Id>,
     modules: HashMap<String, LazyCell<Box<dyn Module>>>,
@@ -121,7 +122,6 @@ impl State {
             }
             Message::PluginMessage(a) => {
                 log::trace!("Handling module message {a:?}");
-                // TODO. match by exact prefix and pass message
                 if let Some((module, prefix)) = self.find_module_mut() {
                     log::trace!("Module handled had prefix {prefix}");
                     return module.update(a).map(Message::PluginMessage);
@@ -216,7 +216,7 @@ impl State {
             .collect();
         all_modules.sort_by(|first, other| first.0.cmp(&other.0));
 
-        // Since the overview screen module is magic, it needs special logic for info
+        // Since the help_screen module is magic, it needs special logic
         all_modules.push((
             HELP_SCREEN_PREFIX.to_string(),
             "This help screen".to_string(),
@@ -323,16 +323,5 @@ fn main() -> iced::Result {
         })
         .theme(State::theme)
         .style(State::style)
-        // .theme(|s| iced::theme::Theme::CatppuccinMocha)
-        // .theme(|_s| {
-        //     // iced::Theme::custom(
-        //     //     // std::borrow::Cow::Borrowed("name"),
-        //     //     // iced::theme::Palette {
-        //     //     //     background: iced::color!(0x313244),
-        //     //     //     ..iced::Theme::CatppuccinMocha.palette()
-        //     //     // },
-        //     // )
-        //     iced::Theme::CatppuccinMocha
-        // })
         .run()
 }
