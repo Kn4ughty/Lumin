@@ -5,23 +5,26 @@ use iced::Theme;
 
 use crate::constants;
 
-static CONFIG_PATH: LazyLock<String> = LazyLock::new(|| constants::CONFIG_DIR.clone() + "conf.csv");
+static CONFIG_PATH: LazyLock<String> =
+    LazyLock::new(|| constants::CONFIG_DIR.clone() + "config.toml");
 
-const DEFAULT_CONFIG: LazyLock<Settings> = LazyLock::new(|| {
-    toml::toml! {
-        color_scheme = "CatppuccinMocha"
-        transparent_background = false
-    }
-    .try_into()
-    .expect("Can turn default config into Settings")
+static DEFAULT_CONFIG: LazyLock<Settings> = LazyLock::new(|| {
+    toml::from_str(include_str!("../assets/config.toml"))
+        .expect("Can turn default config into Settings")
 });
 
-pub static SETTINGS: LazyLock<Settings> =
-    LazyLock::new(|| load_from_disk().expect("Can load settings!"));
+pub static SETTINGS: LazyLock<Settings> = LazyLock::new(|| {
+    load_from_disk().unwrap_or_else(|e| {
+        log::error!("User config was invalid!! {e:?}");
+        LazyLock::<Settings>::force(&DEFAULT_CONFIG).clone()
+    })
+});
 
 #[derive(Debug)]
 enum ConfigError {
-    FileSystemError,
+    CannotReadConfig,
+    #[allow(dead_code, reason = "Used for debug output in terminal")]
+    TomlError(toml::de::Error),
 }
 
 #[derive(Clone, Deserialize)]
@@ -40,35 +43,24 @@ impl Default for Settings {
     }
 }
 
-// impl Settings {
-//     fn optional_theme(mut self, raw_theme: Option<&String>) -> Self {
-//         let Some(raw_theme) = raw_theme else {
-//             return self;
-//         };
-//
-//         let new = match raw_theme.as_str() {
-//             "CatppuccinMocha" => Theme::CatppuccinMocha,
-//             "CatppuccinLatte" => Theme::CatppuccinLatte,
-//             _ => self.color_scheme, // default value
-//         };
-//         self.color_scheme = new;
-//
-//         self
-//     }
-// }
-
 fn load_from_disk() -> Result<Settings, ConfigError> {
-    let raw_string =
-        std::fs::read_to_string(CONFIG_PATH.clone()).map_err(|_| ConfigError::FileSystemError)?;
+    if !std::fs::exists(CONFIG_PATH.clone()).is_ok_and(|v| v) {
+        match std::fs::write(CONFIG_PATH.clone(), include_str!("../assets/config.toml")) {
+            Ok(_) => log::info!(
+                "Successfuly wrote default config to file system to location: {CONFIG_PATH:?}"
+            ),
+            Err(e) => log::error!("Could not write default config to fs! {e:?}"),
+        };
+    }
 
-    let config: Settings = match toml::from_str(&raw_string) {
-        Ok(t) => t,
-        Err(e) => {
-            log::error!("User config was invalid!! {e}");
-            let conf = DEFAULT_CONFIG;
-            LazyLock::<Settings>::force(&conf).clone()
-        }
-    };
+    let raw_string =
+        std::fs::read_to_string(CONFIG_PATH.clone()).map_err(|_| ConfigError::CannotReadConfig)?;
+
+    #[allow(
+        clippy::redundant_closure,
+        reason = "False positive. Breaks strangely if fixed"
+    )]
+    let config: Settings = toml::from_str(&raw_string).map_err(|e| ConfigError::TomlError(e))?;
 
     Ok(config)
 }
