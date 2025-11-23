@@ -7,6 +7,8 @@ use crate::websearch;
 #[derive(Debug, Clone)]
 pub enum ModuleMessage {
     TextChanged(String),
+    SelectionUp,
+    SelectionDown,
     ActivatedIndex(usize),
     AppMessage(apps::AppMessage),
     WebMessage(websearch::WebMsg),

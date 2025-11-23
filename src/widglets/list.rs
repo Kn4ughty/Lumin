@@ -1,3 +1,4 @@
+// use crate::message::Message;
 use iced::widget;
 
 use super::PADDING;
@@ -5,15 +6,11 @@ use super::{HeadingLevel, heading};
 
 const ICON_SIZE: f32 = 32.0;
 
-// pub struct ResultList<Message> {
-//     selected_index: usize,
-//     rows: Vec<ListRow<Message>>,
-// }
-
 /// A single list item displayed to the user.
 /// Is activatable by clicking
 pub struct ListRow<Message> {
     text: String,
+    selected: bool,
     subtext: Option<String>,
     icon: Option<iced::widget::image::Handle>,
     icon_background: iced::Color,
@@ -27,6 +24,7 @@ impl<Message> ListRow<Message> {
     {
         Self {
             text: text.to_string(),
+            selected: false,
             subtext: None,
             icon: None,
             icon_background: iced::Color::TRANSPARENT,
@@ -76,6 +74,11 @@ impl<Message> ListRow<Message> {
         self.on_activate = Some(msg);
         self
     }
+
+    pub fn selected(mut self, status: bool) -> Self {
+        self.selected = status;
+        self
+    }
 }
 
 impl<'a, Message> From<ListRow<Message>> for iced::Element<'a, Message>
@@ -85,7 +88,7 @@ where
     fn from(value: ListRow<Message>) -> Self {
         let mut row_widget = widget::Row::new().padding(0);
 
-        let bg = value.icon_background;
+        let background_colour = value.icon_background;
         let icon_widget = widget::container(
             widget::Responsive::new(move |size| {
                 if let Some(icon) = &value.icon {
@@ -108,7 +111,7 @@ where
             .height(iced::Length::Fixed(ICON_SIZE)),
         )
         .style(move |_theme| widget::container::Style {
-            background: Some(iced::Background::Color(bg)),
+            background: Some(iced::Background::Color(background_colour)),
             ..Default::default()
         });
 
@@ -143,7 +146,7 @@ where
                 .width(iced::Fill)
                 .height(iced::Shrink)
                 .on_press_maybe(value.on_activate)
-                .style(|theme, status| {
+                .style(move |theme, status| {
                     let mut button_style = widget::button::secondary(theme, status);
 
                     let ext_pallet = theme.extended_palette();
@@ -154,7 +157,13 @@ where
                                 button_style.with_background(ext_pallet.secondary.weak.color);
                         }
                         widget::button::Status::Active | widget::button::Status::Pressed => {
-                            button_style = button_style.with_background(iced::color!(0, 0, 0, 0.0));
+                            if !value.selected {
+                                button_style =
+                                    button_style.with_background(iced::color!(0, 0, 0, 0.0));
+                            } else {
+                                button_style =
+                                    button_style.with_background(ext_pallet.secondary.weak.color);
+                            }
                         }
                         _ => {}
                     }

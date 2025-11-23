@@ -78,6 +78,8 @@ pub struct AppModule {
     app_frequencies: HashMap<String, u32>,
     /// To prevent searching again if already searching
     have_started_icon_search: bool,
+    /// Highlighted index to launch
+    selected_index: usize,
 }
 
 impl Default for AppModule {
@@ -128,6 +130,7 @@ impl AppModule {
             app_list: Vec::new(),
             app_frequencies: freq_map,
             have_started_icon_search: false,
+            selected_index: 0,
         }
     }
 
@@ -179,6 +182,8 @@ impl AppModule {
     }
 
     fn handle_text_change(&mut self, input: String) -> Task<ModuleMessage> {
+        self.selected_index = 0;
+
         if self.app_list.is_empty() {
             log::trace!("Generating app_list");
             let start = std::time::Instant::now();
@@ -314,6 +319,7 @@ impl Module for AppModule {
                             .optional_subtext(app.subname)
                             .on_activate(ModuleMessage::ActivatedIndex(i))
                             .optional_icon(icon)
+                            .selected(self.selected_index == i)
                             .into()
                     }),
             )
@@ -348,6 +354,18 @@ impl Module for AppModule {
                 Self::run_app_at_index(self, i);
                 iced::exit()
             }
+            ModuleMessage::SelectionUp => {
+                if self.selected_index >= 1 {
+                    self.selected_index -= 1
+                }
+                Task::none()
+            }
+            ModuleMessage::SelectionDown => {
+                if self.selected_index < self.app_list.len() {
+                    self.selected_index += 1
+                }
+                Task::none()
+            }
             x => {
                 log::warn!("App module received irrelevant msg: {x:?}");
                 Task::none()
@@ -356,7 +374,7 @@ impl Module for AppModule {
     }
 
     fn run(&self) -> Task<crate::message::Message> {
-        Self::run_app_at_index(self, 0);
+        Self::run_app_at_index(self, self.selected_index);
         iced::exit()
     }
 }

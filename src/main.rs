@@ -18,6 +18,8 @@ use websearch::Web;
 mod drun;
 use drun::Drun;
 
+// mod files;
+
 mod config;
 mod constants;
 mod module;
@@ -135,6 +137,22 @@ impl State {
                 } else {
                     Task::none()
                 }
+            }
+            Message::KeyboardUp => {
+                if let Some((module, _)) = self.find_module_mut() {
+                    return module
+                        .update(ModuleMessage::SelectionUp)
+                        .map(Message::PluginMessage);
+                }
+                Task::none()
+            }
+            Message::KeyboardDown => {
+                if let Some((module, _)) = self.find_module_mut() {
+                    return module
+                        .update(ModuleMessage::SelectionDown)
+                        .map(Message::PluginMessage);
+                }
+                Task::none()
             }
         }
     }
@@ -276,6 +294,8 @@ fn handle_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) -> Option<
     match key.as_ref() {
         // This is a bit silly
         keyboard::Key::Named(keyboard::key::Named::Escape) => Some(Message::Close),
+        keyboard::Key::Named(keyboard::key::Named::ArrowUp) => Some(Message::KeyboardUp),
+        keyboard::Key::Named(keyboard::key::Named::ArrowDown) => Some(Message::KeyboardDown),
         _ => None,
     }
 }

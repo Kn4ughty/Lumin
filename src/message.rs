@@ -9,4 +9,6 @@ pub enum Message {
     #[allow(clippy::enum_variant_names)]
     PluginMessage(ModuleMessage),
     Close,
+    KeyboardUp,
+    KeyboardDown,
 }
