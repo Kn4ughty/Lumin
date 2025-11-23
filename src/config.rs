@@ -8,15 +8,21 @@ use crate::constants;
 static CONFIG_PATH: LazyLock<String> =
     LazyLock::new(|| constants::CONFIG_DIR.clone() + "config.toml");
 
-static DEFAULT_CONFIG: LazyLock<Settings> = LazyLock::new(|| {
+static DEFAULT_SETTINGS: LazyLock<Settings> = LazyLock::new(|| {
     toml::from_str(include_str!("../assets/config.toml"))
         .expect("Can turn default config into Settings")
 });
 
+#[test]
+fn default_settings_work() {
+    // Just so it does something
+    println!("{:#?}", DEFAULT_SETTINGS.color_scheme);
+}
+
 pub static SETTINGS: LazyLock<Settings> = LazyLock::new(|| {
     load_from_disk().unwrap_or_else(|e| {
-        log::error!("User config was invalid!! {e:?}");
-        LazyLock::<Settings>::force(&DEFAULT_CONFIG).clone()
+        log::error!("User config was invalid!! {e:#?}");
+        LazyLock::<Settings>::force(&DEFAULT_SETTINGS).clone()
     })
 });
 
@@ -27,7 +33,7 @@ enum ConfigError {
     TomlError(toml::de::Error),
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Settings {
     #[serde(with = "ThemeDef")]
     pub color_scheme: iced::Theme,
