@@ -41,11 +41,11 @@ impl std::fmt::Display for SearchError {
 pub struct Web {
     input_for_results: String,
     cached_results: HashMap<String, Vec<SearchResult>>,
-
     // The memory cost of this isnt actually that bad. Each image is just a couple kB each since
     // they are very small thumbnails. It only increased a few mB over like 10s of usage
     image_hashmap: HashMap<String, widget::image::Handle>,
     client: reqwest::Client,
+    selected_index: usize,
 }
 
 impl Default for Web {
@@ -60,6 +60,7 @@ impl Web {
             input_for_results: String::new(),
             cached_results: HashMap::new(),
             image_hashmap: HashMap::new(),
+            selected_index: 0,
             client: reqwest::ClientBuilder::new()
                 // https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:User-Agent_policy
                 .user_agent("LuminAppLauncher/0.0 (https://github.com/Kn4ughty)")
@@ -70,6 +71,7 @@ impl Web {
 
     /// Split up just bc the indentation was getting to be too much
     fn handle_text_change(&mut self, input: String) -> Task<ModuleMessage> {
+        self.selected_index = 0;
         self.input_for_results = input.to_string();
 
         // Is this search text already in the cache
@@ -192,7 +194,8 @@ impl Module for Web {
         let elements: Vec<iced::Element<'_, ModuleMessage>> = results
             .clone()
             .into_iter()
-            .map(|result| {
+            .enumerate()
+            .map(|(i, result)| {
                 log::trace!("Viewing webresult {:?}", result);
 
                 let image = match result.image_url {
@@ -207,6 +210,7 @@ impl Module for Web {
                     )))
                     .optional_icon(image)
                     .icon_background(iced::Color::WHITE)
+                    .selected(self.selected_index == i)
                     .into()
             })
             .collect();
@@ -235,6 +239,21 @@ impl Module for Web {
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
         match msg {
             ModuleMessage::TextChanged(input) => self.handle_text_change(input),
+            ModuleMessage::SelectionUp => {
+                if self.selected_index >= 1 {
+                    self.selected_index -= 1;
+                }
+                Task::none()
+            }
+            ModuleMessage::SelectionDown => {
+                if let Some(v) = self.cached_results.get(&self.input_for_results)
+                    && self.selected_index + 1 < v.len()
+                {
+                    self.selected_index += 1;
+                }
+                Task::none()
+            }
+
             ModuleMessage::WebMessage(inner) => {
                 log::trace!("received a webMessage yay!!! inner {inner:?}");
 
@@ -288,12 +307,13 @@ impl Module for Web {
     fn run(&self) -> Task<crate::message::Message> {
         match self.cached_results.get(&self.input_for_results) {
             Some(v) => {
-                if let Some(search_res) = v.first() {
+                if let Some(search_res) = v.get(self.selected_index) {
                     Self::launch_url(&search_res.destination_url);
                     iced::exit()
                 } else {
                     log::warn!(
-                        "Selected search_result list was empty? This doesnt make sense. Self: {self:?}"
+                        "Selected search_result index was invalid. \
+                        User probably selected past end of bounds.  {self:#?}"
                     );
                     Task::none()
                 }
