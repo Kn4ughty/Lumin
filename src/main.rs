@@ -290,12 +290,17 @@ fn subscription(_state: &State) -> iced::Subscription<Message> {
 }
 
 // Thank you https://kressle.in/keystrokes
-fn handle_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) -> Option<Message> {
-    match key.as_ref() {
+fn handle_hotkeys(key: keyboard::Key, modifier: keyboard::Modifiers) -> Option<Message> {
+    use iced::keyboard as kb;
+    use iced::keyboard::Modifiers as kmod;
+
+    match (key.as_ref(), modifier) {
         // This is a bit silly
-        keyboard::Key::Named(keyboard::key::Named::Escape) => Some(Message::Close),
-        keyboard::Key::Named(keyboard::key::Named::ArrowUp) => Some(Message::KeyboardUp),
-        keyboard::Key::Named(keyboard::key::Named::ArrowDown) => Some(Message::KeyboardDown),
+        (kb::Key::Named(kb::key::Named::Escape), _) => Some(Message::Close),
+        (kb::Key::Named(kb::key::Named::ArrowUp), _) => Some(Message::KeyboardUp),
+        (kb::Key::Named(kb::key::Named::ArrowDown), _) => Some(Message::KeyboardDown),
+        (kb::Key::Named(kb::key::Named::Tab), kmod::SHIFT) => Some(Message::KeyboardUp),
+        (kb::Key::Named(kb::key::Named::Tab), _) => Some(Message::KeyboardDown),
         _ => None,
     }
 }
