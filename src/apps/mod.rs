@@ -361,7 +361,7 @@ impl Module for AppModule {
                 Task::none()
             }
             ModuleMessage::SelectionDown => {
-                if self.selected_index < self.app_list.len() {
+                if self.selected_index + 1 < self.app_list.len() {
                     self.selected_index += 1
                 }
                 Task::none()
