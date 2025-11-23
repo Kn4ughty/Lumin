@@ -10,7 +10,7 @@ struct Response {
 
 #[derive(Deserialize, Debug, Clone)]
 struct Meaning {
-    #[serde(rename = "partOfSpeech")]
+    // #[serde(rename = "partOfSpeech")]
     // part_of_speech: String,
     definitions: Vec<Defintion>,
 }
