@@ -10,9 +10,13 @@
     - Use `=` prefix and type your equation
 - Async web searching 
     - Type `!w` to quickly search through wikipedia articles and preview results
+    - Type `!d` to search and use an online dictionary API.
 - dmenu support with `--dmenu` flag
     - Pass in newline seperated items. Selected item is written to stdout. Useful for scripting
     - If no lines of items are sent, and an EOF is sent, outputs the input text.
+- Configurable via `~/.config/lumin/config.toml`
+    - All options documented via code comments
+    - Resilient to bad config (uses default config in case of error)
 
 # Installation
 
@@ -33,10 +37,7 @@ Then once it is in your path just run `lumin`
 <!-- Hidden since it is for me and not users -->
 <!-- # ToDo -->
 <!-- - [ ] Change default macos font -->
-<!-- - [ ] Templates for UI elements  -->
-<!--     - [ ] Investiage https://austinmreppert.github.io/iced-reference/chapter_3.html -->
-<!--     - [x] ListBox and List elements -->
-<!--     - [ ] Investigate https://github.com/pop-os/cosmic-time -->
-<!-- - [ ] Dictionary module -->
+<!-- - [ ] Investigate https://austinmreppert.github.io/iced-reference/chapter_3.html -->
+<!-- - [ ] Investigate https://github.com/pop-os/cosmic-time -->
 <!-- - [ ] Refactor calculator -->
 <!-- - [ ] Reduce dependencies -->
