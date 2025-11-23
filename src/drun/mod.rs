@@ -9,6 +9,7 @@ use crate::{
 pub struct Drun {
     options: Vec<String>,
     text_input: String,
+    selected_index: usize,
 }
 
 impl Drun {
@@ -16,6 +17,7 @@ impl Drun {
         Drun {
             options: input,
             text_input: "".into(),
+            selected_index: 0,
         }
     }
 
@@ -40,6 +42,7 @@ impl Module for Drun {
     fn update(&mut self, msg: ModuleMessage) -> iced::Task<ModuleMessage> {
         match msg {
             ModuleMessage::TextChanged(input) => {
+                self.selected_index = 0;
                 self.options
                     .sort_by_cached_key(|opt| -sorting::score_element(&input, opt));
                 Task::none()
@@ -48,6 +51,19 @@ impl Module for Drun {
                 self.run_at_index(i);
                 Task::none()
             }
+            ModuleMessage::SelectionUp => {
+                if self.selected_index >= 1 {
+                    self.selected_index -= 1
+                }
+                Task::none()
+            }
+            ModuleMessage::SelectionDown => {
+                if self.selected_index + 1 < self.options.len() {
+                    self.selected_index += 1
+                }
+                Task::none()
+            }
+
             _ => {
                 log::warn!("unknown message!");
                 Task::none()
@@ -64,6 +80,7 @@ impl Module for Drun {
                 .map(|(i, item)| {
                     widglets::ListRow::new(item)
                         .on_activate(ModuleMessage::ActivatedIndex(i))
+                        .selected(self.selected_index == i)
                         .into()
                 }),
         ))
@@ -71,7 +88,7 @@ impl Module for Drun {
     }
 
     fn run(&self) -> iced::Task<crate::message::Message> {
-        self.run_at_index(0);
+        self.run_at_index(self.selected_index);
         iced::exit()
     }
 }
