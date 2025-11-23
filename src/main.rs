@@ -209,7 +209,9 @@ impl State {
     }
 
     fn get_result_to_display(&self) -> iced::Element<'_, Message> {
-        if !self.has_user_typed || self.text_value == HELP_SCREEN_PREFIX {
+        if (!self.has_user_typed || self.text_value == HELP_SCREEN_PREFIX)
+            && self.modules.len() != 1
+        {
             return self.show_overview_screen();
         }
 
