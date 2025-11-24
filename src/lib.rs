@@ -3,6 +3,7 @@ pub mod apps;
 pub mod calculator;
 pub mod config;
 pub mod drun;
+pub mod files;
 pub mod module;
 pub mod serworse;
 pub mod websearch;

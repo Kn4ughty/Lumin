@@ -18,7 +18,8 @@ use websearch::Web;
 mod drun;
 use drun::Drun;
 
-// mod files;
+mod files;
+use files::FileSearcher;
 
 mod config;
 mod constants;
@@ -49,6 +50,11 @@ impl State {
         modules.insert("=".to_string(), LazyCell::new(|| Box::new(Calc::new())));
 
         modules.insert("!".to_string(), LazyCell::new(|| Box::new(Web::new())));
+
+        modules.insert(
+            "'".to_string(),
+            LazyCell::new(|| Box::new(FileSearcher::new())),
+        );
 
         modules.insert(String::new(), LazyCell::new(|| Box::new(AppModule::new())));
 
