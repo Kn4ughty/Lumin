@@ -11,6 +11,9 @@
 - Async web searching 
     - Type `!w` to quickly search through wikipedia articles and preview results
     - Type `!d` to search and use an online dictionary API.
+- Search through file names with `'`
+    - Searches through files on seperate thread to keep up responsive
+    - Just activate the item to open it in the default app
 - dmenu support with `--dmenu` flag
     - Pass in newline seperated items. Selected item is written to stdout. Useful for scripting
     - If only an EOF is sent and no lines, outputs the input text to stdout.
