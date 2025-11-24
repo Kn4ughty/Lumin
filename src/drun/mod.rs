@@ -49,7 +49,7 @@ impl Module for Drun {
             }
             ModuleMessage::ActivatedIndex(i) => {
                 self.run_at_index(i);
-                Task::none()
+                iced::exit()
             }
             ModuleMessage::SelectionUp => {
                 if self.selected_index >= 1 {
