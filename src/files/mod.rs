@@ -115,11 +115,16 @@ impl Module for FileSearcher {
 
 impl FileSearcher {
     fn run_at_index(&self, i: usize) {
-        crate::util::execute_command_detached(
-            "xdg-open",
-            vec![self.found_files[i].1.as_os_str()],
-            None,
-        )
-        .expect("launch file")
+        Self::open_file(self.found_files[i].1.as_os_str())
+    }
+
+    #[cfg(target_os = "linux")]
+    fn open_file(file: &std::ffi::OsStr) {
+        crate::util::execute_command_detached("xdg-open", vec![file], None).expect("launch file")
+    }
+
+    #[cfg(target_os = "macos")]
+    fn open_file(file: &std::ffi::OsStr) {
+        crate::util::execute_command_detached("open", vec![file], None).expect("launch file")
     }
 }
