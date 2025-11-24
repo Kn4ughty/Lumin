@@ -21,7 +21,12 @@ fn default_settings_work() {
 
 pub static SETTINGS: LazyLock<Settings> = LazyLock::new(|| {
     load_from_disk().unwrap_or_else(|e| {
-        log::error!("User config was invalid!! {e:#?}");
+        log::error!(
+            "User config was invalid!! {e:#?}
+===========
+You can attempt to copy the default config manually so it has the new fields.
+it is in `assets/config.toml`"
+        );
         LazyLock::<Settings>::force(&DEFAULT_SETTINGS).clone()
     })
 });
@@ -38,6 +43,12 @@ pub struct Settings {
     #[serde(with = "ThemeDef")]
     pub color_scheme: iced::Theme,
     pub transparent_background: bool,
+    pub file_settings: FileSettings,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct FileSettings {
+    pub search_directories: Vec<String>,
 }
 
 impl Default for Settings {
@@ -45,6 +56,9 @@ impl Default for Settings {
         Self {
             color_scheme: iced::Theme::CatppuccinMocha,
             transparent_background: false,
+            file_settings: FileSettings {
+                search_directories: vec!["Documents".into(), "Desktop".into(), "Downloads".into()],
+            },
         }
     }
 }

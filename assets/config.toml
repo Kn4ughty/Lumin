@@ -6,3 +6,6 @@ color_scheme = "CatppuccinMocha"
 # If the background of the app should be set to be transparent
 # This can be removed once custom colour schemes are supported
 transparent_background = false
+
+[file_settings]
+search_directories = ["Documents", "Desktop", "Downloads"]
