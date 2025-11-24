@@ -202,7 +202,11 @@ impl State {
         .padding(10)
         .align_top(iced::Fill);
 
-        let mouse = widget::mouse_area(root_continer).on_press(Message::ShouldDrag);
+        let mut mouse = widget::mouse_area(root_continer).on_press(Message::ShouldDrag);
+        // Hide the mouse if the user has not typed yet. Looks better.
+        if !self.has_user_typed {
+            mouse = mouse.interaction(iced::mouse::Interaction::Hidden);
+        }
 
         mouse.into()
     }
@@ -294,6 +298,8 @@ fn subscription(_state: &State) -> iced::Subscription<Message> {
     iced::Subscription::batch(vec![
         iced::window::open_events().map(Message::WindowOpened),
         iced::keyboard::on_key_release(handle_hotkeys),
+        // Todo, work out how to subscribe to mouse movement
+        // https://docs.iced.rs/iced/mouse/index.html
     ])
 }
 
@@ -351,7 +357,6 @@ fn main() -> iced::Result {
             decorations: false,
             transparent: true,
             size: (800.0, 330.0).into(),
-
             ..Default::default()
         })
         .theme(State::theme)
