@@ -13,7 +13,7 @@
     - Type `!d` to search and use an online dictionary API.
 - dmenu support with `--dmenu` flag
     - Pass in newline seperated items. Selected item is written to stdout. Useful for scripting
-    - If no lines of items are sent, and an EOF is sent, outputs the input text.
+    - If only an EOF is sent and no lines, outputs the input text to stdout.
 - Configurable via `~/.config/lumin/config.toml`
     - All options documented via code comments
     - Resilient to bad config (uses default config in case of error)
