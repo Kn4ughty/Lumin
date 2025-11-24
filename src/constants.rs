@@ -1,6 +1,6 @@
 use std::sync::LazyLock;
 
-static HOME_DIR: LazyLock<String> =
+pub static HOME_DIR: LazyLock<String> =
     LazyLock::new(|| std::env::var("HOME").expect("Can get home enviroment variable"));
 
 pub static DATA_DIR: LazyLock<String> = LazyLock::new(|| {

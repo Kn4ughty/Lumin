@@ -8,6 +8,7 @@ use std::path::PathBuf;
 // use std::sync::Mutex;
 
 use crate::{
+    constants,
     module::{Module, ModuleMessage},
     widglets,
 };
@@ -30,9 +31,11 @@ impl FileSearcher {
         thread::spawn(move || {
             let start = std::time::Instant::now();
             let mut count = 0;
-            for entry in WalkDir::new("/home/d/Documents/")
-                .into_iter()
-                .filter_map(|e| e.ok())
+            for entry in WalkDir::new(
+                std::sync::LazyLock::force(&constants::HOME_DIR).to_owned() + "/Documents",
+            )
+            .into_iter()
+            .filter_map(|e| e.ok())
             {
                 tx.send(entry).expect("Can send");
                 count += 1;
