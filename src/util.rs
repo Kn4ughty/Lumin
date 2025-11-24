@@ -4,14 +4,15 @@ use std::io;
 use std::process;
 
 #[cfg(unix)]
-pub fn execute_command_detached<S, I>(
+pub fn execute_command_detached<S, I, A>(
     cmd: S,
     args: I,
     working_dir_arg: Option<String>,
 ) -> io::Result<()>
 where
     S: AsRef<OsStr>,
-    I: IntoIterator<Item = S>,
+    A: AsRef<OsStr>,
+    I: IntoIterator<Item = A>,
 {
     use std::os::unix::process::CommandExt;
 
