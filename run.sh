@@ -6,5 +6,5 @@ case $1 in
         xdg-open target/criterion/get\ apps/profile/flamegraph.svg
         ;;
     tt)
-        cargo r --features time-travel
+        cargo r --release --features time-travel
 esac
