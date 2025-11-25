@@ -84,7 +84,7 @@ impl Module for FileSearcher {
         match msg {
             ModuleMessage::TextChanged(t) => {
                 self.found_files.sort_by_cached_key(|(name, _)| {
-                    -crate::sorting::score_element(&t, name.to_str().expect("path is utf8"))
+                    -crate::sorting::score_element(&t, &name.to_string_lossy())
                 });
             }
             ModuleMessage::SelectionUp => {
