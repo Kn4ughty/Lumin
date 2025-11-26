@@ -297,7 +297,7 @@ impl State {
 fn subscription(_state: &State) -> iced::Subscription<Message> {
     iced::Subscription::batch(vec![
         iced::window::open_events().map(Message::WindowOpened),
-        iced::keyboard::on_key_release(handle_hotkeys),
+        iced::keyboard::on_key_press(handle_hotkeys),
         // Todo, work out how to subscribe to mouse movement
         // https://docs.iced.rs/iced/mouse/index.html
     ])
