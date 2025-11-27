@@ -118,13 +118,14 @@ impl FileSearcher {
         Self::open_file(self.found_files[i].1.as_os_str())
     }
 
-    #[cfg(target_os = "linux")]
     fn open_file(file: &std::ffi::OsStr) {
-        crate::util::execute_command_detached("xdg-open", vec![file], None).expect("launch file")
-    }
-
-    #[cfg(target_os = "macos")]
-    fn open_file(file: &std::ffi::OsStr) {
-        crate::util::execute_command_detached("open", vec![file], None).expect("launch file")
+        let text: &str = if cfg!(target_os = "linux") {
+            "xdg-open"
+        } else if cfg!(target_os = "macos") {
+            "open"
+        } else {
+            panic!("Unknown operating system")
+        };
+        crate::util::execute_command_detached(text, vec![file], None).expect("Can launch url")
     }
 }

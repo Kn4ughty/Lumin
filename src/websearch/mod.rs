@@ -164,15 +164,15 @@ impl Web {
         Ok(bytes)
     }
 
-    #[cfg(target_os = "linux")]
     fn launch_url(url: &str) {
-        util::execute_command_detached("xdg-open", vec![url], None).expect("Can launch url")
-    }
-
-    #[cfg(target_os = "macos")]
-    fn launch_url(url: &str) {
-        util::execute_command_detached::<&str, Vec<&str>>("open", vec![url], None)
-            .expect("Can launch url")
+        let text: &str = if cfg!(target_os = "linux") {
+            "xdg-open"
+        } else if cfg!(target_os = "macos") {
+            "open"
+        } else {
+            panic!("Unknown operating system")
+        };
+        util::execute_command_detached(text, vec![url], None).expect("Can launch url")
     }
 }
 
