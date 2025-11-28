@@ -18,36 +18,6 @@ use crate::sorting;
 use crate::util;
 use crate::widglets;
 
-static APP_SEARCHER: LazyLock<Box<dyn OSAppSearcher>> = LazyLock::new(|| {
-    let searcher: Box<dyn OSAppSearcher> = if cfg!(target_os = "linux") {
-        Box::new(desktop_entry::LinuxAppSearcher::default())
-    } else if cfg!(target_os = "macos") {
-        Box::new(mac_apps::MacOsAppSearcher::default())
-    } else {
-        panic!("Unknown operating system")
-    };
-    searcher
-});
-
-const APP_FREQUENCY_LOOKUP_RELPATH: &str = "app_lookup";
-const ICON_CACHE_RELPATH: &str = "icon_cache";
-
-static APP_FREQUENCY_FILE_PATH: LazyLock<String> =
-    LazyLock::new(|| constants::DATA_DIR.to_owned() + APP_FREQUENCY_LOOKUP_RELPATH);
-
-static ICON_CACHE_FILE_PATH: LazyLock<String> =
-    LazyLock::new(|| constants::CACHE_DIR.to_owned() + ICON_CACHE_RELPATH);
-
-// Big type name!
-static ICON_CACHE: LazyLock<Mutex<HashMap<String, String>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
-
-pub trait OSAppSearcher: Sync + Send {
-    fn get_apps(&self) -> Vec<App>;
-    fn load_icon_path(&self, s: String) -> Option<PathBuf>;
-    fn load_icon_image(&self, path: &Path) -> Option<widget::image::Handle>;
-}
-
 #[derive(Clone, PartialEq, Debug)]
 pub struct App {
     cmd: String,
@@ -56,6 +26,12 @@ pub struct App {
     name: String,
     subname: Option<String>,
     icon: Option<Icon>,
+}
+
+pub trait OSAppSearcher: Sync + Send {
+    fn get_apps(&self) -> Vec<App>;
+    fn load_icon_path(&self, s: String) -> Option<PathBuf>;
+    fn load_icon_image(&self, path: &Path) -> Option<widget::image::Handle>;
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -81,6 +57,30 @@ pub struct AppModule {
     /// Highlighted index to launch
     selected_index: usize,
 }
+
+static APP_SEARCHER: LazyLock<Box<dyn OSAppSearcher>> = LazyLock::new(|| {
+    let searcher: Box<dyn OSAppSearcher> = if cfg!(target_os = "linux") {
+        Box::new(desktop_entry::LinuxAppSearcher::default())
+    } else if cfg!(target_os = "macos") {
+        Box::new(mac_apps::MacOsAppSearcher::default())
+    } else {
+        panic!("Unknown operating system")
+    };
+    searcher
+});
+
+const APP_FREQUENCY_LOOKUP_RELPATH: &str = "app_lookup";
+const ICON_CACHE_RELPATH: &str = "icon_cache";
+
+static APP_FREQUENCY_FILE_PATH: LazyLock<String> =
+    LazyLock::new(|| constants::DATA_DIR.to_owned() + APP_FREQUENCY_LOOKUP_RELPATH);
+
+static ICON_CACHE_FILE_PATH: LazyLock<String> =
+    LazyLock::new(|| constants::CACHE_DIR.to_owned() + ICON_CACHE_RELPATH);
+
+// Big type name!
+static ICON_CACHE: LazyLock<Mutex<HashMap<String, String>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 impl Default for AppModule {
     fn default() -> Self {
