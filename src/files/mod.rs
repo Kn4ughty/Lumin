@@ -55,8 +55,11 @@ impl FileSearcher {
 
 impl Module for FileSearcher {
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
-        let first_few_files: Vec<(PathBuf, PathBuf)> =
-            self.found_files.get(0..5).expect("enough files").to_vec();
+        let first_few_files: Vec<(PathBuf, PathBuf)> = match self.found_files.get(0..5) {
+            None => self.found_files.clone(),
+            Some(slice) => slice.to_vec(),
+        };
+
         widget::scrollable(widget::column(first_few_files.into_iter().enumerate().map(
             |(i, (name, path))| {
                 widglets::ListRow::new(name.to_string_lossy())
