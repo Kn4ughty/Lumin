@@ -54,10 +54,6 @@ impl FileSearcher {
 }
 
 impl Module for FileSearcher {
-    fn description(&self) -> String {
-        String::from("File searching")
-    }
-
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
         let first_few_files: Vec<(PathBuf, PathBuf)> =
             self.found_files.get(0..5).expect("enough files").to_vec();

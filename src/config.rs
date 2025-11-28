@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::sync::LazyLock;
+use std::{collections::HashMap, sync::LazyLock};
 
 use iced::Theme;
 
@@ -8,10 +8,16 @@ use crate::constants;
 static CONFIG_PATH: LazyLock<String> =
     LazyLock::new(|| constants::CONFIG_DIR.clone() + "config.toml");
 
-static DEFAULT_SETTINGS: LazyLock<Settings> = LazyLock::new(|| {
-    toml::from_str(include_str!("../assets/config.toml"))
-        .expect("Can turn default config into Settings")
-});
+static DEFAULT_SETTINGS: LazyLock<Settings> =
+    LazyLock::new(
+        || match toml::from_str(include_str!("../assets/config.toml")) {
+            Err(e) => panic!(
+                "{}",
+                format!("Can turn default config into Settings. Error: {e:#?}")
+            ),
+            Ok(o) => o,
+        },
+    );
 
 #[test]
 fn default_settings_work() {
@@ -44,23 +50,12 @@ pub struct Settings {
     pub color_scheme: iced::Theme,
     pub transparent_background: bool,
     pub file_settings: FileSettings,
+    pub app_prefixes: HashMap<crate::module::ModuleEnum, String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct FileSettings {
     pub search_directories: Vec<String>,
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            color_scheme: iced::Theme::CatppuccinMocha,
-            transparent_background: false,
-            file_settings: FileSettings {
-                search_directories: vec!["Documents".into(), "Desktop".into(), "Downloads".into()],
-            },
-        }
-    }
 }
 
 fn load_from_disk() -> Result<Settings, ConfigError> {

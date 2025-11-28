@@ -6,20 +6,16 @@ use std::cell::LazyCell;
 use std::collections::HashMap;
 
 mod apps;
-use apps::AppModule;
 
 mod calculator;
 mod message;
-use calculator::Calc;
 
 mod websearch;
-use websearch::Web;
 
 mod drun;
 use drun::Drun;
 
 mod files;
-use files::FileSearcher;
 
 mod config;
 mod constants;
@@ -28,7 +24,7 @@ mod serworse;
 mod sorting;
 mod util;
 mod widglets;
-use module::{Module, ModuleMessage};
+use module::{Module, ModuleEnum, ModuleMessage};
 
 use message::Message;
 
@@ -41,22 +37,24 @@ struct State {
     has_user_typed: bool,
     window_id: Option<iced::window::Id>,
     modules: HashMap<String, LazyCell<Box<dyn Module>>>,
+    module_types: Vec<(String, ModuleEnum)>,
 }
 
 impl State {
     fn new_multi_modal() -> Self {
         let start = std::time::Instant::now();
         let mut modules: HashMap<String, LazyCell<Box<dyn Module>>> = HashMap::new();
-        modules.insert("=".to_string(), LazyCell::new(|| Box::new(Calc::new())));
 
-        modules.insert("!".to_string(), LazyCell::new(|| Box::new(Web::new())));
+        let mut module_types = Vec::new();
 
-        modules.insert(
-            "'".to_string(),
-            LazyCell::new(|| Box::new(FileSearcher::new())),
-        );
-
-        modules.insert(String::new(), LazyCell::new(|| Box::new(AppModule::new())));
+        for (mod_enum, prefix) in config::SETTINGS
+            .app_prefixes
+            .iter()
+            .filter(|(module, _)| **module != ModuleEnum::HelpScreen)
+        {
+            modules.insert(prefix.to_string(), LazyCell::new(mod_enum.into()));
+            module_types.push((prefix.clone(), mod_enum.clone()));
+        }
 
         log::info!("Time to initialise modules: {:#?}", start.elapsed());
         State {
@@ -65,6 +63,7 @@ impl State {
             window_id: None,
             has_user_typed: false,
             modules,
+            module_types,
         }
     }
 
@@ -95,6 +94,7 @@ impl State {
             window_id: None,
             has_user_typed: false,
             modules,
+            module_types: Vec::new(),
         }
     }
 
@@ -240,10 +240,11 @@ impl State {
         description_col = description_col.push(widget::rule::horizontal(1));
 
         let mut all_modules: Vec<(String, String)> = self
-            .modules
+            .module_types
             .iter()
-            .map(|(key, module)| (key.clone(), module.description()))
+            .map(|(prefix, module)| (prefix.clone(), module.description()))
             .collect();
+
         all_modules.sort_by(|first, other| first.0.cmp(&other.0));
 
         // Since the help_screen module is magic, it needs special logic
