@@ -2529,7 +2529,7 @@ checksum = "96051b46fc183dc9cd4a223960ef37b9af631b55191852a8274bfef064cda20f"
 
 [[package]]
 name = "lumin"
-version = "0.0.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "bytes",
