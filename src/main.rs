@@ -298,24 +298,34 @@ impl State {
 fn subscription(_state: &State) -> iced::Subscription<Message> {
     iced::Subscription::batch(vec![
         iced::window::open_events().map(Message::WindowOpened),
-        iced::keyboard::on_key_press(handle_hotkeys),
+        // Thank you https://kressle.in/keystrokes
+        iced::keyboard::on_key_press(handle_press_hotkeys),
+        iced::keyboard::on_key_release(handle_release_hotkeys),
         // Todo, work out how to subscribe to mouse movement
         // https://docs.iced.rs/iced/mouse/index.html
     ])
 }
 
-// Thank you https://kressle.in/keystrokes
-fn handle_hotkeys(key: keyboard::Key, modifier: keyboard::Modifiers) -> Option<Message> {
+fn handle_press_hotkeys(key: keyboard::Key, modifier: keyboard::Modifiers) -> Option<Message> {
     use iced::keyboard as kb;
     use iced::keyboard::Modifiers as kmod;
 
     match (key.as_ref(), modifier) {
-        // This is a bit silly
         (kb::Key::Named(kb::key::Named::Escape), _) => Some(Message::Close),
         (kb::Key::Named(kb::key::Named::ArrowUp), _) => Some(Message::KeyboardUp),
         (kb::Key::Named(kb::key::Named::ArrowDown), _) => Some(Message::KeyboardDown),
         (kb::Key::Named(kb::key::Named::Tab), kmod::SHIFT) => Some(Message::KeyboardUp),
         (kb::Key::Named(kb::key::Named::Tab), _) => Some(Message::KeyboardDown),
+        _ => None,
+    }
+}
+
+fn handle_release_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) -> Option<Message> {
+    use iced::keyboard as kb;
+
+    match (key.as_ref(), _modifier) {
+        // This is a bit silly
+        (kb::Key::Named(kb::key::Named::Escape), _) => Some(Message::Close),
         _ => None,
     }
 }
