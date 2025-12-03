@@ -24,18 +24,11 @@
 
 # Installation
 
-Note for linux users: the `xdg-open` command is required for opening URL's in the default browser.
+Note for linux users: the `xdg-open` command is required for opening URL's in the default browser. It should probably be installed by default but if nothing is launching, it not existing is the most likley reason why.
 
-```sh
-git clone "https://github.com/Kn4ughty/Lumin"
-cd Lumin
-cargo build --release
-```
-I reccomend adding to path by symlinking to the release.
-```sh
-ln -s target/release/lumin ~/bin/
-```
-Then once it is in your path just run `lumin`
+1. [Install rust](https://rust-lang.org/tools/install/), then run: 
+2. `cargo install --git https://github.com/Kn4ughty/Lumin/`
+3. there is no step 3
 
 
 <!-- Hidden since it is for me and not users -->
