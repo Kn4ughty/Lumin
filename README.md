@@ -26,14 +26,21 @@
 
 Note for linux users: the `xdg-open` command is required for opening URL's in the default browser. It should probably be installed by default but if nothing is launching, it not existing is the most likley reason why.
 
-1. [Install rust](https://rust-lang.org/tools/install/), then run: 
-2. `cargo install --git https://github.com/Kn4ughty/Lumin/`
-3. there is no step 3
-
+First [install rust](https://rust-lang.org/tools/install/), then run: 
+```sh
+cargo install --git https://github.com/Kn4ughty/Lumin/
+```
+To do easy updates of binaries installed with cargo, install [cargo update](https://github.com/nabijaczleweli/cargo-update):
+```sh
+cargo install cargo-update
+# And to do the updates: 
+cargo install-update -a
+```
 
 <!-- Hidden since it is for me and not users -->
 <!-- # ToDo -->
 <!-- - [ ] Change default macos font -->
+<!-- - [ ] Support multiple locales -->
 <!-- - [ ] Investigate https://austinmreppert.github.io/iced-reference/chapter_3.html -->
 <!-- - [ ] Investigate https://github.com/pop-os/cosmic-time -->
 <!-- - [ ] Refactor calculator -->
