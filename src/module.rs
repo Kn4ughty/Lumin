@@ -16,6 +16,7 @@ pub enum ModuleMessage {
     ActivatedIndex(usize),
     AppMessage(apps::AppMessage),
     WebMessage(websearch::WebMsg),
+    FileMessage(files::FileMsg),
     DoNothing,
 }
 

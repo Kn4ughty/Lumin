@@ -1,11 +1,9 @@
 use iced::{Task, widget};
-use std::sync::mpsc;
 use std::thread;
 use walkdir::{DirEntry, WalkDir};
 
+use futures::channel::mpsc;
 use std::path::PathBuf;
-// use std::sync::LazyLock;
-// use std::sync::Mutex;
 
 use crate::{
     config, constants,
@@ -13,10 +11,16 @@ use crate::{
     widglets,
 };
 
+#[derive(Debug, Clone)]
+pub enum FileMsg {
+    FoundFile((PathBuf, PathBuf)),
+}
+
 pub struct FileSearcher {
+    /// File name, full path
     found_files: Vec<(PathBuf, PathBuf)>,
-    reciever: mpsc::Receiver<DirEntry>,
     selected_index: usize,
+    have_searched_files: bool,
 }
 
 impl Default for FileSearcher {
@@ -27,28 +31,10 @@ impl Default for FileSearcher {
 
 impl FileSearcher {
     pub fn new() -> Self {
-        let (tx, rx) = mpsc::channel();
-        thread::spawn(move || {
-            let start = std::time::Instant::now();
-            let mut count = 0;
-            for dir in &config::SETTINGS.file_settings.search_directories {
-                for entry in WalkDir::new(
-                    std::sync::LazyLock::force(&constants::HOME_DIR).to_owned() + "/" + dir,
-                )
-                .into_iter()
-                .filter_map(|e| e.ok())
-                {
-                    tx.send(entry).expect("Can send");
-                    count += 1;
-                }
-                log::info!("Time to **Send** {count} files: {:#?}", start.elapsed());
-            }
-        });
-
         Self {
             found_files: Vec::new(),
-            reciever: rx,
             selected_index: 0,
+            have_searched_files: false,
         }
     }
 }
@@ -73,13 +59,6 @@ impl Module for FileSearcher {
     }
 
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
-        let start = std::time::Instant::now();
-        while let Ok(entry) = self.reciever.try_recv() {
-            self.found_files
-                .push((entry.file_name().into(), entry.path().to_path_buf()));
-        }
-        log::trace!("Time to read all the files: {:#?}", start.elapsed());
-
         match msg {
             ModuleMessage::TextChanged(t) => {
                 self.found_files.sort_by_cached_key(|(name, _)| {
@@ -100,10 +79,22 @@ impl Module for FileSearcher {
                 self.run_at_index(i);
                 return iced::exit();
             }
+            ModuleMessage::FileMessage(FileMsg::FoundFile(f)) => {
+                self.found_files.push(f);
+            }
             unknown => log::info!("unknown message {unknown:#?}"),
         }
 
-        Task::none()
+        if !self.have_searched_files {
+            self.have_searched_files = true;
+
+            Task::run(Self::spawn_file_finder(), |f| {
+                (f.file_name().into(), f.path().to_path_buf())
+            })
+            .map(|d| ModuleMessage::FileMessage(FileMsg::FoundFile(d)))
+        } else {
+            Task::none()
+        }
     }
 
     fn run(&self) -> iced::Task<crate::message::Message> {
@@ -113,6 +104,26 @@ impl Module for FileSearcher {
 }
 
 impl FileSearcher {
+    fn spawn_file_finder() -> mpsc::Receiver<DirEntry> {
+        let (mut tx, rx) = mpsc::channel(900000);
+        thread::spawn(move || {
+            let start = std::time::Instant::now();
+            let mut count = 0;
+            for dir in &config::SETTINGS.file_settings.search_directories {
+                for entry in WalkDir::new(
+                    std::sync::LazyLock::force(&constants::HOME_DIR).to_owned() + "/" + dir,
+                )
+                .into_iter()
+                .filter_map(|e| e.ok())
+                {
+                    tx.try_send(entry).expect("Can send");
+                    count += 1;
+                }
+            }
+            log::info!("Time to **Send** {count} files: {:#?}", start.elapsed());
+        });
+        rx
+    }
     fn run_at_index(&self, i: usize) {
         Self::open_file(self.found_files[i].1.as_os_str())
     }
