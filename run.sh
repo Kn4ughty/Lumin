@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
+# Small script to automate typing longer commands
+
 case $1 in
-    fg)
-        cargo bench --bench get_desktop_apps -- --profile-time=5
+    fg) # Flamegraph
+        RUST_LOG=none cargo bench --bench get_desktop_apps -- --profile-time=5
         xdg-open target/criterion/get\ apps/profile/flamegraph.svg
         ;;
-    tt)
-        cargo r --release --features time-travel
+    tt) # Time travel
+        RUST_LOG=none cargo r --release --features time-travel
 esac
