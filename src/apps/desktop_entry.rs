@@ -32,7 +32,7 @@ impl super::OSAppSearcher for LinuxAppSearcher {
 
         ICON_SEARCHER
             .find_icon(s.as_str(), 64, 1, "Adwaita") // TODO. Dont hardcode theme
-            .map(|i| i.path)
+            .map(|i| i.path().to_path_buf())
     }
 
     fn load_icon_image(&self, path: &Path) -> Option<iced::widget::image::Handle> {
