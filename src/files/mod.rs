@@ -1,5 +1,9 @@
-use iced::{Task, widget};
-use std::thread;
+use iced::{Task, advanced::image, widget};
+use std::{
+    collections::HashMap,
+    sync::{LazyLock, Mutex},
+    thread,
+};
 use walkdir::{DirEntry, WalkDir};
 
 use futures::channel::mpsc;
@@ -11,16 +15,22 @@ use crate::{
     widglets,
 };
 
+static ICON_SEARCHER: LazyLock<icon::Icons> = LazyLock::new(icon::Icons::new);
+static ICON_LOOKUP: Mutex<LazyLock<HashMap<String, Option<image::Handle>>>> =
+    Mutex::new(LazyLock::new(HashMap::new));
+
 #[derive(Debug, Clone)]
 pub enum FileMsg {
-    FoundFile((PathBuf, PathBuf)),
+    FoundFile((PathBuf, Option<image::Handle>)),
 }
 
 pub struct FileSearcher {
     /// File name, full path
-    found_files: Vec<(PathBuf, PathBuf)>,
+    found_files: Vec<(PathBuf, Option<image::Handle>)>,
     selected_index: usize,
     have_searched_files: bool,
+    start: std::time::Instant,
+    // icon_searcher: icon::Icons,
 }
 
 impl Default for FileSearcher {
@@ -35,24 +45,50 @@ impl FileSearcher {
             found_files: Vec::new(),
             selected_index: 0,
             have_searched_files: false,
+            start: std::time::Instant::now(),
         }
     }
 }
 
+fn file_ext_to_icon_name(ext: &str) -> String {
+    // There did not seem to consistent pattern to what icons were named so it is hard-coded
+    match ext {
+        "png" | "jpeg" | "svg" | "jpg" | "gif" | "webp" => "image-png",
+        "pdf" => "application-pdf",
+        "docx" => "application-wps-office.docx",
+        "pptx" => "application-wps-office.pptx",
+        "mp3" => "audio-mp3",
+        "ogg" => "application-ogg",
+        "json" => "application-json",
+        "md" => "text-markdown",
+        "txt" => "text-plain",
+        "mp4" | "mkv" | "mov" => "video-mp4",
+        _ => "",
+    }
+    .into()
+}
+
 impl Module for FileSearcher {
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
-        let first_few_files: Vec<(PathBuf, PathBuf)> = match self.found_files.get(0..5) {
+        let first_few_files = match self.found_files.get(0..5) {
             None => self.found_files.clone(),
             Some(slice) => slice.to_vec(),
         };
 
         widget::scrollable(widget::column(first_few_files.into_iter().enumerate().map(
-            |(i, (name, path))| {
-                widglets::ListRow::new(name.to_string_lossy())
-                    .subtext(path.to_string_lossy())
-                    .on_activate(ModuleMessage::ActivatedIndex(i))
-                    .selected(self.selected_index == i)
-                    .into()
+            |(i, (path, handle))| {
+                // log::debug!("icon for path {path:?} found_handle: {handle:?}");
+
+                widglets::ListRow::new(
+                    path.file_name()
+                        .expect("should not have '..' file")
+                        .to_string_lossy(),
+                )
+                .subtext(path.to_string_lossy())
+                .optional_icon(handle)
+                .on_activate(ModuleMessage::ActivatedIndex(i))
+                .selected(self.selected_index == i)
+                .into()
             },
         )))
         .into()
@@ -81,20 +117,22 @@ impl Module for FileSearcher {
             }
             ModuleMessage::FileMessage(FileMsg::FoundFile(f)) => {
                 self.found_files.push(f);
+                // log::debug!("time elapsed{}")
             }
             unknown => log::info!("unknown message {unknown:#?}"),
         }
 
-        if !self.have_searched_files {
-            self.have_searched_files = true;
-
-            Task::run(Self::spawn_file_finder(), |f| {
-                (f.file_name().into(), f.path().to_path_buf())
-            })
-            .map(|d| ModuleMessage::FileMessage(FileMsg::FoundFile(d)))
-        } else {
-            Task::none()
+        if self.have_searched_files {
+            return Task::none();
         }
+
+        self.have_searched_files = true;
+        self.start = std::time::Instant::now();
+
+        // Doing it as a task with streaming many many calls to update which is slow,
+        // so a seperate thread is used instead
+        Task::run(Self::spawn_file_finder(), |f| f)
+            .map(|d| ModuleMessage::FileMessage(FileMsg::FoundFile(d)))
     }
 
     fn run(&self) -> iced::Task<crate::message::Message> {
@@ -104,9 +142,41 @@ impl Module for FileSearcher {
 }
 
 impl FileSearcher {
-    fn spawn_file_finder() -> mpsc::Receiver<DirEntry> {
+    fn get_data(path: DirEntry) -> (PathBuf, Option<image::Handle>) {
+        let path = path.path().to_path_buf();
+
+        let icon_name = &file_ext_to_icon_name(
+            &path
+                .extension()
+                .unwrap_or(std::ffi::OsStr::new(""))
+                .to_string_lossy(),
+        );
+
+        if let Some(handle) = ICON_LOOKUP.lock().expect("unlock mutex").get(icon_name) {
+            return (path, handle.clone());
+        }
+
+        let icon_path = ICON_SEARCHER.find_icon(icon_name, 32, 1, "breeze");
+
+        let icon_handle = icon_path.map(|i| {
+            if i.path().extension() == Some(std::ffi::OsStr::new("svg")) {
+                widglets::svg_path_to_handle(i.path().to_path_buf()).expect("can render svg")
+            } else {
+                iced::advanced::image::Handle::from_path(i.path())
+            }
+        });
+
+        ICON_LOOKUP
+            .lock()
+            .expect("unlock mutex")
+            .insert(icon_name.to_string(), icon_handle.clone());
+
+        (path, icon_handle)
+    }
+
+    fn spawn_file_finder() -> mpsc::Receiver<(PathBuf, Option<image::Handle>)> {
         let (mut tx, rx) = mpsc::channel(900000);
-        thread::spawn(move || {
+        thread::spawn(move || -> () {
             let start = std::time::Instant::now();
             let mut count = 0;
             for dir in &config::SETTINGS.file_settings.search_directories {
@@ -116,7 +186,8 @@ impl FileSearcher {
                 .into_iter()
                 .filter_map(|e| e.ok())
                 {
-                    tx.try_send(entry).expect("Can send");
+                    tx.try_send(Self::get_data(entry)).expect("Can send");
+
                     count += 1;
                 }
             }
@@ -125,7 +196,7 @@ impl FileSearcher {
         rx
     }
     fn run_at_index(&self, i: usize) {
-        Self::open_file(self.found_files[i].1.as_os_str())
+        Self::open_file(self.found_files[i].0.as_os_str())
     }
 
     fn open_file(file: &std::ffi::OsStr) {
