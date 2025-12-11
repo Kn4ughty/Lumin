@@ -91,6 +91,9 @@ impl Module for FileSearcher {
                 .into()
             },
         )))
+        .direction(widget::scrollable::Direction::Vertical(
+            widget::scrollable::Scrollbar::hidden(),
+        ))
         .into()
     }
 
