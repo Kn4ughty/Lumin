@@ -3,7 +3,6 @@
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
-    sync::LazyLock,
     vec::Vec,
 };
 
@@ -12,10 +11,11 @@ use walkdir::WalkDir;
 
 use super::{App, Icon};
 
-static ICON_SEARCHER: LazyLock<icon::Icons> = LazyLock::new(icon::Icons::new);
-
 #[derive(Default)]
-pub struct LinuxAppSearcher {}
+pub struct LinuxAppSearcher {
+    icon_searcher: icon::Icons,
+}
+
 impl super::OSAppSearcher for LinuxAppSearcher {
     fn get_apps(&self) -> Vec<App> {
         load_desktop_entries()
@@ -30,7 +30,7 @@ impl super::OSAppSearcher for LinuxAppSearcher {
             return Some(PathBuf::from(s));
         }
 
-        ICON_SEARCHER
+        self.icon_searcher
             .find_icon(s.as_str(), 64, 1, "Adwaita") // TODO. Dont hardcode theme
             .map(|i| i.path().to_path_buf())
     }
