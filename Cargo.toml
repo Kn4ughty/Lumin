@@ -4,6 +4,10 @@ version = "1.0.0"
 edition = "2024"
 path = "src/"
 
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+
 [lints.clippy]
 unwrap_used = "deny"
 
