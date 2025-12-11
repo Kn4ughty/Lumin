@@ -56,17 +56,17 @@ impl<Message> ListRow<Message> {
         self
     }
 
-    pub fn icon_background(mut self, color: iced::Color) -> Self {
-        self.icon_background = color;
-        self
-    }
-
     pub fn optional_icon(self, handle: Option<widget::image::Handle>) -> Self {
         if let Some(h) = handle {
             self.icon(h)
         } else {
             self
         }
+    }
+
+    pub fn icon_background(mut self, color: iced::Color) -> Self {
+        self.icon_background = color;
+        self
     }
 
     /// Message to output when selected and enter is pressed, or clicked.
