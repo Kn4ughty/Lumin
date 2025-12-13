@@ -51,7 +51,17 @@ impl FileSearcher {
 }
 
 fn file_ext_to_icon_name(ext: &str) -> String {
-    // There did not seem to consistent pattern to what icons were named so it is hard-coded
+    // TODO. use /usr/share/mime/globs
+    // This also seems relevant
+    // https://www.freedesktop.org/wiki/Specifications/shared-mime-info-spec/
+    // https://specifications.freedesktop.org/shared-mime-info/0.21/ar01s02.html
+    // Steps
+    // 0. Read MIME/mime.cache
+    //      The spec is sparse on how to do this
+    // 1. Find mime type for file in MIME/globs2
+    // 2. With mime-type lookup icon for that mimetype in MIME/icons
+    //
+    //
     match ext {
         "png" | "jpeg" | "svg" | "jpg" | "gif" | "webp" => "image-png",
         "pdf" => "application-pdf",
