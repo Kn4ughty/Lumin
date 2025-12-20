@@ -40,9 +40,9 @@ impl ModuleEnum {
         match self {
             Self::AppSearch => "Launch your installed apps",
             Self::WebSearch => "Quick access to search different websites",
-            Self::FileSearch => "file search",
-            Self::HelpScreen => "help",
-            Self::Calculator => "calc",
+            Self::FileSearch => "Search the files on your computer",
+            Self::HelpScreen => "This help screen",
+            Self::Calculator => "Basic calculator ",
         }
         .to_string()
     }
