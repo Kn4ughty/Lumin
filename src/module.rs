@@ -55,7 +55,7 @@ impl From<&ModuleEnum> for fn() -> Box<dyn Module> {
             ModuleEnum::WebSearch => || Box::new(websearch::Web::new()),
             ModuleEnum::Calculator => || Box::new(calculator::Calc::new()),
             ModuleEnum::FileSearch => || Box::new(files::FileSearcher::new()),
-            ModuleEnum::HelpScreen => panic!("not possible"),
+            ModuleEnum::HelpScreen => unreachable!("Help screen should not be ran as real module"),
         }
     }
 }
