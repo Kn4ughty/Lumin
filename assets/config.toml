@@ -10,7 +10,11 @@ transparent_background = false
 # Sadly the toml parser I use doesnt allow newlines and nice formatting :/
 app_prefixes = { AppSearch = "", WebSearch = "!", FileSearch = "'", HelpScreen = "?", Calculator = "=" }
 
+# The background text where you type your search
 input_prompt = "Type to search"
+
+# Show icons for search results
+show_icons = true
 
 [file_settings]
 search_directories = ["Documents", "Desktop", "Downloads"]

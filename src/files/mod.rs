@@ -80,6 +80,7 @@ fn file_ext_to_icon_name(ext: &str) -> String {
 
 impl Module for FileSearcher {
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
+        let should_icon = crate::config::SETTINGS.lock().expect("mutex").show_icons;
         let first_few_files = match self.found_files.get(0..5) {
             None => self.found_files.clone(),
             Some(slice) => slice.to_vec(),
@@ -96,6 +97,7 @@ impl Module for FileSearcher {
                 )
                 .subtext(path.to_string_lossy())
                 .optional_icon(handle)
+                .show_icon(should_icon)
                 .on_activate(ModuleMessage::ActivatedIndex(i))
                 .selected(self.selected_index == i)
                 .into()

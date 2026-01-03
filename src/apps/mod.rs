@@ -11,6 +11,7 @@ use iced::widget;
 pub mod desktop_entry;
 pub mod mac_apps;
 
+use crate::config;
 use crate::constants;
 use crate::module::{Module, ModuleMessage};
 use crate::serworse;
@@ -216,7 +217,11 @@ impl AppModule {
             start.elapsed()
         );
 
-        self.do_icon_lookup()
+        if config::SETTINGS.lock().expect("mutex").show_icons {
+            self.do_icon_lookup()
+        } else {
+            Task::none()
+        }
     }
 
     fn do_icon_lookup(&mut self) -> Task<ModuleMessage> {
@@ -298,6 +303,7 @@ impl AppModule {
 
 impl Module for AppModule {
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
+        let should_icon = crate::config::SETTINGS.lock().expect("mutex").show_icons;
         widget::scrollable(
             widget::column(
                 self.app_list
@@ -315,6 +321,7 @@ impl Module for AppModule {
                             .optional_subtext(app.subname)
                             .on_activate(ModuleMessage::ActivatedIndex(i))
                             .optional_icon(icon)
+                            .show_icon(should_icon)
                             .selected(self.selected_index == i)
                             .into()
                     }),

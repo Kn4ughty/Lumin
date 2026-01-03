@@ -2,6 +2,7 @@ use iced::{Task, widget};
 use std::io::Write;
 
 use crate::{
+    config,
     module::{Module, ModuleMessage},
     sorting, widglets,
 };
@@ -72,6 +73,7 @@ impl Module for Drun {
     }
 
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
+        let should_icon = config::SETTINGS.lock().expect("mutex").show_icons;
         widget::scrollable(widget::column(
             self.options
                 .clone()
@@ -81,6 +83,7 @@ impl Module for Drun {
                     widglets::ListRow::new(item)
                         .on_activate(ModuleMessage::ActivatedIndex(i))
                         .selected(self.selected_index == i)
+                        .show_icon(should_icon)
                         .into()
                 }),
         ))

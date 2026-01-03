@@ -55,6 +55,7 @@ pub struct Settings {
     pub file_settings: FileSettings,
     pub app_prefixes: HashMap<crate::module::ModuleEnum, String>,
     pub input_prompt: String,
+    pub show_icons: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]

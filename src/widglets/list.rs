@@ -1,6 +1,8 @@
 // use crate::message::Message;
 use iced::widget;
 
+use crate::message::Message;
+
 use super::PADDING;
 use super::{HeadingLevel, heading};
 
@@ -12,6 +14,7 @@ pub struct ListRow<Message> {
     text: String,
     selected: bool,
     subtext: Option<String>,
+    show_icon: bool,
     icon: Option<iced::widget::image::Handle>,
     icon_background: iced::Color,
     on_activate: Option<Message>,
@@ -26,6 +29,7 @@ impl<Message> ListRow<Message> {
             text: text.to_string(),
             selected: false,
             subtext: None,
+            show_icon: true,
             icon: None,
             icon_background: iced::Color::TRANSPARENT,
             on_activate: None,
@@ -64,6 +68,11 @@ impl<Message> ListRow<Message> {
         }
     }
 
+    pub fn show_icon(mut self, showit: bool) -> Self {
+        self.show_icon = showit;
+        self
+    }
+
     pub fn icon_background(mut self, color: iced::Color) -> Self {
         self.icon_background = color;
         self
@@ -89,34 +98,37 @@ where
         let mut row_widget = widget::Row::new().padding(0);
 
         let background_colour = value.icon_background;
-        let icon_widget = widget::container(
-            widget::Responsive::new(move |size| {
-                if let Some(icon) = &value.icon {
-                    let real_image =
-                        widget::image::Image::new(icon).content_fit(iced::ContentFit::Cover);
 
-                    widget::container(real_image)
-                } else {
-                    widget::container(widget::image(super::MISSING_IMAGE.clone()))
-                }
-                .clip(true)
-                .width(size.height)
-                .height(size.height)
-                .padding(0)
-                .align_y(iced::Alignment::Center)
-                .align_x(iced::Alignment::Center)
-                .into()
-            })
-            .width(iced::Shrink)
-            .height(iced::Length::Fixed(ICON_SIZE)),
-        )
-        .style(move |_theme| widget::container::Style {
-            background: Some(iced::Background::Color(background_colour)),
-            ..Default::default()
-        });
+        if value.show_icon {
+            let icon_widget = widget::container(
+                widget::Responsive::new(move |size| {
+                    if let Some(icon) = &value.icon {
+                        let real_image =
+                            widget::image::Image::new(icon).content_fit(iced::ContentFit::Cover);
 
-        row_widget = row_widget.push(icon_widget);
-        row_widget = row_widget.push(widget::space().width(iced::Length::Fixed(PADDING)));
+                        widget::container(real_image)
+                    } else {
+                        widget::container(widget::image(super::MISSING_IMAGE.clone()))
+                    }
+                    .clip(true)
+                    .width(size.height)
+                    .height(size.height)
+                    .padding(0)
+                    .align_y(iced::Alignment::Center)
+                    .align_x(iced::Alignment::Center)
+                    .into()
+                })
+                .width(iced::Shrink)
+                .height(iced::Length::Fixed(ICON_SIZE)),
+            )
+            .style(move |_theme| widget::container::Style {
+                background: Some(iced::Background::Color(background_colour)),
+                ..Default::default()
+            });
+
+            row_widget = row_widget.push(icon_widget);
+            row_widget = row_widget.push(widget::space().width(iced::Length::Fixed(PADDING)));
+        }
 
         let mut text_area = widget::column(vec![]);
 

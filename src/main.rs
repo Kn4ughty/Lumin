@@ -368,6 +368,9 @@ fn main() -> Result<(), String> {
                 // to it at this point of execution
                 config::SETTINGS.lock().expect("mutex").input_prompt = prompt;
             }
+            "--no_icon" => {
+                config::SETTINGS.lock().expect("mutex").show_icons = false;
+            }
             unknown => log::warn!("Unknown arg {unknown}"),
         }
     }
