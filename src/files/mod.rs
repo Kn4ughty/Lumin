@@ -192,7 +192,12 @@ impl FileSearcher {
         thread::spawn(move || -> () {
             let start = std::time::Instant::now();
             let mut count = 0;
-            for dir in &config::SETTINGS.file_settings.search_directories {
+            for dir in &config::SETTINGS
+                .lock()
+                .expect("mutex")
+                .file_settings
+                .search_directories
+            {
                 for entry in WalkDir::new(
                     std::sync::LazyLock::force(&constants::HOME_DIR).to_owned() + "/" + dir,
                 )

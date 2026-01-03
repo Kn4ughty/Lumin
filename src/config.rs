@@ -1,5 +1,8 @@
 use serde::Deserialize;
-use std::{collections::HashMap, sync::LazyLock};
+use std::{
+    collections::HashMap,
+    sync::{LazyLock, Mutex},
+};
 
 use iced::Theme;
 
@@ -25,7 +28,7 @@ fn default_settings_work() {
     println!("{:#?}", DEFAULT_SETTINGS.color_scheme);
 }
 
-pub static SETTINGS: LazyLock<Settings> = LazyLock::new(|| {
+pub static SETTINGS: Mutex<LazyLock<Settings>> = Mutex::new(LazyLock::new(|| {
     load_from_disk().unwrap_or_else(|e| {
         log::error!(
             "User config was invalid!! {e:#?}
@@ -35,7 +38,7 @@ it is in `assets/config.toml`"
         );
         LazyLock::<Settings>::force(&DEFAULT_SETTINGS).clone()
     })
-});
+}));
 
 #[derive(Debug)]
 enum ConfigError {
@@ -51,6 +54,7 @@ pub struct Settings {
     pub transparent_background: bool,
     pub file_settings: FileSettings,
     pub app_prefixes: HashMap<crate::module::ModuleEnum, String>,
+    pub input_prompt: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]

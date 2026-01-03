@@ -48,6 +48,8 @@ impl State {
         let mut module_types = Vec::new();
 
         for (mod_enum, prefix) in config::SETTINGS
+            .lock()
+            .expect("mutex")
             .app_prefixes
             .iter()
             .filter(|(module, _)| **module != ModuleEnum::HelpScreen)
@@ -166,20 +168,23 @@ impl State {
     fn view(&self) -> iced::Element<'_, Message> {
         log::trace!("view fn run");
 
-        let text_input = widget::text_input("Type to search", &self.text_value)
-            .id(self.text_id.clone())
-            .on_input(Message::TextInputChanged)
-            .on_submit(Message::TextInputSubmitted("test".to_string()))
-            .padding(8.0)
-            .style(|theme, status| {
-                let mut base_style = widget::text_input::default(theme, status);
-                base_style.border = iced::Border {
-                    color: iced::Color::TRANSPARENT,
-                    width: 0.0,
-                    radius: 10.0.into(),
-                };
-                base_style
-            });
+        let text_input = widget::text_input(
+            &config::SETTINGS.lock().expect("mutex").input_prompt,
+            &self.text_value,
+        )
+        .id(self.text_id.clone())
+        .on_input(Message::TextInputChanged)
+        .on_submit(Message::TextInputSubmitted("test".to_string()))
+        .padding(8.0)
+        .style(|theme, status| {
+            let mut base_style = widget::text_input::default(theme, status);
+            base_style.border = iced::Border {
+                color: iced::Color::TRANSPARENT,
+                width: 0.0,
+                radius: 10.0.into(),
+            };
+            base_style
+        });
 
         let result = self.get_result_to_display();
 
@@ -194,7 +199,11 @@ impl State {
                 radius: 15.0.into(),
                 ..base_theme.border
             };
-            if config::SETTINGS.transparent_background {
+            if config::SETTINGS
+                .lock()
+                .expect("mutex")
+                .transparent_background
+            {
                 base_theme = base_theme.background(iced::Color::TRANSPARENT);
             }
             base_theme
@@ -270,7 +279,7 @@ impl State {
     }
 
     fn theme(&self) -> Option<iced::Theme> {
-        Some(config::SETTINGS.clone().color_scheme)
+        Some(config::SETTINGS.lock().expect("mutex").clone().color_scheme)
     }
 
     #[allow(clippy::borrowed_box)]
@@ -330,13 +339,15 @@ fn handle_release_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) ->
     }
 }
 
-fn main() -> iced::Result {
+fn main() -> Result<(), String> {
     pretty_env_logger::init();
 
-    let mut state = State::new_multi_modal as fn() -> State;
+    let mut state: fn() -> State = State::new_multi_modal;
 
     // Skip first arg (program name)
-    for arg in std::env::args().skip(1) {
+    let mut args = std::env::args().skip(1);
+
+    while let Some(arg) = args.next() {
         match arg.as_str() {
             "-v" | "--version" => {
                 println!(
@@ -347,7 +358,15 @@ fn main() -> iced::Result {
                 return Ok(());
             }
             "--dmenu" => {
-                state = State::new_drun as fn() -> State;
+                state = State::new_drun;
+            }
+            "-p" => {
+                let Some(prompt) = args.next() else {
+                    return Err("Missing prompt name after -p argument".to_string());
+                };
+                // Safety. The program has not started yet, so there cannot be anything else writing
+                // to it at this point of execution
+                config::SETTINGS.lock().expect("mutex").input_prompt = prompt;
             }
             unknown => log::warn!("Unknown arg {unknown}"),
         }
@@ -373,4 +392,5 @@ fn main() -> iced::Result {
         .theme(State::theme)
         .style(State::style)
         .run()
+        .map_err(|e| format!("Iced Error: {e:#?}"))
 }
