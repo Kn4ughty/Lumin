@@ -117,19 +117,33 @@ pub enum ParseError {
     UnknownApplicationType,
     NoDisplayTrue,
     ActionMissingName,
-    MissingDataDirsEnvVar,
+    MissingDataDirsEviromentVariables,
+}
+
+fn get_data_dirs() -> Result<Vec<String>, ParseError> {
+    let splitter = |s: Option<String>| -> Vec<String> {
+        s.unwrap_or_default()
+            .split(":")
+            .map(|s| s.to_owned())
+            .collect()
+    };
+
+    let mut data_dirs = splitter(std::env::var("XDG_DATA_DIRS").ok());
+    data_dirs.extend(splitter(std::env::var("XDG_DATA_HOME").ok()));
+
+    if data_dirs.is_empty() {
+        return Err(ParseError::MissingDataDirsEviromentVariables);
+    }
+
+    Ok(data_dirs)
 }
 
 pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
     let mut entries = Vec::new();
-    let Ok(raw_data_dirs) = std::env::var("XDG_DATA_DIRS") else {
-        return Err(ParseError::MissingDataDirsEnvVar);
-    };
-    log::trace!("raw data dirs = {raw_data_dirs}");
 
     let mut dir_count = 0;
 
-    for dir in raw_data_dirs.split(":") {
+    for dir in get_data_dirs()? {
         dir_count += 1;
 
         let mut file_count = 0;
