@@ -78,6 +78,7 @@ impl Module for Drun {
             self.options
                 .clone()
                 .into_iter()
+                .take(10)
                 .enumerate()
                 .map(|(i, item)| {
                     widglets::ListRow::new(item)
