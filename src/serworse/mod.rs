@@ -7,6 +7,8 @@ pub enum ParseError {
     MissingSeperator,
     /// Failed to turn key/value of item into type required
     IntoFailure,
+    /// Bad Header
+    BadHeader,
 }
 
 /// Input data is a csv
@@ -45,4 +47,70 @@ ten,10"#;
     // Check inverse
     // Doesnt work since order is indeterminate
     // assert_eq!(hash_map_to_csv::<u32>(map), raw_string);
+}
+
+// Using lifetimes here may look ugly, but it leads to a 30% performance improvement from reduced
+// heap allocations
+pub fn parse_ini_format<'a>(
+    input: &'a str,
+) -> Result<HashMap<&'a str, HashMap<&'a str, &'a str>>, ParseError> {
+    let mut main_map: HashMap<&'a str, HashMap<&'a str, &'a str>> = HashMap::new();
+
+    let mut current_heading = "";
+    let mut current_map: HashMap<&'a str, &'a str> = HashMap::new();
+
+    for line in input.lines() {
+        log::trace!("current_line: {line}");
+
+        if let Some(l) = line.split_once('=') {
+            current_map.insert(l.0, l.1);
+            continue;
+        }
+
+        if line.starts_with("#") {
+            continue;
+        }
+
+        if line.starts_with("[") {
+            if !current_map.is_empty() {
+                log::trace!("current map was not empty");
+                main_map.insert(
+                    std::mem::take(&mut current_heading),
+                    std::mem::take(&mut current_map),
+                );
+            }
+
+            // Get characters between starting and ending []. i.e, the xxx in "[xxx]"
+            current_heading = line.get(1..line.len() - 1).ok_or(ParseError::BadHeader)?;
+            log::trace!("current heading being set. Is set to {current_heading}");
+            continue;
+        }
+    }
+    if !current_map.is_empty() {
+        main_map.insert(
+            std::mem::take(&mut current_heading),
+            std::mem::take(&mut current_map),
+        );
+    }
+
+    Ok(main_map)
+}
+
+#[test]
+fn can_parse_entry_from_str() {
+    let mut hash = HashMap::new();
+    let mut main_map = HashMap::new();
+    main_map.insert("Type", "Application");
+    main_map.insert("Categories", "System;TerminalEmulator;");
+    hash.insert("Desktop Entry", main_map);
+
+    assert_eq!(
+        parse_ini_format(
+            r#"[Desktop Entry]
+Type=Application
+Categories=System;TerminalEmulator;"#
+        )
+        .unwrap(),
+        hash
+    )
 }

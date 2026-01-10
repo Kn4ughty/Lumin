@@ -10,6 +10,7 @@ use icon;
 use walkdir::WalkDir;
 
 use super::{App, Icon};
+use crate::serworse;
 
 #[derive(Default)]
 pub struct LinuxAppSearcher {
@@ -118,6 +119,8 @@ pub enum ParseError {
     NoDisplayTrue,
     ActionMissingName,
     MissingDataDirsEviromentVariables,
+    #[allow(dead_code)]
+    SerWorseError(serworse::ParseError),
 }
 
 fn get_data_dirs() -> Result<Vec<String>, ParseError> {
@@ -172,74 +175,7 @@ pub fn load_desktop_entries() -> Result<Vec<DesktopEntry>, ParseError> {
 fn parse_from_file(file_path: &std::path::Path) -> Result<DesktopEntry, ParseError> {
     let contents = std::fs::read_to_string(file_path).map_err(|_| ParseError::CouldNotLoadFile)?;
 
-    parse_from_hashmap(parse_entry_from_string(&contents)?)
-}
-
-// Using lifetimes here may look ugly, but it leads to a 30% performance improvement from reduced
-// heap allocations
-fn parse_entry_from_string<'a>(
-    input: &'a str,
-) -> Result<HashMap<&'a str, HashMap<&'a str, &'a str>>, ParseError> {
-    let mut main_map: HashMap<&'a str, HashMap<&'a str, &'a str>> = HashMap::new();
-
-    let mut current_heading = "";
-    let mut current_map: HashMap<&'a str, &'a str> = HashMap::new();
-
-    for line in input.lines() {
-        log::trace!("current_line: {line}");
-
-        if let Some(l) = line.split_once('=') {
-            current_map.insert(l.0, l.1);
-            continue;
-        }
-
-        if line.starts_with("#") {
-            continue;
-        }
-
-        if line.starts_with("[") {
-            if !current_map.is_empty() {
-                log::trace!("current map was not empty");
-                main_map.insert(
-                    std::mem::take(&mut current_heading),
-                    std::mem::take(&mut current_map),
-                );
-            }
-
-            current_heading = line
-                .get(1..line.len() - 1)
-                .ok_or(ParseError::BadGroupHeader)?;
-            log::trace!("current heading being set. Is set to {current_heading}");
-            continue;
-        }
-    }
-    if !current_map.is_empty() {
-        main_map.insert(
-            std::mem::take(&mut current_heading),
-            std::mem::take(&mut current_map),
-        );
-    }
-
-    Ok(main_map)
-}
-
-#[test]
-fn can_parse_entry_from_str() {
-    let mut hash = HashMap::new();
-    let mut main_map = HashMap::new();
-    main_map.insert("Type", "Application");
-    main_map.insert("Categories", "System;TerminalEmulator;");
-    hash.insert("Desktop Entry", main_map);
-
-    assert_eq!(
-        parse_entry_from_string(
-            r#"[Desktop Entry]
-Type=Application
-Categories=System;TerminalEmulator;"#
-        )
-        .unwrap(),
-        hash
-    )
+    parse_from_hashmap(serworse::parse_ini_format(&contents).map_err(ParseError::SerWorseError)?)
 }
 
 fn parse_from_hashmap<'a>(
@@ -510,7 +446,7 @@ Name=New Terminal
 Exec=testaction
     "#;
 
-    let entry = parse_from_hashmap(parse_entry_from_string(test).unwrap()).unwrap();
+    let entry = parse_from_hashmap(serworse::parse_ini_format(test).unwrap()).unwrap();
 
     assert_eq!(entry.name, "Test Name");
     assert_eq!(entry.entry_type, EntryType::Application);
