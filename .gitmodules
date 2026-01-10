@@ -1,0 +1,3 @@
+[submodule "assets/lexend"]
+	path = assets/lexend
+	url = https://github.com/googlefonts/lexend

@@ -11,4 +11,5 @@ pub enum Message {
     Close,
     KeyboardUp,
     KeyboardDown,
+    FontLoaded(Result<(), iced::font::Error>),
 }

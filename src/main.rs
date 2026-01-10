@@ -40,8 +40,9 @@ struct State {
     module_types: Vec<(String, ModuleEnum)>,
 }
 
+// Startup things
 impl State {
-    fn new_multi_modal() -> Self {
+    fn new_multi_modal() -> (Self, Task<Message>) {
         let start = std::time::Instant::now();
         let mut modules: HashMap<String, LazyCell<Box<dyn Module>>> = HashMap::new();
 
@@ -59,17 +60,20 @@ impl State {
         }
 
         log::info!("Time to initialise modules: {:#?}", start.elapsed());
-        State {
-            text_value: String::new(),
-            text_id: widget::Id::new("text_entry"),
-            window_id: None,
-            has_user_typed: false,
-            modules,
-            module_types,
-        }
+        (
+            State {
+                text_value: String::new(),
+                text_id: widget::Id::new("text_entry"),
+                window_id: None,
+                has_user_typed: false,
+                modules,
+                module_types,
+            },
+            Self::load_font(),
+        )
     }
 
-    fn new_drun() -> Self {
+    fn new_drun() -> (Self, Task<Message>) {
         let start = iced::debug::time("load modules");
         let mut modules: HashMap<String, LazyCell<Box<dyn Module>>> = HashMap::new();
 
@@ -90,16 +94,28 @@ impl State {
 
         start.finish();
 
-        State {
-            text_value: String::new(),
-            text_id: widget::Id::new("text_entry"),
-            window_id: None,
-            has_user_typed: false,
-            modules,
-            module_types: Vec::new(),
-        }
+        (
+            State {
+                text_value: String::new(),
+                text_id: widget::Id::new("text_entry"),
+                window_id: None,
+                has_user_typed: false,
+                modules,
+                module_types: Vec::new(),
+            },
+            Self::load_font(),
+        )
     }
 
+    fn load_font() -> Task<Message> {
+        iced::font::load(include_bytes!(
+            "../assets/lexend/fonts/deca/ttf/LexendDeca-Regular.ttf"
+        ))
+        .map(Message::FontLoaded)
+    }
+}
+
+impl State {
     fn update(&mut self, message: Message) -> Task<Message> {
         log::trace!("update fn run");
 
@@ -160,6 +176,13 @@ impl State {
                         .update(ModuleMessage::SelectionDown)
                         .map(Message::PluginMessage);
                 }
+                Task::none()
+            }
+            Message::FontLoaded(res) => {
+                if let Err(e) = res {
+                    log::error!("Could not load font: {e:#?}");
+                }
+                log::debug!("Loaded font successfully");
                 Task::none()
             }
         }
@@ -342,7 +365,7 @@ fn handle_release_hotkeys(key: keyboard::Key, _modifier: keyboard::Modifiers) ->
 fn main() -> Result<(), String> {
     pretty_env_logger::init();
 
-    let mut state: fn() -> State = State::new_multi_modal;
+    let mut state: fn() -> (State, Task<Message>) = State::new_multi_modal;
 
     // Skip first arg (program name)
     let mut args = std::env::args().skip(1);
@@ -378,7 +401,10 @@ fn main() -> Result<(), String> {
     iced::application(state, State::update, State::view)
         .title("Lumin")
         .settings(iced::Settings {
-            default_font: iced::Font::MONOSPACE,
+            default_font: iced::Font {
+                family: iced::font::Family::Name("Lexend Deca"),
+                ..Default::default()
+            },
             ..Default::default()
         })
         .subscription(subscription)
