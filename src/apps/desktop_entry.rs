@@ -3,6 +3,7 @@
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
+    sync::LazyLock,
     vec::Vec,
 };
 
@@ -10,12 +11,49 @@ use icon;
 use walkdir::WalkDir;
 
 use super::{App, Icon};
+use crate::constants;
 use crate::serworse;
 
 #[derive(Default)]
 pub struct LinuxAppSearcher {
     icon_searcher: icon::Icons,
 }
+
+static ICON_THEME_NAME: LazyLock<String> = LazyLock::new(|| {
+    let get_gtk3 = || -> Option<String> {
+        Some(
+            serworse::parse_ini_format(
+                &std::fs::read_to_string(
+                    constants::HOME_DIR.clone() + "/.config/gtk-3.0/settings.ini",
+                )
+                .ok()?,
+            )
+            .ok()?
+            .get("Settings")?
+            .get("gtk-icon-theme-name")?
+            .to_string(),
+        )
+    };
+
+    let get_gtk2 = || -> Option<String> {
+        Some(
+            serworse::parse_xsv::<String>(
+                &std::fs::read_to_string(constants::HOME_DIR.clone() + "/.gtkrc-2.0").ok()?,
+                '=',
+            )
+            .ok()?
+            .get("gtk-icon-theme-name")
+            .expect("asdf")
+            .to_string(),
+        )
+    };
+
+    let theme = get_gtk3()
+        .or_else(get_gtk2)
+        .unwrap_or("Adwaita".to_string());
+    log::warn!("Icon theme picked was: {theme}");
+    theme
+});
 
 impl super::OSAppSearcher for LinuxAppSearcher {
     fn get_apps(&self) -> Vec<App> {
@@ -32,7 +70,7 @@ impl super::OSAppSearcher for LinuxAppSearcher {
         }
 
         self.icon_searcher
-            .find_icon(s.as_str(), 64, 1, "Adwaita") // TODO. Dont hardcode theme
+            .find_icon(s.as_str(), 64, 1, &ICON_THEME_NAME)
             .map(|i| i.path().to_path_buf())
     }
 
