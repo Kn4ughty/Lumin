@@ -1,8 +1,6 @@
 // use crate::message::Message;
 use iced::widget;
 
-use crate::message::Message;
-
 use super::PADDING;
 use super::{HeadingLevel, heading};
 

@@ -58,23 +58,26 @@ pub enum HeadingLevel {
     H3,
     Subheading,
 }
+
 /// Does appropriate sizing, weighting and colouring for a given heading level
 pub fn heading<'a>(
     level: HeadingLevel,
     text: String,
     font: Option<iced::Font>,
 ) -> widget::Text<'a> {
+    use HeadingLevel as HL;
+
     let mut font = font.unwrap_or(iced::Font::DEFAULT);
 
     let font_mult = match level {
-        HeadingLevel::H1 => 2.0,
-        HeadingLevel::H2 => 1.5,
-        HeadingLevel::H3 => 1.0,
-        HeadingLevel::Subheading => 0.7,
+        HL::H1 => 2.0,
+        HL::H2 => 1.5,
+        HL::H3 => 1.0,
+        HL::Subheading => 0.7,
     };
 
     font.weight = match level {
-        HeadingLevel::H1 | HeadingLevel::H2 => iced::font::Weight::Bold,
+        HL::H1 | HL::H2 => iced::font::Weight::Bold,
         _ => iced::font::Weight::Normal,
     };
 
@@ -82,9 +85,10 @@ pub fn heading<'a>(
         .size(iced::Settings::default().default_text_size * font_mult)
         .style(move |_theme: &iced::Theme| {
             let c = match level {
-                HeadingLevel::Subheading => Some(iced::color!(140, 140, 150)),
+                HL::Subheading => Some(iced::color!(140, 140, 150)),
                 _ => None,
             };
             widget::text::Style { color: c }
         })
+        .font(font)
 }
