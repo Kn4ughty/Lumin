@@ -60,8 +60,6 @@ pub fn parse_ini_format<'a>(
     let mut current_map: HashMap<&'a str, &'a str> = HashMap::new();
 
     for line in input.lines() {
-        log::trace!("current_line: {line}");
-
         if let Some(l) = line.split_once('=') {
             current_map.insert(l.0, l.1);
             continue;
@@ -73,7 +71,6 @@ pub fn parse_ini_format<'a>(
 
         if line.starts_with("[") {
             if !current_map.is_empty() {
-                log::trace!("current map was not empty");
                 main_map.insert(
                     std::mem::take(&mut current_heading),
                     std::mem::take(&mut current_map),
@@ -82,7 +79,6 @@ pub fn parse_ini_format<'a>(
 
             // Get characters between starting and ending []. i.e, the xxx in "[xxx]"
             current_heading = line.get(1..line.len() - 1).ok_or(ParseError::BadHeader)?;
-            log::trace!("current heading being set. Is set to {current_heading}");
             continue;
         }
     }
