@@ -11,11 +11,17 @@ pub enum ParseError {
     BadHeader,
 }
 
-/// Input data is a csv
-pub fn parse_csv<T: std::str::FromStr>(data: &str) -> Result<HashMap<String, T>, ParseError> {
+/// any sort of two item pairing with a single character seperator, e.g x=y, x,y
+pub fn parse_xsv<T: std::str::FromStr>(
+    data: &str,
+    sep: char,
+) -> Result<HashMap<String, T>, ParseError> {
     let mut map = HashMap::new();
     for line in data.lines() {
-        let (start, end) = line.split_once(',').ok_or(ParseError::MissingSeperator)?;
+        if line.is_empty() {
+            continue;
+        }
+        let (start, end) = line.split_once(sep).ok_or(ParseError::MissingSeperator)?;
         map.insert(
             start.to_owned(),
             end.parse::<T>().map_err(|_| ParseError::IntoFailure)?,
@@ -23,6 +29,11 @@ pub fn parse_csv<T: std::str::FromStr>(data: &str) -> Result<HashMap<String, T>,
     }
 
     Ok(map)
+}
+
+/// Input data is a csv (foo,42)
+pub fn parse_csv<T: std::str::FromStr>(data: &str) -> Result<HashMap<String, T>, ParseError> {
+    parse_xsv(data, ',')
 }
 
 /// Inverse function of parse_csv
