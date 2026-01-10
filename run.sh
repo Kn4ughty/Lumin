@@ -9,4 +9,8 @@ case $1 in
         ;;
     tt) # Time travel
         RUST_LOG=none cargo r --release --features time-travel
+        ;;
+    ba) # Benchmark Apps
+        RUST_LOG=none cargo bench --bench get_desktop_apps
+        ;;
 esac
