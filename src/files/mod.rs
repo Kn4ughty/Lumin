@@ -9,6 +9,8 @@ use walkdir::{DirEntry, WalkDir};
 use futures::channel::mpsc;
 use std::path::PathBuf;
 
+use shared_mime_info;
+
 use crate::{
     config, constants,
     module::{Module, ModuleMessage},
@@ -18,6 +20,9 @@ use crate::{
 static ICON_SEARCHER: LazyLock<icon::Icons> = LazyLock::new(icon::Icons::new);
 static ICON_LOOKUP: Mutex<LazyLock<HashMap<String, Option<image::Handle>>>> =
     Mutex::new(LazyLock::new(HashMap::new));
+
+static MIME_SEARCHER: LazyLock<shared_mime_info::MimeSearcher> =
+    LazyLock::new(|| shared_mime_info::MimeSearcher::new().expect("Couldn't make mime_searcher"));
 
 #[derive(Debug, Clone)]
 pub enum FileMsg {
@@ -30,7 +35,6 @@ pub struct FileSearcher {
     selected_index: usize,
     have_searched_files: bool,
     start: std::time::Instant,
-    // icon_searcher: icon::Icons,
 }
 
 impl Default for FileSearcher {
@@ -48,34 +52,6 @@ impl FileSearcher {
             start: std::time::Instant::now(),
         }
     }
-}
-
-fn file_ext_to_icon_name(ext: &str) -> String {
-    // TODO. use /usr/share/mime/globs
-    // This also seems relevant
-    // https://www.freedesktop.org/wiki/Specifications/shared-mime-info-spec/
-    // https://specifications.freedesktop.org/shared-mime-info/0.21/ar01s02.html
-    // Steps
-    // 0. Read MIME/mime.cache
-    //      The spec is sparse on how to do this
-    // 1. Find mime type for file in MIME/globs2
-    // 2. With mime-type lookup icon for that mimetype in MIME/icons
-    //
-    //
-    match ext {
-        "png" | "jpeg" | "svg" | "jpg" | "gif" | "webp" => "image-png",
-        "pdf" => "application-pdf",
-        "docx" => "application-wps-office.docx",
-        "pptx" => "application-wps-office.pptx",
-        "mp3" => "audio-mp3",
-        "ogg" => "application-ogg",
-        "json" => "application-json",
-        "md" => "text-markdown",
-        "txt" => "text-plain",
-        "mp4" | "mkv" | "mov" => "video-mp4",
-        _ => "",
-    }
-    .into()
 }
 
 impl Module for FileSearcher {
@@ -160,18 +136,16 @@ impl FileSearcher {
     fn get_data(path: DirEntry) -> (PathBuf, Option<image::Handle>) {
         let path = path.path().to_path_buf();
 
-        let icon_name = &file_ext_to_icon_name(
-            &path
-                .extension()
-                .unwrap_or(std::ffi::OsStr::new(""))
-                .to_string_lossy(),
-        );
+        let icon_name = MIME_SEARCHER
+            .find_mimetype_from_filepath(&path)
+            .map(|mt| {
+                MIME_SEARCHER
+                    .find_icon_for_mimetype(mt)
+                    .unwrap_or("".to_string())
+            })
+            .unwrap_or_default();
 
-        if let Some(handle) = ICON_LOOKUP.lock().expect("unlock mutex").get(icon_name) {
-            return (path, handle.clone());
-        }
-
-        let icon_path = ICON_SEARCHER.find_icon(icon_name, 32, 1, "breeze");
+        let icon_path = ICON_SEARCHER.find_icon(&icon_name, 32, 1, "breeze");
 
         let icon_handle = icon_path.map(|i| {
             if i.path().extension() == Some(std::ffi::OsStr::new("svg")) {
@@ -184,8 +158,7 @@ impl FileSearcher {
         ICON_LOOKUP
             .lock()
             .expect("unlock mutex")
-            .insert(icon_name.to_string(), icon_handle.clone());
-
+            .insert(icon_name, icon_handle.clone());
         (path, icon_handle)
     }
 
