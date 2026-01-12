@@ -23,6 +23,7 @@ pub static CACHE_DIR: LazyLock<String> = LazyLock::new(|| {
     cache_dir
 });
 
+// TODO. Use $XDG_CONFIG
 pub static CONFIG_DIR: LazyLock<String> = LazyLock::new(|| {
     let config_dir = HOME_DIR.clone() + "/.config/lumin/";
 

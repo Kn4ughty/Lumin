@@ -90,7 +90,7 @@ impl Web {
                 let client = self.client.clone();
 
                 let full_text = self.input_for_results.clone();
-                // trim first character. TODO. Dont hardcode
+                // trim first character.
                 let trimmed_text = search_text[1..].to_owned();
                 Task::perform(
                     async move {
@@ -105,7 +105,7 @@ impl Web {
                 log::debug!("Dictionary module");
                 let client = self.client.clone();
                 let full_text = self.input_for_results.clone();
-                // trim first character. TODO. Dont hardcode
+                // trim first character.
                 let trimmed_text = search_text[1..].to_owned();
 
                 Task::perform(
