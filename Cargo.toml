@@ -55,3 +55,7 @@ harness = false
 [[bench]]
 name = "get_macos_apps"
 harness = false
+
+[[bench]]
+name = "get_files"
+harness = false

@@ -188,6 +188,26 @@ impl FileSearcher {
         });
         rx
     }
+
+    #[allow(dead_code)] // used in benchmarking
+    pub fn find_files() {
+        for dir in &config::SETTINGS
+            .lock()
+            .expect("mutex")
+            .file_settings
+            .search_directories
+        {
+            for entry in WalkDir::new(
+                std::sync::LazyLock::force(&constants::HOME_DIR).to_owned() + "/" + dir,
+            )
+            .into_iter()
+            .filter_map(|e| e.ok())
+            {
+                Self::get_data(entry);
+            }
+        }
+    }
+
     fn run_at_index(&self, i: usize) {
         Self::open_file(self.found_files[i].0.as_os_str())
     }
