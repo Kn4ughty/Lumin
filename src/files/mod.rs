@@ -145,6 +145,10 @@ impl FileSearcher {
             })
             .unwrap_or_default();
 
+        if let Some(handle) = ICON_LOOKUP.lock().expect("unlock mutex").get(&icon_name) {
+            return (path, handle.clone());
+        }
+
         let icon_path = ICON_SEARCHER.find_icon(&icon_name, 32, 1, "breeze");
 
         let icon_handle = icon_path.map(|i| {
