@@ -182,6 +182,7 @@ impl FileSearcher {
                 )
                 .into_iter()
                 .filter_map(|e| e.ok())
+                .filter(|e| !e.file_type().is_dir())
                 {
                     tx.try_send(Self::get_data(entry)).expect("Can send");
 
@@ -194,7 +195,10 @@ impl FileSearcher {
     }
 
     #[allow(dead_code)] // used in benchmarking
-    pub fn find_files() {
+    pub fn find_files() -> mpsc::Receiver<(PathBuf, Option<image::Handle>)> {
+        let (mut tx, rx) = mpsc::channel(900000);
+        let start = std::time::Instant::now();
+        let mut count = 0;
         for dir in &config::SETTINGS
             .lock()
             .expect("mutex")
@@ -207,9 +211,13 @@ impl FileSearcher {
             .into_iter()
             .filter_map(|e| e.ok())
             {
-                Self::get_data(entry);
+                tx.try_send(Self::get_data(entry)).expect("Can send");
+
+                count += 1;
             }
         }
+        log::info!("Time to **Send** {count} files: {:#?}", start.elapsed());
+        rx
     }
 
     fn run_at_index(&self, i: usize) {

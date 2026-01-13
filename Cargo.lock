@@ -4284,7 +4284,7 @@ dependencies = [
 [[package]]
 name = "shared-mime-info"
 version = "0.1.0"
-source = "git+https://github.com/Kn4ughty/shared-mime-info#0dfbd626f14106bc11e5ee35598ec5a9ec0d1dca"
+source = "git+https://github.com/Kn4ughty/shared-mime-info#30cfa0331260becd0d77a80c57eefa8d3c5e79af"
 dependencies = [
  "glob",
  "log",
