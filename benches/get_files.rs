@@ -9,7 +9,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("get_files", |b| {
         b.iter(|| {
             //fo
-            files::FileSearcher::find_files()
+            let _rx = files::FileSearcher::find_files();
         })
     });
 }
