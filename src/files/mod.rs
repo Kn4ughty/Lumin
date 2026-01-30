@@ -210,6 +210,7 @@ impl FileSearcher {
             )
             .into_iter()
             .filter_map(|e| e.ok())
+            .filter(|e| !e.file_type().is_dir())
             {
                 tx.try_send(Self::get_data(entry)).expect("Can send");
 
