@@ -37,11 +37,17 @@ cargo install cargo-update
 cargo install-update -a
 ```
 
-<!-- Hidden since it is for me and not users -->
-<!-- # ToDo -->
-<!-- - [ ] Change default macos font -->
-<!-- - [ ] Support multiple locales -->
-<!-- - [ ] Investigate https://austinmreppert.github.io/iced-reference/chapter_3.html -->
-<!-- - [ ] Investigate https://github.com/pop-os/cosmic-time -->
-<!-- - [ ] Refactor calculator -->
-<!-- - [ ] Reduce dependencies -->
+<!-- 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Here is some text
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQRjdKqggfVq16ynnlPCUDTsg3hASgUCaZGnAAAKCRDCUDTsg3hA
+SrAmAP4i+ZBTuHv3cE2i0h/1YyfKQGsrF7qfeLKCKHeeXNwiywD/fGLMJaEndqzl
+YZqmTQg1NZ1xS5LaPggZiN3p6ZOHXA0=
+=wrzP
+-----END PGP SIGNATURE-----
+-->
