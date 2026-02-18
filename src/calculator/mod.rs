@@ -167,6 +167,10 @@ impl Calc {
         let mut iter = chars.enumerate().peekable();
         while let Some((idx, c)) = iter.next() {
             log::trace!("Character in tokenisation is: {c}");
+            if c == '_' {
+                continue;
+            }
+
             if c.is_digit(BASE) || c == '.' {
                 log::trace!("Character was num: {c}");
                 number_buf.push(c);
@@ -176,6 +180,9 @@ impl Calc {
                         let next = iter.next().expect("Can get next");
                         log::trace!("Next character ({}) was a num or .", next.1);
                         number_buf.push(next.1)
+                    }
+                    Some((_, '_')) => {
+                        // do nothing
                     }
                     // No number next
                     _ => {
