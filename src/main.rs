@@ -185,6 +185,7 @@ impl State {
                 log::debug!("Loaded font successfully");
                 Task::none()
             }
+            Message::DoNothing => Task::none(),
         }
     }
 
@@ -331,10 +332,21 @@ fn subscription(_state: &State) -> iced::Subscription<Message> {
     iced::Subscription::batch(vec![
         iced::window::open_events().map(Message::WindowOpened),
         // Thank you https://kressle.in/keystrokes
-        iced::keyboard::on_key_press(handle_press_hotkeys),
-        iced::keyboard::on_key_release(handle_release_hotkeys),
-        // Todo, work out how to subscribe to mouse movement
-        // https://docs.iced.rs/iced/mouse/index.html
+        // iced::keyboard::on_key_press(handle_press_hotkeys),
+        // iced::keyboard::on_key_release(handle_release_hotkeys),
+        iced::keyboard::listen().map(|ke| {
+            match ke {
+                keyboard::Event::KeyPressed { key, modifiers, .. } => {
+                    handle_press_hotkeys(key, modifiers)
+                }
+                keyboard::Event::KeyReleased { key, modifiers, .. } => {
+                    handle_release_hotkeys(key, modifiers)
+                }
+                keyboard::Event::ModifiersChanged(_) => None,
+            }
+            .unwrap_or(Message::DoNothing)
+        }), // Todo, work out how to subscribe to mouse movement
+            // https://docs.iced.rs/iced/mouse/index.html
     ])
 }
 

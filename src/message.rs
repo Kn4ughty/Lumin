@@ -8,6 +8,7 @@ pub enum Message {
     TextInputSubmitted(String),
     #[allow(clippy::enum_variant_names)]
     PluginMessage(ModuleMessage),
+    DoNothing,
     Close,
     KeyboardUp,
     KeyboardDown,

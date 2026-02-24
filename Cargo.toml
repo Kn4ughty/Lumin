@@ -25,7 +25,7 @@ rustflags = ["-Clink-arg=-fuse-ld=lld", "-Clink-arg=-Wl,--no-rosegment"]
 
 
 [dependencies]
-iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "tokio", "image"], rev= "8bfd099c5929d927a3fdde666d4c645d0bd83cb7" }
+iced = { version = "0.14.0", features = ["advanced", "tokio", "image"] }
 shared-mime-info = { git = "https://github.com/Kn4ughty/shared-mime-info" }
 # shared-mime-info = { path = "../shared-mime-info" } # This is useful for rapid testing
 anyhow = "1.0.99"
