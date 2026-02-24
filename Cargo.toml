@@ -41,7 +41,7 @@ serde_json = "1.0.145"
 icns = "0.3.1"
 icon = { git = "https://github.com/Kn4ughty/linux_icons" }
 resvg = "0.45.1"
-bytes = "1.11.0"
+bytes = "1.11.1"
 toml = "0.9.8"
 futures = "0.3.31"
 
