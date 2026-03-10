@@ -109,7 +109,7 @@ impl State {
 
     fn load_font() -> Task<Message> {
         iced::font::load(include_bytes!(
-            "../assets/lexend/fonts/deca/ttf/LexendDeca-Regular.ttf"
+            "../assets/lexend/LexendDeca-Regular.ttf"
         ))
         .map(Message::FontLoaded)
     }
