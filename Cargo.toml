@@ -32,7 +32,7 @@ anyhow = "1.0.99"
 libc = "0.2.175"
 log = "0.4.28"
 pretty_env_logger = "0.5.0"
-reqwest = { version = "0.12.23", features = ["json"] }
+reqwest = { version = "0.13.2", features = ["json"] }
 thiserror = "2.0.16"
 tokio = {version = "1.47.1", features = ["full"]}
 walkdir = "2.5.0"
