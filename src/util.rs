@@ -19,9 +19,10 @@ where
     let working_dir: String =
         working_dir_arg.unwrap_or(std::env::var("HOME").unwrap_or("/".into()));
 
-    let mut command = process::Command::new(cmd);
+    let mut command = process::Command::new("/usr/bin/env");
     unsafe {
         command
+            .arg(cmd)
             .args(args)
             .current_dir(working_dir)
             .stdin(process::Stdio::null())
