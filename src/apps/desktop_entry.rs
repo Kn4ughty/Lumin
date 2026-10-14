@@ -117,7 +117,7 @@ pub struct DesktopEntry {
     pub try_exec: Option<String>,
     pub exec: String, // Techicially optional, nuh uh.
     pub working_dir: Option<String>,
-    pub terminal: bool,
+    pub is_terminal: bool,
     pub action_list: Vec<Action>,
     pub categories: Vec<String>,
     pub keywords: Vec<String>,
@@ -138,12 +138,44 @@ impl std::default::Default for DesktopEntry {
             try_exec: None,
             exec: String::new(),
             working_dir: None,
-            terminal: false,
+            is_terminal: false,
             action_list: Vec::new(),
             categories: Vec::new(),
             keywords: Vec::new(),
             url: None,
         }
+    }
+}
+
+impl DesktopEntry {
+    fn get_command(&self) -> (String, Vec<String>) {
+        let (cmd, args_unsplit) = self
+            .exec
+            .split_once(' ')
+            .unwrap_or((self.exec.as_str(), ""));
+
+        let mut cmd = cmd.to_string();
+
+        let mut args: Vec<String> = args_unsplit
+            .split(" ")
+            .map(|s| s.to_string())
+            .filter(|x| !x.is_empty())
+            .collect();
+
+        if args.len() == 1 && args[0].is_empty() {
+            log::trace!("ARGS LEN 0");
+            args.clear();
+        };
+
+        if self.is_terminal {
+            let terminal = std::env::var("TERMINAL");
+            if let Ok(terminal) = terminal {
+                args.insert(0, cmd.clone());
+                cmd = terminal
+            }
+        }
+
+        (cmd, args)
     }
 }
 
@@ -258,7 +290,7 @@ fn parse_from_hashmap<'a>(
         only_show_in: parse_string_list(entry_keys.get("OnlyShowIn").copied()),
         not_show_in: parse_string_list(entry_keys.get("NotShowIn").copied()),
         working_dir: entry_keys.get("Path").map(|s| s.to_string()),
-        terminal: entry_keys.get("Terminal").is_some_and(|b| *b == "true"),
+        is_terminal: entry_keys.get("Terminal").is_some_and(|b| *b == "true"),
         categories: parse_string_list(entry_keys.get("Categories").copied()),
         keywords: parse_string_list(entry_keys.get("Keywords").copied()),
         url: match entry_keys.get("URL") {
@@ -299,27 +331,7 @@ fn parse_from_hashmap<'a>(
 impl From<DesktopEntry> for App {
     fn from(desktop_entry: DesktopEntry) -> Self {
         // https://docs.iced.rs/iced/advanced/image/index.html
-        log::trace!("{}", desktop_entry.exec.replace(' ', "*"));
-        let (cmd, args) = match desktop_entry.exec.split_once(' ') {
-            Some((cmd, args)) => {
-                let mut arg: Vec<String> = args
-                    .split(" ")
-                    .map(|s| s.to_string())
-                    .filter(|x| !x.is_empty())
-                    .collect();
-
-                log::trace!("arg is: {:#?}", arg);
-
-                if arg == vec![String::new()] {
-                    log::trace!("ARGS LEN 0");
-                    arg.clear();
-                }
-
-                (cmd.to_string(), arg)
-            }
-            None => (desktop_entry.exec, vec![String::new()]),
-        };
-
+        let (cmd, args) = desktop_entry.get_command();
         let working_dir = desktop_entry.working_dir;
 
         App {
