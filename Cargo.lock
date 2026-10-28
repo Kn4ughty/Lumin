@@ -2140,8 +2140,9 @@ dependencies = [
 [[package]]
 name = "icon"
 version = "0.1.3"
-source = "git+https://github.com/Kn4ughty/linux_icons#f2db07bc01465a387908ce0c5bcce379b6c1a759"
+source = "git+https://github.com/Kn4ughty/linux_icons#53c68cfd5443834bc2dba8134167b1f76cb9b1c4"
 dependencies = [
+ "ahash",
  "freedesktop_entry_parser",
  "thiserror 2.0.21",
  "xdg",
@@ -2636,7 +2637,7 @@ checksum = "4050469837a6ff301cd14c1f8f24f88549e6d548f24f64e2148eb0f72cebc51f"
 
 [[package]]
 name = "lumin"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -5297,9 +5298,9 @@ checksum = "b1d386ff53b415b7fe27b50bb44679e2cc4660272694b7b6f3326d8480823a94"
 
 [[package]]
 name = "unicode-width"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
+checksum = "ca718471876992059f251e33aafc334346ada08042b7661dd1fe313a9bced557"
 
 [[package]]
 name = "untrusted"
