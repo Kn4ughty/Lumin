@@ -42,3 +42,10 @@ where
     }
     Ok(())
 }
+
+/// this function will change global state and add to an error queue, which will
+/// be shown in the main ui
+#[expect(unused)]
+pub fn show_error(error: String) {
+    todo!()
+}

@@ -13,9 +13,6 @@
 - Async web searching 
     - Type `!w` to quickly search through wikipedia articles and preview results
     - Type `!d` to search and use an online dictionary API.
-- Search through file names with `'`
-    - Searches through files on seperate thread to keep ui responsive
-    - Just activate the item to open it in the default app
 - dmenu support with `--dmenu` flag
     - Pass in newline seperated items. Selected item is written to stdout. Useful for scripting
     - If only an EOF is sent and no lines, outputs the input text to stdout.
@@ -36,18 +33,3 @@ cargo install cargo-update
 # And to do the updates: 
 cargo install-update -a
 ```
-
-<!-- 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-Here is some text
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYKAB0WIQRjdKqggfVq16ynnlPCUDTsg3hASgUCaZGnAAAKCRDCUDTsg3hA
-SrAmAP4i+ZBTuHv3cE2i0h/1YyfKQGsrF7qfeLKCKHeeXNwiywD/fGLMJaEndqzl
-YZqmTQg1NZ1xS5LaPggZiN3p6ZOHXA0=
-=wrzP
------END PGP SIGNATURE-----
--->

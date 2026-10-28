@@ -1628,12 +1628,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "151665d9be52f9bb40fc7966565d39666f2d1e69233571b71b87791c7e0528b3"
 
 [[package]]
-name = "glob"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4eba85ea1d0a966a983acd07deee566e67395d2d96b6fb39e62b5a833f1eb0b"
-
-[[package]]
 name = "glow"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2654,7 +2648,6 @@ dependencies = [
  "resvg",
  "serde",
  "serde_json",
- "shared-mime-info",
  "thiserror 2.0.21",
  "tokio",
  "toml",
@@ -4486,15 +4479,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e7523beb55eece201a2356bee0bbca0d1ab466c14c07703b2e0ee6d42cb0c2c"
 dependencies = [
  "serde_core",
-]
-
-[[package]]
-name = "shared-mime-info"
-version = "0.1.0"
-source = "git+https://github.com/Kn4ughty/shared-mime-info#68dc4af960960c93cdf30c9109f80e483325d025"
-dependencies = [
- "glob",
- "log",
 ]
 
 [[package]]

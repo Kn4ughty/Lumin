@@ -15,8 +15,6 @@ mod websearch;
 mod drun;
 use drun::Drun;
 
-mod files;
-
 mod config;
 mod constants;
 mod module;
@@ -108,10 +106,8 @@ impl State {
     }
 
     fn load_font() -> Task<Message> {
-        iced::font::load(include_bytes!(
-            "../assets/lexend/LexendDeca-Regular.ttf"
-        ))
-        .map(Message::FontLoaded)
+        iced::font::load(include_bytes!("../assets/lexend/LexendDeca-Regular.ttf"))
+            .map(Message::FontLoaded)
     }
 }
 

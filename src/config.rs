@@ -31,11 +31,12 @@ fn default_settings_work() {
 pub static SETTINGS: Mutex<LazyLock<Settings>> = Mutex::new(LazyLock::new(|| {
     load_from_disk().unwrap_or_else(|e| {
         log::error!(
-            "User config was invalid!! {e:#?}
+            "Your config is invalid! {e:#?}
 ===========
 You can attempt to copy the default config manually so it has the new fields.
 it is in `assets/config.toml`"
         );
+        // TODO. Display this error graphically
         LazyLock::<Settings>::force(&DEFAULT_SETTINGS).clone()
     })
 }));
@@ -52,15 +53,9 @@ pub struct Settings {
     #[serde(with = "ThemeDef")]
     pub color_scheme: iced::Theme,
     pub transparent_background: bool,
-    pub file_settings: FileSettings,
     pub app_prefixes: HashMap<crate::module::ModuleEnum, String>,
     pub input_prompt: String,
     pub show_icons: bool,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct FileSettings {
-    pub search_directories: Vec<String>,
 }
 
 fn load_from_disk() -> Result<Settings, ConfigError> {

@@ -5,7 +5,6 @@ use crate::message::Message;
 
 use crate::apps;
 use crate::calculator;
-use crate::files;
 use crate::websearch;
 
 #[derive(Debug, Clone)]
@@ -16,7 +15,6 @@ pub enum ModuleMessage {
     ActivatedIndex(usize),
     AppMessage(apps::AppMessage),
     WebMessage(websearch::WebMsg),
-    FileMessage(files::FileMsg),
     DoNothing,
 }
 
@@ -27,11 +25,10 @@ pub trait Module {
     fn run(&self) -> Task<Message>;
 }
 
-#[derive(Debug, Clone, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
 pub enum ModuleEnum {
     AppSearch,
     WebSearch,
-    FileSearch,
     HelpScreen,
     Calculator,
 }
@@ -40,7 +37,6 @@ impl ModuleEnum {
         match self {
             Self::AppSearch => "Launch your installed apps",
             Self::WebSearch => "Quick access to search different websites",
-            Self::FileSearch => "Search the files on your computer",
             Self::HelpScreen => "This help screen",
             Self::Calculator => "Basic calculator ",
         }
@@ -54,7 +50,6 @@ impl From<&ModuleEnum> for fn() -> Box<dyn Module> {
             ModuleEnum::AppSearch => || Box::new(apps::AppModule::new()),
             ModuleEnum::WebSearch => || Box::new(websearch::Web::new()),
             ModuleEnum::Calculator => || Box::new(calculator::Calc::new()),
-            ModuleEnum::FileSearch => || Box::new(files::FileSearcher::new()),
             ModuleEnum::HelpScreen => unreachable!("Help screen should not be ran as real module"),
         }
     }
