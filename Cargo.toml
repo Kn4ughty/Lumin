@@ -42,6 +42,8 @@ resvg = "0.45.1"
 bytes = "1.11.1"
 toml = "0.9.8"
 futures = "0.3.31"
+naga = { version = "27", features = ["termcolor"] }
+numbat = "1.24.0"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }

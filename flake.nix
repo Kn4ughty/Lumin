@@ -14,33 +14,14 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
-
-        runtimeLibs = with pkgs; [
-          wayland
-          # required?
-          libxkbcommon
-          libGL
-          vulkan-loader
-        ];
-        libPath = pkgs.lib.makeLibraryPath runtimeLibs;
+        lumin = pkgs.callPackage ./package.nix { };
       in
       {
-        packages.default = pkgs.rustPlatform.buildRustPackage {
-          pname = "lumin";
-          version = "1.1.0";
-          src = ./.;
-          cargoLock = {
-            lockFile = ./Cargo.lock;
-            allowBuiltinFetchGit = true;
-          };
-          nativeBuildInputs = with pkgs; [
-            pkg-config
-            patchelf
-          ];
-          postFixup = ''
-            patchelf --add-rpath ${libPath} $out/bin/lumin
-          '';
+        packages = {
+          inherit lumin;
+          default = lumin;
         };
+
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = [ pkgs.pkg-config ];
           packages = with pkgs; [
@@ -51,8 +32,13 @@
             rust-analyzer
           ];
           RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
-          RUSTFLAGS = "-C link-arg=-Wl,-rpath,${libPath}";
+          RUSTFLAGS = "-C link-arg=-Wl,-rpath,${lumin.libPath}";
         };
       }
-    );
+    )
+    // {
+      overlays.default = final: prev: {
+        lumin = final.callPackage ./package.nix { };
+      };
+    };
 }
