@@ -181,6 +181,14 @@ impl State {
                 log::debug!("Loaded font successfully");
                 Task::none()
             }
+            Message::Unfocused => {
+                if config::SETTINGS.lock().expect("mutex").close_on_unfocus {
+                    log::info!("Lost focus; app is exiting.");
+                    iced::exit()
+                } else {
+                    Task::none()
+                }
+            }
             Message::DoNothing => Task::none(),
         }
     }
@@ -327,6 +335,13 @@ impl State {
 fn subscription(_state: &State) -> iced::Subscription<Message> {
     iced::Subscription::batch(vec![
         iced::window::open_events().map(Message::WindowOpened),
+        iced::window::events().map(|event| {
+            if event.1 == iced::window::Event::Unfocused {
+                Message::Unfocused
+            } else {
+                Message::DoNothing
+            }
+         }),
         // Thank you https://kressle.in/keystrokes
         // iced::keyboard::on_key_press(handle_press_hotkeys),
         // iced::keyboard::on_key_release(handle_release_hotkeys),
