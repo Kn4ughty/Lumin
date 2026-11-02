@@ -19,3 +19,6 @@ input_prompt = "Type to search"
 
 # Show icons for search results
 show_icons = true
+
+# Unfocusing Lumin should close it
+close_on_unfocus = false

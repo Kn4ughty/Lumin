@@ -56,6 +56,7 @@ pub struct Settings {
     pub app_prefixes: HashMap<crate::module::ModuleEnum, String>,
     pub input_prompt: String,
     pub show_icons: bool,
+    pub close_on_unfocus: bool,
 }
 
 fn load_from_disk() -> Result<Settings, ConfigError> {
