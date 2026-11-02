@@ -51,7 +51,9 @@ impl State {
             .expect("mutex")
             .app_prefixes
             .iter()
-            .filter(|(module, _)| **module != ModuleEnum::HelpScreen)
+            .filter(|(module, _)| {
+                **module != ModuleEnum::HelpScreen && !matches!(**module, ModuleEnum::Unknown(_))
+            })
         {
             modules.insert(prefix.to_string(), LazyCell::new(mod_enum.into()));
             module_types.push((prefix.clone(), mod_enum.clone()));
@@ -341,7 +343,7 @@ fn subscription(_state: &State) -> iced::Subscription<Message> {
             } else {
                 Message::DoNothing
             }
-         }),
+        }),
         // Thank you https://kressle.in/keystrokes
         // iced::keyboard::on_key_press(handle_press_hotkeys),
         // iced::keyboard::on_key_release(handle_release_hotkeys),

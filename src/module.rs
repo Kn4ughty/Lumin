@@ -31,16 +31,18 @@ pub enum ModuleEnum {
     WebSearch,
     HelpScreen,
     Calculator,
+    #[serde(untagged)]
+    Unknown(String),
 }
 impl ModuleEnum {
     pub fn description(&self) -> String {
         match self {
-            Self::AppSearch => "Launch your installed apps",
-            Self::WebSearch => "Quick access to search different websites",
-            Self::HelpScreen => "This help screen",
-            Self::Calculator => "Basic calculator ",
+            Self::AppSearch => "Launch your installed apps".to_string(),
+            Self::WebSearch => "Quick access to search different websites".to_string(),
+            Self::HelpScreen => "This help screen".to_string(),
+            Self::Calculator => "Basic calculator ".to_string(),
+            Self::Unknown(name) => format!("Unknown module: {name}"),
         }
-        .to_string()
     }
 }
 
@@ -51,6 +53,9 @@ impl From<&ModuleEnum> for fn() -> Box<dyn Module> {
             ModuleEnum::WebSearch => || Box::new(websearch::Web::new()),
             ModuleEnum::Calculator => || Box::new(calculator::Calc::new()),
             ModuleEnum::HelpScreen => unreachable!("Help screen should not be ran as real module"),
+            ModuleEnum::Unknown(name) => {
+                panic!("Unknown module named: '{name}', was tried be ran")
+            }
         }
     }
 }
