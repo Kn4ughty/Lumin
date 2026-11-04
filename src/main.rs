@@ -2,7 +2,8 @@
 
 use iced::{Task, keyboard, theme::Style, widget};
 
-use std::cell::LazyCell;
+use std::path::PathBuf;
+use std::{cell::LazyCell, fs};
 use std::collections::HashMap;
 
 mod apps;
@@ -22,9 +23,13 @@ mod serworse;
 mod sorting;
 mod util;
 mod widglets;
+mod history;
 use module::{Module, ModuleEnum, ModuleMessage};
 
 use message::Message;
+
+use crate::constants::DATA_DIR;
+use crate::history::History;
 
 const HELP_SCREEN_PREFIX: &str = "?";
 
@@ -36,6 +41,8 @@ struct State {
     window_id: Option<iced::window::Id>,
     modules: HashMap<String, LazyCell<Box<dyn Module>>>,
     module_types: Vec<(String, ModuleEnum)>,
+    dummy_text: Option<String>,
+    history: History
 }
 
 // Startup things
@@ -58,6 +65,7 @@ impl State {
         }
 
         log::info!("Time to initialise modules: {:#?}", start.elapsed());
+
         (
             State {
                 text_value: String::new(),
@@ -66,6 +74,8 @@ impl State {
                 has_user_typed: false,
                 modules,
                 module_types,
+                dummy_text: Some(String::new()),
+                history: History::load(),
             },
             Self::load_font(),
         )
@@ -100,6 +110,8 @@ impl State {
                 has_user_typed: false,
                 modules,
                 module_types: Vec::new(),
+                dummy_text: Some(String::new()),
+                history: History::load()
             },
             Self::load_font(),
         )
@@ -131,7 +143,7 @@ impl State {
             }
             Message::TextInputSubmitted(_text) => {
                 log::info!("Text input submitted");
-
+                self.add_item_to_history();
                 self.find_module().expect("Can find module").0.run()
             }
             Message::WindowOpened(id) => {
@@ -159,14 +171,21 @@ impl State {
                 }
             }
             Message::KeyboardUp => {
+                self.dummy_text = self.history.get_above(self.text_value.clone());
+                log::info!("Dummy Text: {:?}", self.dummy_text);
+
                 if let Some((module, _)) = self.find_module_mut() {
                     return module
                         .update(ModuleMessage::SelectionUp)
                         .map(Message::PluginMessage);
                 }
+
                 Task::none()
             }
             Message::KeyboardDown => {
+                self.dummy_text = self.history.get_below(self.text_value.clone());
+                log::info!("Dummy Text: {:?}", self.dummy_text);
+
                 if let Some((module, _)) = self.find_module_mut() {
                     return module
                         .update(ModuleMessage::SelectionDown)
@@ -329,6 +348,12 @@ impl State {
             .map(|(prefix, m)| (m, prefix.len()));
         start.finish();
         res
+    }
+
+    fn add_item_to_history(&mut self) {
+        self.history.add_query(self.text_value.clone());
+        let history = PathBuf::from(DATA_DIR.clone()).join("history");
+        let _ = fs::write(history, self.history.to_string());
     }
 }
 
