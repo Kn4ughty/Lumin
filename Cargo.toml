@@ -19,7 +19,11 @@ perf = []
 time-travel = ["iced/time-travel"]
 
 [dependencies]
-iced = { version = "0.14.0", features = ["advanced", "tokio", "image"] }
+iced = { 
+    git = "https://github.com/iced-rs/iced/", 
+    rev = "8ff48c42b0d5188223501ea1ccc506fd5beaf36a",
+    features = ["advanced", "tokio", "image"] 
+}
 anyhow = "1.0.99"
 libc = "0.2.175"
 log = "0.4.28"

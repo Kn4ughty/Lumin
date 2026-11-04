@@ -195,7 +195,7 @@ impl State {
         }
     }
 
-    fn view(&self) -> iced::Element<'_, Message> {
+    fn view(&self) -> impl iced::Widget<Message> {
         log::trace!("view fn run");
 
         let text_input = widget::text_input(
@@ -273,10 +273,10 @@ impl State {
 
     fn show_overview_screen(&self) -> iced::Element<'_, Message> {
         let mut prefix_col = widget::column![widget::text("Prefix")];
-        prefix_col = prefix_col.push(widget::rule::horizontal(1));
+        prefix_col = prefix_col.push(widget::rule::horizontal(1).into());
 
         let mut description_col = widget::column![widget::text("Description")];
-        description_col = description_col.push(widget::rule::horizontal(1));
+        description_col = description_col.push(widget::rule::horizontal(1).into());
 
         let mut all_modules: Vec<(String, String)> = self
             .module_types
@@ -293,11 +293,11 @@ impl State {
         ));
 
         for (prefix, module) in all_modules {
-            prefix_col = prefix_col.push(widget::text(prefix));
-            prefix_col = prefix_col.push(widget::rule::horizontal(1));
+            prefix_col = prefix_col.push(widget::text(prefix).into());
+            prefix_col = prefix_col.push(widget::rule::horizontal(1).into());
 
-            description_col = description_col.push(widget::text(module));
-            description_col = description_col.push(widget::rule::horizontal(1));
+            description_col = description_col.push(widget::text(module).into());
+            description_col = description_col.push(widget::rule::horizontal(1).into());
         }
 
         widget::row![
