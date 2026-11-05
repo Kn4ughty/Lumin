@@ -5,8 +5,7 @@ use std::path::PathBuf;
 use std::sync::LazyLock;
 use std::sync::Mutex;
 
-use iced::Task;
-use iced::widget;
+use iced::{Task, Widget, widget};
 
 pub mod desktop_entry;
 pub mod mac_apps;
@@ -304,7 +303,7 @@ impl AppModule {
 impl Module for AppModule {
     fn view(&self) -> iced::Element<'_, ModuleMessage> {
         let should_icon = crate::config::SETTINGS.lock().expect("mutex").show_icons;
-        widget::scrollable(
+        widget::scrollable::<ModuleMessage, iced::Element<'_, ModuleMessage>, iced::Theme>(
             widget::column(
                 self.app_list
                     .clone()
@@ -317,21 +316,23 @@ impl Module for AppModule {
                             Some(Icon::ImageHandle(h)) => Some(h),
                         };
 
-                        widglets::ListRow::new(app.name)
-                            .optional_subtext(app.subname)
-                            .on_activate(ModuleMessage::ActivatedIndex(i))
-                            .optional_icon(icon)
-                            .show_icon(should_icon)
-                            .selected(self.selected_index == i)
-                            .into()
+                        iced::Element::from(
+                            widglets::ListRow::new(app.name)
+                                .optional_subtext(app.subname)
+                                .on_activate(ModuleMessage::ActivatedIndex(i))
+                                .optional_icon(icon)
+                                .show_icon(should_icon)
+                                .selected(self.selected_index == i),
+                        )
                     }),
             )
-            .width(iced::Fill),
+            .width(iced::Fill)
+            .boxed(),
         )
         .direction(widget::scrollable::Direction::Vertical(
             widget::scrollable::Scrollbar::hidden(),
         ))
-        .into()
+        .boxed()
     }
 
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {

@@ -1,4 +1,4 @@
-use iced::{Task, widget};
+use iced::{Task, Widget, widget};
 use std::collections::HashMap;
 
 use crate::{
@@ -215,7 +215,7 @@ impl Module for Web {
                 widget::scrollable::Scrollbar::hidden(),
             ))
             .width(iced::Fill)
-            .into()
+            .boxed()
     }
 
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {

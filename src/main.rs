@@ -1,6 +1,6 @@
 #![deny(clippy::unwrap_used)]
 
-use iced::{Task, keyboard, theme::Style, widget};
+use iced::{Task, Widget, keyboard, theme::Style, widget};
 
 use std::cell::LazyCell;
 use std::collections::HashMap;
@@ -191,6 +191,12 @@ impl State {
                     Task::none()
                 }
             }
+            Message::Clipboard(t) => {
+                if let Err(e) = t {
+                    log::error!("Error copying to clipboard: {e:?}")
+                }
+                Task::none()
+            }
             Message::DoNothing => Task::none(),
         }
     }
@@ -198,23 +204,21 @@ impl State {
     fn view(&self) -> impl iced::Widget<Message> {
         log::trace!("view fn run");
 
-        let text_input = widget::text_input(
-            &config::SETTINGS.lock().expect("mutex").input_prompt,
-            &self.text_value,
-        )
-        .id(self.text_id.clone())
-        .on_input(Message::TextInputChanged)
-        .on_submit(Message::TextInputSubmitted("test".to_string()))
-        .padding(8.0)
-        .style(|theme, status| {
-            let mut base_style = widget::text_input::default(theme, status);
-            base_style.border = iced::Border {
-                color: iced::Color::TRANSPARENT,
-                width: 0.0,
-                radius: 10.0.into(),
-            };
-            base_style
-        });
+        let input_prompt = config::SETTINGS.lock().expect("mutex").input_prompt.clone();
+        let text_input = widget::text_input(input_prompt, &self.text_value)
+            .id(self.text_id.clone())
+            .on_input(Message::TextInputChanged)
+            .on_submit(Message::TextInputSubmitted("test".to_string()))
+            .padding(8.0)
+            .style(|theme, status| {
+                let mut base_style = widget::text_input::default(theme, status);
+                base_style.border = iced::Border {
+                    color: iced::Color::TRANSPARENT,
+                    width: 0.0,
+                    radius: 10.0.into(),
+                };
+                base_style
+            });
 
         let result = self.get_result_to_display();
 
@@ -235,6 +239,8 @@ impl State {
                 .transparent_background
             {
                 base_theme = base_theme.background(iced::Color::TRANSPARENT);
+            } else {
+                base_theme = base_theme.background(theme.palette().background.base.color)
             }
             base_theme
         })
@@ -247,13 +253,13 @@ impl State {
             mouse = mouse.interaction(iced::mouse::Interaction::Hidden);
         }
 
-        mouse.into()
+        mouse
     }
 
     fn style(&self, theme: &iced::Theme) -> Style {
         Style {
             background_color: iced::Color::TRANSPARENT,
-            text_color: theme.palette().text,
+            text_color: theme.palette().primary.base.text,
         }
     }
 
@@ -269,14 +275,15 @@ impl State {
             .0
             .view()
             .map(|s: ModuleMessage| Message::PluginMessage(s))
+            .boxed()
     }
 
     fn show_overview_screen(&self) -> iced::Element<'_, Message> {
         let mut prefix_col = widget::column![widget::text("Prefix")];
-        prefix_col = prefix_col.push(widget::rule::horizontal(1).into());
+        prefix_col = prefix_col.push(widget::rule::horizontal(1).boxed());
 
         let mut description_col = widget::column![widget::text("Description")];
-        description_col = description_col.push(widget::rule::horizontal(1).into());
+        description_col = description_col.push(widget::rule::horizontal(1).boxed());
 
         let mut all_modules: Vec<(String, String)> = self
             .module_types
@@ -293,11 +300,11 @@ impl State {
         ));
 
         for (prefix, module) in all_modules {
-            prefix_col = prefix_col.push(widget::text(prefix).into());
-            prefix_col = prefix_col.push(widget::rule::horizontal(1).into());
+            prefix_col = prefix_col.push(widget::text(prefix).boxed());
+            prefix_col = prefix_col.push(widget::rule::horizontal(1).boxed());
 
-            description_col = description_col.push(widget::text(module).into());
-            description_col = description_col.push(widget::rule::horizontal(1).into());
+            description_col = description_col.push(widget::text(module).boxed());
+            description_col = description_col.push(widget::rule::horizontal(1).boxed());
         }
 
         widget::row![
@@ -305,7 +312,7 @@ impl State {
             widget::container(widget::rule::vertical(2)).padding(8),
             description_col
         ]
-        .into()
+        .boxed()
     }
 
     fn theme(&self) -> Option<iced::Theme> {
@@ -426,7 +433,7 @@ fn main() -> Result<(), String> {
     iced::application(state, State::update, State::view)
         .title("Lumin")
         .settings(iced::Settings {
-            default_font: iced::Font {
+            font: iced::Font {
                 family: iced::font::Family::Name("Lexend Deca"),
                 ..Default::default()
             },
