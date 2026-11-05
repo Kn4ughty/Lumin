@@ -1,4 +1,4 @@
-use iced::{Element, Task, widget};
+use iced::{Element, Task, Widget, widget};
 use numbat::pretty_print::PrettyPrint;
 use numbat::{self as nb, Context};
 
@@ -57,7 +57,7 @@ impl Module for Calc {
             )
             .font(font),
         ]
-        .into()
+        .boxed()
     }
 
     fn update(&mut self, msg: ModuleMessage) -> Task<ModuleMessage> {
@@ -80,14 +80,13 @@ impl Module for Calc {
         // Maybe i could build a clipboard manager into lumin, like how macos does it.
         // Anyway for now, just do nothing.
 
-        iced::clipboard::write(self.main_text.to_string()).chain(Task::perform(
-            std::future::ready(()),
-            |_| {
+        iced::clipboard::write(self.main_text.to_string())
+            .map(crate::message::Message::Clipboard)
+            .chain(Task::perform(std::future::ready(()), |_| {
                 // little stupid hack to make it wait for a moment so the clipboard manager can copy it
                 std::thread::sleep(std::time::Duration::from_millis(1));
                 crate::message::Message::Close
-            },
-        ))
+            }))
     }
 }
 
@@ -99,7 +98,7 @@ impl Calc {
 
             Err(e) => {
                 // idk man
-                log::error!("{e:?}");
+                log::warn!("Calc interpret error: {e:?}");
                 // self.ctx.print_diagnostic(error, colorize);
                 CalcResult::Err(e)
             }
