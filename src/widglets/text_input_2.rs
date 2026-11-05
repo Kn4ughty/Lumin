@@ -29,12 +29,12 @@
 //!     }
 //! }
 //! ```
+use crate::widglets::input2;
 use iced::advanced::layout;
 use iced::advanced::renderer;
 use iced::advanced::shell;
 use iced::advanced::text;
 use iced::advanced::text::editor;
-use iced::advanced::text::input;
 use iced::advanced::widget;
 use iced::advanced::widget::operation::{self, Focusable, Operation};
 use iced::advanced::widget::tree::{self, Tree};
@@ -296,7 +296,7 @@ where
         tree.size = state.input.layout(
             renderer,
             limits,
-            input::Layout {
+            input2::Layout {
                 width: self.width,
                 height: self.height,
                 padding: self.padding,
@@ -422,7 +422,7 @@ where
             renderer,
             bounds,
             *viewport,
-            input::Style {
+            input2::Style {
                 value: style.value,
                 selection: style.selection,
                 placeholder: style.placeholder,
@@ -452,7 +452,7 @@ where
 
 /// The state of a [`TextInput`].
 struct State<R: text::Renderer> {
-    input: text::Input<R>,
+    input: input2::Input<R>,
     value: String,
     transaction: Option<shell::Tracking>,
 }
@@ -465,7 +465,7 @@ impl<R: text::Renderer> State<R> {
     /// Creates a new [`State`], representing an unfocused [`TextInput`].
     fn new() -> Self {
         Self {
-            input: text::Input::new(),
+            input: input2::Input::new(),
             value: String::new(),
             transaction: None,
         }

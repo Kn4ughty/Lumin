@@ -204,14 +204,19 @@ impl State {
     fn view(&self) -> impl iced::Widget<Message> {
         log::trace!("view fn run");
 
-        let input_prompt = config::SETTINGS.lock().expect("mutex").input_prompt.clone();
-        let text_input = widget::text_input(input_prompt, &self.text_value)
+        let input_prompt = if self.text_value.is_empty() {
+            config::SETTINGS.lock().expect("mutex").input_prompt.clone()
+        } else {
+            "".to_string()
+        };
+
+        let text_input = widglets::text_input_2::TextInput::new(input_prompt, &self.text_value)
             .id(self.text_id.clone())
             .on_input(Message::TextInputChanged)
             .on_submit(Message::TextInputSubmitted("test".to_string()))
             .padding(8.0)
             .style(|theme, status| {
-                let mut base_style = widget::text_input::default(theme, status);
+                let mut base_style = widglets::text_input_2::default(theme, status);
                 base_style.border = iced::Border {
                     color: iced::Color::TRANSPARENT,
                     width: 0.0,

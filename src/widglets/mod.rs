@@ -2,6 +2,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 
 use iced::widget;
 
+pub mod input2;
 pub mod list;
 pub mod text_input_2;
 
