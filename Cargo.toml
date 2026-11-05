@@ -2,7 +2,6 @@
 name = "lumin"
 version = "1.1.0"
 edition = "2024"
-path = "src/"
 
 [profile.release-with-debug]
 inherits = "release"
@@ -19,13 +18,12 @@ path = "src/main.rs"
 perf = []
 time-travel = ["iced/time-travel"]
 
-[target.x86_64-unknown-linux-gnu]
-linker = "/usr/bin/clang"
-rustflags = ["-Clink-arg=-fuse-ld=lld", "-Clink-arg=-Wl,--no-rosegment"]
-
-
 [dependencies]
-iced = { version = "0.14.0", features = ["advanced", "tokio", "image"] }
+iced = { 
+    git = "https://github.com/iced-rs/iced/", 
+    rev = "8ff48c42b0d5188223501ea1ccc506fd5beaf36a",
+    features = ["advanced", "tokio", "image"] 
+}
 anyhow = "1.0.99"
 libc = "0.2.175"
 log = "0.4.28"
@@ -44,6 +42,7 @@ toml = "0.9.8"
 futures = "0.3.31"
 naga = { version = "27", features = ["termcolor"] }
 numbat = "1.24.0"
+unicode-segmentation = "1.13.3"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }

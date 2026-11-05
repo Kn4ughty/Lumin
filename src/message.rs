@@ -13,5 +13,6 @@ pub enum Message {
     KeyboardUp,
     KeyboardDown,
     FontLoaded(Result<(), iced::font::Error>),
-    Unfocused
+    Unfocused,
+    Clipboard(Result<(), iced::clipboard::Error>),
 }

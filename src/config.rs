@@ -29,7 +29,7 @@ fn default_settings_work() {
 }
 
 pub static SETTINGS: Mutex<LazyLock<Settings>> = Mutex::new(LazyLock::new(|| {
-    load_from_disk().unwrap_or_else(|e| {
+    let config = load_from_disk().unwrap_or_else(|e| {
         log::error!(
             "Your config is invalid! {e:#?}
 ===========
@@ -38,7 +38,9 @@ it is in `assets/config.toml`"
         );
         // TODO. Display this error graphically
         LazyLock::<Settings>::force(&DEFAULT_SETTINGS).clone()
-    })
+    });
+    log::info!("Loaded config is: {:#?}", config);
+    config
 }));
 
 #[derive(Debug)]
@@ -48,15 +50,54 @@ enum ConfigError {
     TomlError(toml::de::Error),
 }
 
+macro_rules! generate_default_settings {
+    ($(#[$meta:meta])* $vis:vis struct $name:ident {
+        $( $(#[$vmeta:meta])* $item_vis:vis $variant:ident: $type:ty,)*
+    }) => {
+        $(#[$meta])*
+        $vis struct $name {
+            $(
+                // Sadly, cannot do #[serde(default = stringify!($name::$variant))]
+                // https://stackoverflow.com/questions/78010732/rust-macro-expected-literal
+                // would require using proc macros. Just duplicating the field name is fine ig
+                $(#[$vmeta])* $item_vis $variant: $type,
+            )*
+        }
+
+        impl $name {
+            $(
+            #[allow(unused)]
+            fn $variant() -> $type {
+                DEFAULT_SETTINGS.$variant.clone()
+            }
+            )*
+        }
+    }
+
+}
+
+generate_default_settings! {
 #[derive(Debug, Clone, Deserialize)]
 pub struct Settings {
     #[serde(with = "ThemeDef")]
+    #[serde(default = "Settings::color_scheme")]
     pub color_scheme: iced::Theme,
+
+    #[serde(default = "Settings::transparent_background")]
     pub transparent_background: bool,
+
+    #[serde(default = "Settings::app_prefixes")]
     pub app_prefixes: HashMap<crate::module::ModuleEnum, String>,
+
+    #[serde(default = "Settings::input_prompt")]
     pub input_prompt: String,
+
+    #[serde(default = "Settings::show_icons")]
     pub show_icons: bool,
+
+    #[serde(default = "Settings::close_on_unfocus")]
     pub close_on_unfocus: bool,
+}
 }
 
 fn load_from_disk() -> Result<Settings, ConfigError> {

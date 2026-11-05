@@ -2,7 +2,10 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 
 use iced::widget;
 
+pub mod input2;
 pub mod list;
+pub mod text_input_2;
+
 pub use list::ListRow;
 
 const PADDING: f32 = 4.0;
@@ -82,13 +85,16 @@ pub fn heading<'a>(
     };
 
     widget::text(text)
-        .size(iced::Settings::default().default_text_size * font_mult)
+        .size(iced::Settings::default().text_size * font_mult)
         .style(move |_theme: &iced::Theme| {
             let c = match level {
                 HL::Subheading => Some(iced::color!(140, 140, 150)),
                 _ => None,
             };
-            widget::text::Style { color: c }
+            widget::text::Style {
+                color: c,
+                selection: None,
+            }
         })
         .font(font)
 }
