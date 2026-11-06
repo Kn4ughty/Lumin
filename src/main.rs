@@ -173,7 +173,7 @@ impl State {
                 }
             }
             Message::KeyboardUp => {
-                self.dummy_text = self.history.get_above(self.text_value.clone());
+                self.dummy_text = self.history.get_above(self.text_value.clone()).or(self.dummy_text.clone());
                 log::info!("Dummy Text: {:?}", self.dummy_text);
 
                 if let Some((module, _)) = self.find_module_mut() {
@@ -185,6 +185,7 @@ impl State {
                 Task::none()
             }
             Message::KeyboardDown => {
+                // We don't want to go to nothing when we hit the top of the list, but when we go back down the final item **should** be empty, so no .or()
                 self.dummy_text = self.history.get_below(self.text_value.clone());
                 log::info!("Dummy Text: {:?}", self.dummy_text);
 
@@ -223,11 +224,13 @@ impl State {
     fn view(&self) -> impl iced::Widget<Message> {
         log::trace!("view fn run");
 
-        let input_prompt = if self.text_value.is_empty() {
-            config::SETTINGS.lock().expect("mutex").input_prompt.clone()
-        } else {
-            "".to_string()
-        };
+        let input_prompt = self.dummy_text.clone().unwrap_or(
+            if self.text_value.is_empty() {
+                config::SETTINGS.lock().expect("mutex").input_prompt.clone()
+            } else {
+                String::new()
+            }
+        );
 
         let text_input = widglets::text_input_2::TextInput::new(input_prompt, &self.text_value)
             .id(self.text_id.clone())
