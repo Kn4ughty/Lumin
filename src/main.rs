@@ -200,7 +200,12 @@ impl State {
                 log::info!("Filling suggestion");
                 self.text_value = self.dummy_text.clone().unwrap_or_default();
                 self.dummy_text = None;
-                Task::done(Message::TextInputChanged(self.text_value.clone()))
+                Task::batch(
+                    [
+                        Task::done(Message::TextInputChanged(self.text_value.clone())),
+                        widget::operation::text_input::move_cursor_to_end(self.text_id.clone())
+                    ]
+                )
             }
             Message::FontLoaded(res) => {
                 if let Err(e) = res {
