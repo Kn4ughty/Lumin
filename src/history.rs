@@ -36,10 +36,9 @@ impl History {
                 self.current_idx = idx;
                 return Some(entry.clone())
             }
-            if direction == Direction::Up {
-                idx = idx.saturating_sub(1)
-            } else {
-                idx = idx.saturating_add(1)
+            idx = match direction {
+                Direction::Up => idx.saturating_sub(1),
+                Direction::Down => idx.saturating_add(1)
             }
         }
 
@@ -75,8 +74,7 @@ impl Display for History {
 }
 
 #[derive(Eq, PartialEq, Clone, Copy, Debug)]
-#[repr(i8)]
 enum Direction {
-    Up = -1,
-    Down = 1
+    Up,
+    Down
 }
