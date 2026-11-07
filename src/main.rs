@@ -196,6 +196,12 @@ impl State {
                 }
                 Task::none()
             }
+            Message::FillSuggestion => {
+                log::info!("Filling suggestion");
+                self.text_value = self.dummy_text.clone().unwrap_or_default();
+                self.dummy_text = None;
+                Task::none()
+            }
             Message::FontLoaded(res) => {
                 if let Err(e) = res {
                     log::error!("Could not load font: {e:#?}");
@@ -411,8 +417,7 @@ fn handle_press_hotkeys(key: keyboard::Key, modifier: keyboard::Modifiers) -> Op
         (kb::Key::Named(kb::key::Named::Escape), _) => Some(Message::Close),
         (kb::Key::Named(kb::key::Named::ArrowUp), _) => Some(Message::KeyboardUp),
         (kb::Key::Named(kb::key::Named::ArrowDown), _) => Some(Message::KeyboardDown),
-        (kb::Key::Named(kb::key::Named::Tab), kmod::SHIFT) => Some(Message::KeyboardUp),
-        (kb::Key::Named(kb::key::Named::Tab), _) => Some(Message::KeyboardDown),
+        (kb::Key::Named(kb::key::Named::Tab), _) => Some(Message::FillSuggestion),
         _ => None,
     }
 }
