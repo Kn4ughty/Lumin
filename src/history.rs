@@ -12,7 +12,7 @@ pub struct History {
 impl History {
     pub fn load() -> Self {
         let history_path = PathBuf::from(DATA_DIR.clone()).join("history");
-        let history_raw = std::fs::read_to_string(history_path).unwrap_or(String::new());
+        let history_raw = std::fs::read_to_string(history_path).unwrap_or_else(|e| {log::error!("Couldn't read history: {e}"); String::new()});
         let history = history_raw.lines().map(|line| line.to_owned()).collect::<Vec<String>>(); 
         log::info!("{history_raw} | {history:?}");
 
@@ -42,7 +42,7 @@ impl History {
                 search.reverse();
             }
 
-            let search = search[..dbg!(self.history.len()-self.current_search_filter.len())]
+            let search = search[..self.history.len()-self.current_search_filter.len()]
                 .iter()
                 .filter(|item| item.starts_with(&self.current_search_phrase))
                 .cloned()
@@ -67,7 +67,11 @@ impl History {
     pub fn add_query(&mut self, query: String) {
         self.history.push(query);
         let history = PathBuf::from(DATA_DIR.clone()).join("history");
-        let _ = std::fs::write(history, self.to_string());
+        if let Err(e) = std::fs::write(history, self.to_string()) {
+            log::error!("Failed to write history: {e}");
+        } else {
+            log::info!("Saved history successfully");
+        }
     }
 }
 
