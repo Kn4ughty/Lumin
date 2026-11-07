@@ -3,7 +3,7 @@
 use iced::{Task, Widget, keyboard, theme::Style, widget};
 
 use std::path::PathBuf;
-use std::{cell::LazyCell, fs};
+use std::cell::LazyCell;
 use std::collections::HashMap;
 
 mod apps;
@@ -41,7 +41,7 @@ struct State {
     window_id: Option<iced::window::Id>,
     modules: HashMap<String, LazyCell<Box<dyn Module>>>,
     module_types: Vec<(String, ModuleEnum)>,
-    dummy_text: Option<String>,
+    history_suggestion: Option<String>,
     history: History
 }
 
@@ -76,7 +76,7 @@ impl State {
                 has_user_typed: false,
                 modules,
                 module_types,
-                dummy_text: Some(String::new()),
+                history_suggestion: None,
                 history: History::load(),
             },
             Self::load_font(),
@@ -112,7 +112,7 @@ impl State {
                 has_user_typed: false,
                 modules,
                 module_types: Vec::new(),
-                dummy_text: Some(String::new()),
+                history_suggestion: None,
                 history: History::load()
             },
             Self::load_font(),
@@ -145,7 +145,7 @@ impl State {
             }
             Message::TextInputSubmitted(_text) => {
                 log::info!("Text input submitted");
-                self.add_item_to_history();
+                self.history.add_query(self.text_value.clone());
                 self.find_module().expect("Can find module").0.run()
             }
             Message::WindowOpened(id) => {
@@ -173,8 +173,10 @@ impl State {
                 }
             }
             Message::KeyboardUp => {
-                self.dummy_text = self.history.get_above(self.text_value.clone()).or(self.dummy_text.clone());
-                log::info!("Dummy Text: {:?}", self.dummy_text);
+                if let Some(history_suggestion) = self.history.get_above(self.text_value.clone()) {
+                    self.history_suggestion = Some(history_suggestion)
+                }
+                log::info!("Dummy Text: {:?}", self.history_suggestion);
 
                 if let Some((module, _)) = self.find_module_mut() {
                     return module
@@ -186,8 +188,8 @@ impl State {
             }
             Message::KeyboardDown => {
                 // We don't want to go to nothing when we hit the top of the list, but when we go back down the final item **should** be empty, so no .or()
-                self.dummy_text = self.history.get_below(self.text_value.clone());
-                log::info!("Dummy Text: {:?}", self.dummy_text);
+                self.history_suggestion = self.history.get_below(self.text_value.clone());
+                log::info!("Dummy Text: {:?}", self.history_suggestion);
 
                 if let Some((module, _)) = self.find_module_mut() {
                     return module
@@ -196,10 +198,10 @@ impl State {
                 }
                 Task::none()
             }
-            Message::FillSuggestion => {
+            Message::FillAccepted => {
                 log::info!("Filling suggestion");
-                self.text_value = self.dummy_text.clone().unwrap_or_default();
-                self.dummy_text = None;
+                self.text_value = self.history_suggestion.clone().unwrap_or_default();
+                self.history_suggestion = None;
                 Task::batch(
                     [
                         Task::done(Message::TextInputChanged(self.text_value.clone())),
@@ -235,7 +237,7 @@ impl State {
     fn view(&self) -> impl iced::Widget<Message> {
         log::trace!("view fn run");
 
-        let input_prompt = self.dummy_text.clone().unwrap_or(
+        let input_prompt = self.history_suggestion.clone().unwrap_or(
             if self.text_value.is_empty() {
                 config::SETTINGS.lock().expect("mutex").input_prompt.clone()
             } else {
@@ -378,11 +380,6 @@ impl State {
         res
     }
 
-    fn add_item_to_history(&mut self) {
-        self.history.add_query(self.text_value.clone());
-        let history = PathBuf::from(DATA_DIR.clone()).join("history");
-        let _ = fs::write(history, self.history.to_string());
-    }
 }
 
 fn subscription(_state: &State) -> iced::Subscription<Message> {
@@ -422,7 +419,7 @@ fn handle_press_hotkeys(key: keyboard::Key, modifier: keyboard::Modifiers) -> Op
         (kb::Key::Named(kb::key::Named::Escape), _) => Some(Message::Close),
         (kb::Key::Named(kb::key::Named::ArrowUp), _) => Some(Message::KeyboardUp),
         (kb::Key::Named(kb::key::Named::ArrowDown), _) => Some(Message::KeyboardDown),
-        (kb::Key::Named(kb::key::Named::Tab), _) => Some(Message::FillSuggestion),
+        (kb::Key::Named(kb::key::Named::Tab), _) => Some(Message::FillAccepted),
         _ => None,
     }
 }

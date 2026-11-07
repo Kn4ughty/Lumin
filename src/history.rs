@@ -1,4 +1,5 @@
-use std::{fmt::Display, fs, path::PathBuf};
+use std::fmt::Display; 
+use std::path::PathBuf;
 
 use crate::constants::DATA_DIR;
 
@@ -11,7 +12,7 @@ pub struct History {
 impl History {
     pub fn load() -> Self {
         let history_path = PathBuf::from(DATA_DIR.clone()).join("history");
-        let history_raw = fs::read_to_string(history_path).unwrap_or(String::new());
+        let history_raw = std::fs::read_to_string(history_path).unwrap_or(String::new());
         let history = history_raw.lines().map(|line| line.to_owned()).collect::<Vec<String>>(); 
         log::info!("{history_raw} | {history:?}");
 
@@ -64,9 +65,12 @@ impl History {
     }
 
     pub fn add_query(&mut self, query: String) {
-        self.history.push(query)
+        self.history.push(query);
+        let history = PathBuf::from(DATA_DIR.clone()).join("history");
+        let _ = std::fs::write(history, self.to_string());
     }
 }
+
 impl Display for History {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.history.join("\n"))?;
