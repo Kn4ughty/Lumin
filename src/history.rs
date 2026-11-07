@@ -5,9 +5,8 @@ use crate::constants::DATA_DIR;
 
 pub struct History {
     history: Vec<String>,
+    current_idx: usize,
     current_search_phrase: String,
-    direction: Option<Direction>,
-    current_search_filter: Vec<String>
 }
 impl History {
     pub fn load() -> Self {
@@ -17,43 +16,36 @@ impl History {
         log::info!("{history_raw} | {history:?}");
 
         History {
+            current_idx: history.len(),
             history,
             current_search_phrase: String::new(),
-            direction: None,
-            current_search_filter: vec![],
         }
     }
 
     fn get_next_match(&mut self, phrase: String, direction: Direction) -> Option<String> {
-        if self.current_search_phrase != phrase || self.direction != Some(direction) {
-            // If it's the first time we index history, we need to grab the last item.
-            // Otherwise, (because switching direction) we should index an extra time
-            // since we're moving
-            // idk explain this better when im saner
-            let mut is_first_tap = false;
-            if self.direction.is_none() || self.direction == Some(direction) {
-                is_first_tap = true;
-            }
+        if self.current_search_phrase != phrase {
+            self.current_idx = self.history.len();
             self.current_search_phrase = phrase;
-            self.direction = Some(direction);
-            let mut search = self.history.clone();
-
-            if self.direction == Some(Direction::Down) {
-                search.reverse();
-            }
-
-            let search = search[..self.history.len()-self.current_search_filter.len()]
-                .iter()
-                .filter(|item| item.starts_with(&self.current_search_phrase))
-                .cloned()
-                .collect::<Vec<String>>();
-
-            self.current_search_filter = search;
-
-            if !is_first_tap {let _ = self.current_search_filter.pop();}
-            log::info!("{:?}", self.current_search_filter)
         }
-        self.current_search_filter.pop()
+
+        let mut idx = self.current_idx;
+
+        if direction == Direction::Up {idx = idx.saturating_sub(1)} else {idx = idx.saturating_add(1)}
+        while let Some(entry) = self.history.get(idx) {
+            if entry.starts_with(&self.current_search_phrase) {
+                self.current_idx = idx;
+                return Some(entry.clone())
+            }
+            if direction == Direction::Up {
+                idx = idx.saturating_sub(1)
+            } else {
+                idx = idx.saturating_add(1)
+            }
+        }
+
+        self.current_idx = self.history.len();
+        
+        None
     }
 
     pub fn get_above(&mut self, phrase: String) -> Option<String> {
@@ -83,7 +75,8 @@ impl Display for History {
 }
 
 #[derive(Eq, PartialEq, Clone, Copy, Debug)]
+#[repr(i8)]
 enum Direction {
-    Up,
-    Down
+    Up = -1,
+    Down = 1
 }
