@@ -103,6 +103,7 @@ where
 /// The default [`Padding`] of a [`TextInput`].
 pub const DEFAULT_PADDING: Padding = Padding::new(5.0);
 
+#[allow(unused)]
 impl<'a, Message, Theme> TextInput<'a, Message, Theme>
 where
     Message: Clone,

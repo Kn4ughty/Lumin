@@ -2,7 +2,6 @@
 
 use iced::{Task, Widget, keyboard, theme::Style, widget};
 
-use std::path::PathBuf;
 use std::cell::LazyCell;
 use std::collections::HashMap;
 
@@ -18,17 +17,16 @@ use drun::Drun;
 
 mod config;
 mod constants;
+mod history;
 mod module;
 mod serworse;
 mod sorting;
 mod util;
 mod widglets;
-mod history;
 use module::{Module, ModuleEnum, ModuleMessage};
 
 use message::Message;
 
-use crate::constants::DATA_DIR;
 use crate::history::History;
 
 const HELP_SCREEN_PREFIX: &str = "?";
@@ -42,7 +40,7 @@ struct State {
     modules: HashMap<String, LazyCell<Box<dyn Module>>>,
     module_types: Vec<(String, ModuleEnum)>,
     history_suggestion: Option<String>,
-    history: History
+    history: History,
 }
 
 // Startup things
@@ -113,7 +111,7 @@ impl State {
                 modules,
                 module_types: Vec::new(),
                 history_suggestion: None,
-                history: History::load()
+                history: History::load(),
             },
             Self::load_font(),
         )
@@ -202,12 +200,10 @@ impl State {
                 log::info!("Filling suggestion");
                 self.text_value = self.history_suggestion.clone().unwrap_or_default();
                 self.history_suggestion = None;
-                Task::batch(
-                    [
-                        Task::done(Message::TextInputChanged(self.text_value.clone())),
-                        widget::operation::text_input::move_cursor_to_end(self.text_id.clone())
-                    ]
-                )
+                Task::batch([
+                    Task::done(Message::TextInputChanged(self.text_value.clone())),
+                    widget::operation::text_input::move_cursor_to_end(self.text_id.clone()),
+                ])
             }
             Message::FontLoaded(res) => {
                 if let Err(e) = res {
@@ -237,13 +233,14 @@ impl State {
     fn view(&self) -> impl iced::Widget<Message> {
         log::trace!("view fn run");
 
-        let input_prompt = self.history_suggestion.clone().unwrap_or(
-            if self.text_value.is_empty() {
-                config::SETTINGS.lock().expect("mutex").input_prompt.clone()
-            } else {
-                String::new()
-            }
-        );
+        let input_prompt =
+            self.history_suggestion
+                .clone()
+                .unwrap_or(if self.text_value.is_empty() {
+                    config::SETTINGS.lock().expect("mutex").input_prompt.clone()
+                } else {
+                    String::new()
+                });
 
         let text_input = widglets::text_input_2::TextInput::new(input_prompt, &self.text_value)
             .id(self.text_id.clone())
@@ -379,7 +376,6 @@ impl State {
         start.finish();
         res
     }
-
 }
 
 fn subscription(_state: &State) -> iced::Subscription<Message> {
@@ -413,7 +409,6 @@ fn subscription(_state: &State) -> iced::Subscription<Message> {
 
 fn handle_press_hotkeys(key: keyboard::Key, modifier: keyboard::Modifiers) -> Option<Message> {
     use iced::keyboard as kb;
-    use iced::keyboard::Modifiers as kmod;
 
     match (key.as_ref(), modifier) {
         (kb::Key::Named(kb::key::Named::Escape), _) => Some(Message::Close),
