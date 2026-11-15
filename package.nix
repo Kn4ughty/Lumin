@@ -7,6 +7,7 @@
   libxkbcommon,
   libGL,
   vulkan-loader,
+  aws-lc,
 }:
 let
   runtimeLibs = [
@@ -14,6 +15,7 @@ let
     libxkbcommon
     libGL
     vulkan-loader
+    aws-lc
   ];
   libPath = lib.makeLibraryPath runtimeLibs;
 in
@@ -29,6 +31,7 @@ rustPlatform.buildRustPackage {
     pkg-config
     patchelf
   ];
+  buildInputs = [ aws-lc ];
   postFixup = ''
     patchelf --add-rpath ${libPath} $out/bin/lumin
   '';
