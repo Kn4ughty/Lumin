@@ -1,34 +1,4 @@
 //! Text inputs display fields that can be filled with text.
-//!
-//! # Example
-//! ```no_run
-//! # mod iced { pub mod widget { pub use iced_widget::*; } pub use iced_widget::Renderer; pub use iced_widget::core::*; }
-//! # use iced::widget::Widget;
-//! #
-//! use iced::widget::text_input;
-//!
-//! struct State {
-//!    content: String,
-//! }
-//!
-//! #[derive(Debug, Clone)]
-//! enum Message {
-//!     ContentChanged(String)
-//! }
-//!
-//! fn view(state: &State) -> impl Widget<Message> {
-//!     text_input("Type something here...", &state.content)
-//!         .on_input(Message::ContentChanged)
-//! }
-//!
-//! fn update(state: &mut State, message: Message) {
-//!     match message {
-//!         Message::ContentChanged(content) => {
-//!             state.content = content;
-//!         }
-//!     }
-//! }
-//! ```
 use crate::widglets::input2;
 use iced::advanced::layout;
 use iced::advanced::renderer;
@@ -47,36 +17,6 @@ use iced::{
 };
 
 /// A field that can be filled with text.
-///
-/// # Example
-/// ```no_run
-/// # mod iced { pub mod widget { pub use iced_widget::*; } pub use iced_widget::Renderer; pub use iced_widget::core::*; }
-/// # use iced::widget::Widget;
-/// #
-/// use iced::widget::text_input;
-///
-/// struct State {
-///    content: String,
-/// }
-///
-/// #[derive(Debug, Clone)]
-/// enum Message {
-///     ContentChanged(String)
-/// }
-///
-/// fn view(state: &State) -> impl Widget<Message> {
-///     text_input("Type something here...", &state.content)
-///         .on_input(Message::ContentChanged)
-/// }
-///
-/// fn update(state: &mut State, message: Message) {
-///     match message {
-///         Message::ContentChanged(content) => {
-///             state.content = content;
-///         }
-///     }
-/// }
-/// ```
 pub struct TextInput<'a, Message, Theme = iced::Theme>
 where
     Theme: Catalog,
